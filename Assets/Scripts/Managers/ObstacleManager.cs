@@ -6,6 +6,12 @@ public class ObstacleManager : MonoBehaviour
     [Header("Spawn Settings")]
     public float minSpawnInterval = 2f;
     public float maxSpawnInterval = 4f;
+    
+    [Header("Difficulty Progression")]
+    public float minSpawnIntervalMin = 0.5f; // Intervalo mínimo al máximo de dificultad
+    public float maxSpawnIntervalMin = 1.0f; // Intervalo máximo al máximo de dificultad
+    public float difficultyIncreaseRate = 0.1f; // Reducción del intervalo por segundo de juego
+    public float difficultyUpdateInterval = 1f; // Cada cuánto actualizar la dificultad
 
     [Header("Obstacle Prefabs")]
     public GameObject doorFixedPrefab;
@@ -26,6 +32,10 @@ public class ObstacleManager : MonoBehaviour
     private Camera mainCamera;
     private float timeSinceLastSpawn = 0f;
     private float nextSpawnTime;
+    private float gameTime = 0f; // Tiempo transcurrido desde el inicio
+    private float timeSinceDifficultyUpdate = 0f;
+    private float currentMinSpawnInterval;
+    private float currentMaxSpawnInterval;
 
     private void Start()
     {
@@ -83,7 +93,11 @@ public class ObstacleManager : MonoBehaviour
             Debug.Log($"ObstacleManager: Loaded {loadedPrefabs}/5 prefabs");
         }
 
-        nextSpawnTime = Random.Range(minSpawnInterval, maxSpawnInterval);
+        // Inicializar intervalos actuales
+        currentMinSpawnInterval = minSpawnInterval;
+        currentMaxSpawnInterval = maxSpawnInterval;
+        
+        nextSpawnTime = Random.Range(currentMinSpawnInterval, currentMaxSpawnInterval);
         Debug.Log($"ObstacleManager: Next spawn in {nextSpawnTime} seconds");
     }
 
@@ -131,16 +145,53 @@ public class ObstacleManager : MonoBehaviour
     {
         if (!Application.isPlaying) return;
         
+        gameTime += Time.deltaTime;
         timeSinceLastSpawn += Time.deltaTime;
+        timeSinceDifficultyUpdate += Time.deltaTime;
+
+        // Actualizar dificultad progresivamente
+        if (timeSinceDifficultyUpdate >= difficultyUpdateInterval)
+        {
+            UpdateDifficulty();
+            timeSinceDifficultyUpdate = 0f;
+        }
 
         if (timeSinceLastSpawn >= nextSpawnTime)
         {
             Debug.Log($"ObstacleManager: Attempting to spawn obstacle (time: {timeSinceLastSpawn}, threshold: {nextSpawnTime})");
             SpawnObstacle();
             timeSinceLastSpawn = 0f;
-            nextSpawnTime = Random.Range(minSpawnInterval, maxSpawnInterval);
-            Debug.Log($"ObstacleManager: Next spawn in {nextSpawnTime} seconds");
+            nextSpawnTime = Random.Range(currentMinSpawnInterval, currentMaxSpawnInterval);
+            Debug.Log($"ObstacleManager: Next spawn in {nextSpawnTime} seconds (min: {currentMinSpawnInterval:F2}, max: {currentMaxSpawnInterval:F2})");
         }
+    }
+
+    private void UpdateDifficulty()
+    {
+        // Reducir progresivamente los intervalos de spawn
+        // Cuanto más tiempo pase, más rápido aparecerán los obstáculos
+        float reduction = gameTime * difficultyIncreaseRate;
+        
+        // Calcular nuevos intervalos (reducir progresivamente)
+        float newMinInterval = Mathf.Max(
+            minSpawnInterval - reduction,
+            minSpawnIntervalMin
+        );
+        float newMaxInterval = Mathf.Max(
+            maxSpawnInterval - reduction,
+            maxSpawnIntervalMin
+        );
+        
+        // Asegurar que el mínimo no sea mayor que el máximo
+        if (newMinInterval > newMaxInterval)
+        {
+            newMinInterval = newMaxInterval;
+        }
+        
+        currentMinSpawnInterval = newMinInterval;
+        currentMaxSpawnInterval = newMaxInterval;
+        
+        Debug.Log($"ObstacleManager: Difficulty updated - Spawn intervals: {currentMinSpawnInterval:F2}s - {currentMaxSpawnInterval:F2}s (Game time: {gameTime:F1}s)");
     }
 
     private void SpawnObstacle()

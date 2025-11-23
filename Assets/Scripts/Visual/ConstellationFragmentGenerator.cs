@@ -18,8 +18,8 @@ public static class ConstellationFragmentGenerator
         float maxRadius = textureSize / 2f - 4f;
 
         // Crear forma geométrica tipo fragmento (triángulo, hexágono, o forma irregular)
-        // Usar un hash determinístico basado en el color para consistencia
-        int shapeType = Mathf.Abs(baseColor.GetHashCode()) % 3;
+        // Usar un valor aleatorio para que cada fragmento tenga una forma diferente
+        int shapeType = Random.Range(0, 3);
         
         for (int y = 0; y < textureSize; y++)
         {

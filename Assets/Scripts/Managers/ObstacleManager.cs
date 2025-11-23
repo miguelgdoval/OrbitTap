@@ -28,6 +28,9 @@ public class ObstacleManager : MonoBehaviour
     [Header("Movement Settings")]
     public float obstacleSpeed = 3f;
     public float spawnDistanceFromScreen = 12f; // Distancia fuera de la pantalla para spawnear
+    public float speedVariation = 1.5f; // Multiplicador máximo para variación de velocidad (1.0 a 1.5x)
+    public float sizeVariation = 3.0f; // Multiplicador máximo para variación de tamaño (1.0 a 3.0x)
+    public int maxObstaclesOnScreen = 5; // Máximo número de obstáculos en pantalla simultáneamente
 
     private Camera mainCamera;
     private float timeSinceLastSpawn = 0f;
@@ -169,11 +172,23 @@ public class ObstacleManager : MonoBehaviour
 
         if (timeSinceLastSpawn >= nextSpawnTime)
         {
-            Debug.Log($"ObstacleManager: Attempting to spawn obstacle (time: {timeSinceLastSpawn}, threshold: {nextSpawnTime})");
-            SpawnObstacle();
-            timeSinceLastSpawn = 0f;
-            nextSpawnTime = Random.Range(currentMinSpawnInterval, currentMaxSpawnInterval);
-            Debug.Log($"ObstacleManager: Next spawn in {nextSpawnTime} seconds (min: {currentMinSpawnInterval:F2}, max: {currentMaxSpawnInterval:F2})");
+            // Verificar cuántos obstáculos hay en pantalla antes de spawnear
+            int obstaclesOnScreen = CountObstaclesOnScreen();
+            
+            if (obstaclesOnScreen < maxObstaclesOnScreen)
+            {
+                Debug.Log($"ObstacleManager: Attempting to spawn obstacle (time: {timeSinceLastSpawn}, threshold: {nextSpawnTime}, obstacles on screen: {obstaclesOnScreen}/{maxObstaclesOnScreen})");
+                SpawnObstacle();
+                timeSinceLastSpawn = 0f;
+                nextSpawnTime = Random.Range(currentMinSpawnInterval, currentMaxSpawnInterval);
+                Debug.Log($"ObstacleManager: Next spawn in {nextSpawnTime} seconds (min: {currentMinSpawnInterval:F2}, max: {currentMaxSpawnInterval:F2})");
+            }
+            else
+            {
+                // Esperar un poco más antes de intentar spawnear de nuevo
+                timeSinceLastSpawn = nextSpawnTime - 0.5f; // Reducir el tiempo para intentar de nuevo pronto
+                Debug.Log($"ObstacleManager: Max obstacles reached ({obstaclesOnScreen}/{maxObstaclesOnScreen}), waiting...");
+            }
         }
     }
 
@@ -354,8 +369,21 @@ public class ObstacleManager : MonoBehaviour
             return;
         }
         
+        // Asignar velocidad aleatoria (entre 1.0x y speedVariation)
+        float randomSpeedMultiplier = Random.Range(1.0f, speedVariation);
+        float randomSpeed = obstacleSpeed * randomSpeedMultiplier;
+        
         mover.SetDirection(movementDirection);
-        mover.SetSpeed(obstacleSpeed);
+        mover.SetSpeed(randomSpeed);
+        
+        // Aplicar tamaño aleatorio al obstáculo (entre 1.0x y sizeVariation)
+        // Usar distribución sesgada: más probable que sea pequeño, menos probable que sea grande
+        // Usar una función cuadrática para sesgar hacia valores más pequeños
+        float randomValue = Random.Range(0f, 1f);
+        float randomSizeMultiplier = 1.0f + (sizeVariation - 1.0f) * (randomValue * randomValue);
+        
+        // Aplicar escalado después de que se ejecute Start() para que los sprites ya estén creados
+        StartCoroutine(ApplyObstacleScale(obstacle, randomSizeMultiplier));
         
         // Agregar efecto de brillo aleatorio al obstáculo
         ObstacleGlow glow = obstacle.GetComponent<ObstacleGlow>();
@@ -377,7 +405,85 @@ public class ObstacleManager : MonoBehaviour
             tracker = obstacle.AddComponent<ObstacleSafetyTracker>();
         }
         
-        Debug.Log($"ObstacleManager: Spawned {selectedPrefab.name} at {obstacle.transform.position} moving {movementDirection}");
+        Debug.Log($"ObstacleManager: Spawned {selectedPrefab.name} at {obstacle.transform.position} moving {movementDirection} (speed: {randomSpeed:F2}x, size: {randomSizeMultiplier:F2}x)");
+    }
+
+    /// <summary>
+    /// Aplica el escalado al obstáculo después de que se ejecute Start()
+    /// </summary>
+    private System.Collections.IEnumerator ApplyObstacleScale(GameObject obstacle, float scaleMultiplier)
+    {
+        // Esperar dos frames para asegurar que Start() de todos los componentes se haya ejecutado
+        yield return null;
+        yield return null;
+        
+        if (obstacle == null) yield break;
+        
+        // Aplicar el escalado al transform principal (esto escalará automáticamente todos los hijos)
+        obstacle.transform.localScale = Vector3.one * scaleMultiplier;
+        
+        // Los colliders se escalan automáticamente con el transform en Unity
+        AdjustCollidersToScale(obstacle, scaleMultiplier);
+    }
+
+    /// <summary>
+    /// Cuenta cuántos obstáculos hay actualmente en pantalla
+    /// </summary>
+    private int CountObstaclesOnScreen()
+    {
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+            if (mainCamera == null)
+            {
+                mainCamera = FindObjectOfType<Camera>();
+            }
+        }
+
+        if (mainCamera == null) return 0;
+
+        int count = 0;
+        
+        // Buscar todos los objetos con ObstacleMover (todos los obstáculos activos tienen este componente)
+        ObstacleMover[] allObstacles = FindObjectsOfType<ObstacleMover>();
+        
+        foreach (ObstacleMover mover in allObstacles)
+        {
+            if (mover == null || mover.gameObject == null) continue;
+            
+            // Verificar si el obstáculo está en pantalla o cerca de ella
+            Vector3 viewportPos = mainCamera.WorldToViewportPoint(mover.transform.position);
+            
+            // Considerar que está "en pantalla" si está dentro o cerca de los límites de la pantalla
+            if (viewportPos.x > -0.5f && viewportPos.x < 1.5f &&
+                viewportPos.y > -0.5f && viewportPos.y < 1.5f &&
+                viewportPos.z >= mainCamera.nearClipPlane && viewportPos.z <= mainCamera.farClipPlane)
+            {
+                count++;
+            }
+        }
+        
+        return count;
+    }
+
+    /// <summary>
+    /// Ajusta los colliders al nuevo tamaño del obstáculo
+    /// </summary>
+    private void AdjustCollidersToScale(GameObject obstacle, float scaleMultiplier)
+    {
+        if (obstacle == null) return;
+        
+        // Ajustar todos los colliders en el obstáculo y sus hijos
+        Collider2D[] colliders = obstacle.GetComponentsInChildren<Collider2D>();
+        foreach (Collider2D collider in colliders)
+        {
+            if (collider == null) continue;
+            
+            // Los colliders se escalan automáticamente con el transform,
+            // pero podemos ajustar el tamaño base si es necesario
+            // Nota: Unity escala automáticamente los colliders con el transform,
+            // así que esto puede no ser necesario, pero lo dejamos por si acaso
+        }
     }
 }
 

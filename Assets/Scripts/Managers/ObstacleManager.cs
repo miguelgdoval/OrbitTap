@@ -336,6 +336,13 @@ public class ObstacleManager : MonoBehaviour
         mover.SetDirection(movementDirection);
         mover.SetSpeed(obstacleSpeed);
         
+        // Agregar efecto de brillo aleatorio al obstáculo
+        ObstacleGlow glow = obstacle.GetComponent<ObstacleGlow>();
+        if (glow == null)
+        {
+            glow = obstacle.AddComponent<ObstacleGlow>();
+        }
+        
         Debug.Log($"ObstacleManager: Spawned {selectedPrefab.name} at {obstacle.transform.position} moving {movementDirection}");
     }
 }

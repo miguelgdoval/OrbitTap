@@ -44,18 +44,20 @@ public class MainMenuController : MonoBehaviour
         GameObject titleObj = new GameObject("TitleText");
         titleObj.transform.SetParent(canvas.transform, false);
         titleText = titleObj.AddComponent<Text>();
-        titleText.text = "ORBIT TAP";
+        titleText.text = "Starbound Orbit";
         titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         titleText.fontSize = 60;
         titleText.fontStyle = FontStyle.Bold;
         titleText.color = CosmicTheme.SoftGold; // Dorado suave para el título
         titleText.alignment = TextAnchor.MiddleCenter;
+        titleText.horizontalOverflow = HorizontalWrapMode.Overflow; // Permitir que el texto se muestre completo
+        titleText.verticalOverflow = VerticalWrapMode.Overflow;
 
         RectTransform titleRect = titleObj.GetComponent<RectTransform>();
         titleRect.anchorMin = new Vector2(0.5f, 0.5f);
         titleRect.anchorMax = new Vector2(0.5f, 0.5f);
         titleRect.anchoredPosition = new Vector2(0, 100);
-        titleRect.sizeDelta = new Vector2(400, 100);
+        titleRect.sizeDelta = new Vector2(600, 100); // Aumentar ancho para que quepa "Starbound Orbit"
 
         // Create Tap to Start Text
         GameObject tapObj = new GameObject("TapToStartText");

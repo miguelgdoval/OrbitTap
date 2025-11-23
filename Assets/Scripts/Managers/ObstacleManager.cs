@@ -36,6 +36,7 @@ public class ObstacleManager : MonoBehaviour
     private float timeSinceDifficultyUpdate = 0f;
     private float currentMinSpawnInterval;
     private float currentMaxSpawnInterval;
+    private OrbitSafetySystem safetySystem;
 
     private void Start()
     {
@@ -75,6 +76,14 @@ public class ObstacleManager : MonoBehaviour
         if (playerOrbit != null)
         {
             spawnRadius = playerOrbit.radius;
+        }
+
+        // Obtener o crear el sistema de seguridad
+        safetySystem = FindObjectOfType<OrbitSafetySystem>();
+        if (safetySystem == null && Application.isPlaying)
+        {
+            GameObject safetyObj = new GameObject("OrbitSafetySystem");
+            safetySystem = safetyObj.AddComponent<OrbitSafetySystem>();
         }
 
         // Auto-load prefabs if not assigned (only at runtime)
@@ -253,8 +262,20 @@ public class ObstacleManager : MonoBehaviour
             orbitRadius = playerOrbit.radius;
         }
         
-        // Elegir un punto aleatorio en la órbita del jugador por donde debe pasar el obstáculo
-        float targetAngle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+        // Elegir un punto en la órbita del jugador por donde debe pasar el obstáculo
+        // Usar el sistema de seguridad para asegurar que siempre haya un camino libre
+        float targetAngleDegrees = Random.Range(0f, 360f);
+        
+        // Verificar si el ángulo es seguro, si no, encontrar uno seguro
+        if (safetySystem != null)
+        {
+            if (!safetySystem.IsAngleSafe(targetAngleDegrees))
+            {
+                targetAngleDegrees = safetySystem.FindSafeAngle(targetAngleDegrees);
+            }
+        }
+        
+        float targetAngle = targetAngleDegrees * Mathf.Deg2Rad;
         Vector3 targetPointOnOrbit = center.position + new Vector3(
             Mathf.Cos(targetAngle) * orbitRadius,
             Mathf.Sin(targetAngle) * orbitRadius,
@@ -341,6 +362,19 @@ public class ObstacleManager : MonoBehaviour
         if (glow == null)
         {
             glow = obstacle.AddComponent<ObstacleGlow>();
+        }
+        
+        // Registrar el obstáculo en el sistema de seguridad
+        if (safetySystem != null)
+        {
+            safetySystem.RegisterObstacle(obstacle);
+        }
+        
+        // Agregar un componente para desregistrarse cuando se destruya
+        ObstacleSafetyTracker tracker = obstacle.GetComponent<ObstacleSafetyTracker>();
+        if (tracker == null)
+        {
+            tracker = obstacle.AddComponent<ObstacleSafetyTracker>();
         }
         
         Debug.Log($"ObstacleManager: Spawned {selectedPrefab.name} at {obstacle.transform.position} moving {movementDirection}");

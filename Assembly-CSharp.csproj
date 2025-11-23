@@ -75,8 +75,10 @@
     <Compile Include="Assets/Scripts/Managers/GameInitializer.cs" />
     <Compile Include="Assets/Scripts/Managers/ScoreManager.cs" />
     <Compile Include="Assets/Scripts/Visual/StarParticleTrail.cs" />
+    <Compile Include="Assets/Scripts/Managers/OrbitSafetySystem.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleGlow.cs" />
     <Compile Include="Assets/Scripts/Obstacles/OscillatingBarrier.cs" />
+    <Compile Include="Assets/Scripts/Obstacles/ObstacleSafetyTracker.cs" />
     <Compile Include="Assets/Scripts/UI/GameOverController.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleCollisionDetector.cs" />
     <Compile Include="Assets/Scripts/Player/SpriteGenerator.cs" />

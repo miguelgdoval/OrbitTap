@@ -3,8 +3,8 @@ using UnityEngine;
 public class FlashEffect : MonoBehaviour
 {
     [Header("Flash Settings")]
-    public float flashDuration = 0.1f;
-    public Color flashColor = new Color(1f, 1f, 1f, 1f);
+    public float flashDuration = 0.2f;
+    public Color flashColor = CosmicTheme.SoftGold; // Pulso dorado como latido estelar
 
     private SpriteRenderer spriteRenderer;
     private Color originalColor;

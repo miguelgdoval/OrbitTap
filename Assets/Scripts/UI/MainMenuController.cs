@@ -13,6 +13,12 @@ public class MainMenuController : MonoBehaviour
 
     private void Start()
     {
+        // Configurar fondo cósmico
+        if (GetComponent<CosmicBackground>() == null)
+        {
+            gameObject.AddComponent<CosmicBackground>();
+        }
+
         if (createUIAtRuntime)
         {
             CreateUI();
@@ -42,7 +48,7 @@ public class MainMenuController : MonoBehaviour
         titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         titleText.fontSize = 60;
         titleText.fontStyle = FontStyle.Bold;
-        titleText.color = new Color(0f, 0.8784314f, 1f, 1f);
+        titleText.color = CosmicTheme.SoftGold; // Dorado suave para el título
         titleText.alignment = TextAnchor.MiddleCenter;
 
         RectTransform titleRect = titleObj.GetComponent<RectTransform>();
@@ -58,7 +64,7 @@ public class MainMenuController : MonoBehaviour
         tapToStartText.text = "Toca para comenzar";
         tapToStartText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         tapToStartText.fontSize = 30;
-        tapToStartText.color = Color.white;
+        tapToStartText.color = CosmicTheme.CelestialBlue; // Azul celeste luminoso
         tapToStartText.alignment = TextAnchor.MiddleCenter;
 
         RectTransform tapRect = tapObj.GetComponent<RectTransform>();

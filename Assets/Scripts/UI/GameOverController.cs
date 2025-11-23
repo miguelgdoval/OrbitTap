@@ -19,6 +19,12 @@ public class GameOverController : MonoBehaviour
     {
         Debug.Log("GameOverController: Start() llamado - createUIAtRuntime = " + createUIAtRuntime);
         
+        // Configurar fondo cósmico
+        if (GetComponent<CosmicBackground>() == null)
+        {
+            gameObject.AddComponent<CosmicBackground>();
+        }
+        
         // Forzar creación de UI si no existe
         if (createUIAtRuntime || GameObject.Find("Canvas") == null)
         {
@@ -76,7 +82,7 @@ public class GameOverController : MonoBehaviour
             scoreText = scoreObj.AddComponent<Text>();
             scoreText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             scoreText.fontSize = 40;
-            scoreText.color = Color.white;
+            scoreText.color = CosmicTheme.SoftGold; // Dorado suave
             scoreText.alignment = TextAnchor.MiddleCenter;
 
             RectTransform scoreRect = scoreObj.GetComponent<RectTransform>();
@@ -99,7 +105,7 @@ public class GameOverController : MonoBehaviour
             highScoreText = highScoreObj.AddComponent<Text>();
             highScoreText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             highScoreText.fontSize = 35;
-            highScoreText.color = Color.white;
+            highScoreText.color = CosmicTheme.CelestialBlue; // Azul celeste
             highScoreText.alignment = TextAnchor.MiddleCenter;
 
             RectTransform highScoreRect = highScoreObj.GetComponent<RectTransform>();
@@ -123,7 +129,7 @@ public class GameOverController : MonoBehaviour
             tapText.text = "Toca para volver al menú";
             tapText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             tapText.fontSize = 30;
-            tapText.color = new Color(0f, 0.8784314f, 1f, 1f);
+            tapText.color = CosmicTheme.EtherealLila; // Rosa-lila etéreo
             tapText.alignment = TextAnchor.MiddleCenter;
 
             RectTransform tapRect = tapObj.GetComponent<RectTransform>();

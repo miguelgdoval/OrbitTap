@@ -45,9 +45,10 @@ public class GameInitializer : MonoBehaviour
             
             player.transform.position = new Vector3(2, 0, 0);
 
-            // SpriteRenderer
+            // SpriteRenderer - Estrella naciente
             SpriteRenderer sr = player.AddComponent<SpriteRenderer>();
-            sr.sprite = SpriteGenerator.CreateCircleSprite(0.5f, new Color(0f, 0.8784314f, 1f, 1f));
+            sr.sprite = SpriteGenerator.CreateStarSprite(0.3f, CosmicTheme.EtherealLila);
+            sr.color = CosmicTheme.EtherealLila;
             sr.sortingOrder = 10;
 
             // Rigidbody2D - necesario para que las colisiones con triggers funcionen
@@ -71,6 +72,28 @@ public class GameInitializer : MonoBehaviour
             FlashEffect flash = player.AddComponent<FlashEffect>();
             orbit.flashEffect = flash;
             orbit.spriteRenderer = sr;
+            
+            // StarParticleTrail - Cola de partículas
+            player.AddComponent<StarParticleTrail>();
+        }
+
+        // Crear fondo cósmico
+        GameObject cosmicBg = GameObject.Find("CosmicBackground");
+        if (cosmicBg == null)
+        {
+            cosmicBg = new GameObject("CosmicBackground");
+            cosmicBg.AddComponent<CosmicBackground>();
+        }
+
+        // Crear anillo sagrado de órbita
+        GameObject orbitRing = GameObject.Find("SacredOrbitRing");
+        if (orbitRing == null)
+        {
+            orbitRing = new GameObject("SacredOrbitRing");
+            orbitRing.transform.SetParent(center.transform);
+            orbitRing.transform.localPosition = Vector3.zero;
+            SacredOrbitRing ring = orbitRing.AddComponent<SacredOrbitRing>();
+            ring.radius = 2f; // Mismo radio que la órbita del jugador
         }
 
         // Crear InputController
@@ -175,7 +198,7 @@ public class GameInitializer : MonoBehaviour
             scoreText.text = "0";
             scoreText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             scoreText.fontSize = 40;
-            scoreText.color = Color.white;
+            scoreText.color = CosmicTheme.SoftGold; // Dorado suave para la puntuación
             scoreText.alignment = TextAnchor.UpperCenter;
 
             RectTransform scoreRect = scoreTextObj.GetComponent<RectTransform>();

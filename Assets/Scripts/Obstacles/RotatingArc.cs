@@ -28,7 +28,7 @@ public class RotatingArc : ObstacleBase
         
         SpriteRenderer sr = arc.AddComponent<SpriteRenderer>();
         sr.sprite = CreateArcSprite();
-        sr.color = new Color(1f, 0f, 0f, 1f); // Rojo brillante para máxima visibilidad
+        sr.color = Color.white; // El color viene del sprite
         sr.sortingOrder = 5; // Asegurar que esté visible
         sr.sortingLayerName = "Default";
         
@@ -48,21 +48,9 @@ public class RotatingArc : ObstacleBase
 
     private Sprite CreateArcSprite()
     {
-        // Crear un sprite MUY grande y simple - un cuadrado sólido
-        int size = 256;
-        Texture2D texture = new Texture2D(size, size);
-        Color[] colors = new Color[size * size];
-        
-        // Llenar todo el sprite de blanco (máxima visibilidad)
-        for (int i = 0; i < colors.Length; i++)
-        {
-            colors[i] = Color.white;
-        }
-        
-        texture.SetPixels(colors);
-        texture.Apply();
-        // Usar pixelsPerUnit más alto para hacer el sprite más pequeño - 200 hace que 256px = 1.28 unidades en el mundo
-        return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 200f);
+        // Crear fragmento de constelación
+        Color fragmentColor = Color.Lerp(CosmicTheme.ConstellationBlue, CosmicTheme.CelestialBlue, 0.5f);
+        return ConstellationFragmentGenerator.CreateFragmentSprite(0.5f, fragmentColor, true);
     }
 }
 

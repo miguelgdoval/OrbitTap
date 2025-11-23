@@ -53,7 +53,7 @@ public class OscillatingBarrier : ObstacleBase
         
         SpriteRenderer sr = barrier.AddComponent<SpriteRenderer>();
         sr.sprite = CreateBarrierSprite();
-        sr.color = new Color(1f, 1f, 0f, 1f); // Amarillo brillante
+        sr.color = Color.white; // El color viene del sprite
         sr.sortingOrder = 5; // Asegurar que esté visible
         sr.sortingLayerName = "Default";
         
@@ -70,18 +70,9 @@ public class OscillatingBarrier : ObstacleBase
 
     private Sprite CreateBarrierSprite()
     {
-        // Crear un sprite MUY grande y simple - un cuadrado sólido
-        int size = 256;
-        Texture2D texture = new Texture2D(size, size);
-        Color[] colors = new Color[size * size];
-        for (int i = 0; i < colors.Length; i++)
-        {
-            colors[i] = Color.white;
-        }
-        texture.SetPixels(colors);
-        texture.Apply();
-        // Usar pixelsPerUnit más alto para hacer el sprite más pequeño - 200 hace que 256px = 1.28 unidades en el mundo
-        return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 200f);
+        // Crear fragmento de constelación
+        Color fragmentColor = Color.Lerp(CosmicTheme.CelestialBlue, CosmicTheme.EtherealLila, 0.4f);
+        return ConstellationFragmentGenerator.CreateFragmentSprite(0.5f, fragmentColor, false);
     }
 }
 

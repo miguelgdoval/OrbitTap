@@ -35,10 +35,17 @@ public class PlayerOrbit : MonoBehaviour
             spriteRenderer = GetComponent<SpriteRenderer>();
         }
 
-        // Create sprite if none exists
+        // Create sprite if none exists - Estrella naciente
         if (spriteRenderer != null && spriteRenderer.sprite == null)
         {
-            spriteRenderer.sprite = SpriteGenerator.CreateCircleSprite(0.5f, new Color(0f, 0.8784314f, 1f, 1f));
+            spriteRenderer.sprite = SpriteGenerator.CreateStarSprite(0.3f, CosmicTheme.EtherealLila);
+            spriteRenderer.color = CosmicTheme.EtherealLila;
+        }
+        
+        // Agregar cola de partículas
+        if (GetComponent<StarParticleTrail>() == null)
+        {
+            gameObject.AddComponent<StarParticleTrail>();
         }
 
         if (flashEffect == null)

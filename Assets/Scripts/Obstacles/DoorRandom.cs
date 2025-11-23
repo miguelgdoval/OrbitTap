@@ -36,9 +36,14 @@ public class DoorRandom : ObstacleBase
             SpriteRenderer sr = doorSegment.AddComponent<SpriteRenderer>();
             sr.sprite = CreateDoorSprite();
             sr.color = new Color(0.8f, 0.2f, 0.2f, 1f);
+            sr.sortingOrder = 5; // Asegurar que esté visible
+            sr.sortingLayerName = "Default";
             
+            // Calcular el tamaño real del sprite en unidades del mundo para colisión pixel perfect
+            float spriteWorldSize = sr.sprite.rect.width / sr.sprite.pixelsPerUnit;
             BoxCollider2D collider = doorSegment.AddComponent<BoxCollider2D>();
-            collider.size = new Vector2(doorWidth, doorLength / numberOfGaps);
+            // Usar el tamaño del sprite para el collider
+            collider.size = new Vector2(spriteWorldSize, spriteWorldSize);
             collider.isTrigger = true;
             
             // Agregar detector de colisiones
@@ -48,15 +53,18 @@ public class DoorRandom : ObstacleBase
 
     private Sprite CreateDoorSprite()
     {
-        Texture2D texture = new Texture2D(32, 32);
-        Color[] colors = new Color[32 * 32];
+        // Crear un sprite MUY grande y simple - un cuadrado sólido
+        int size = 256;
+        Texture2D texture = new Texture2D(size, size);
+        Color[] colors = new Color[size * size];
         for (int i = 0; i < colors.Length; i++)
         {
             colors[i] = Color.white;
         }
         texture.SetPixels(colors);
         texture.Apply();
-        return Sprite.Create(texture, new Rect(0, 0, 32, 32), new Vector2(0.5f, 0.5f));
+        // Usar pixelsPerUnit más alto para hacer el sprite más pequeño - 200 hace que 256px = 1.28 unidades en el mundo
+        return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 200f);
     }
 }
 

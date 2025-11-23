@@ -9,7 +9,9 @@ public class StaticArc : ObstacleBase
 
     private void Start()
     {
+        Debug.Log($"StaticArc: Start() called for {gameObject.name} at {transform.position}");
         CreateArc();
+        Debug.Log($"StaticArc: CreateArc() completed for {gameObject.name}");
     }
 
     private void CreateArc()
@@ -21,9 +23,16 @@ public class StaticArc : ObstacleBase
         SpriteRenderer sr = arc.AddComponent<SpriteRenderer>();
         sr.sprite = CreateArcSprite();
         sr.color = new Color(0.6f, 0.6f, 0.6f, 1f);
+        sr.sortingOrder = 5; // Asegurar que esté visible
+        sr.sortingLayerName = "Default";
+        
+        // Calcular el tamaño real del sprite en unidades del mundo para colisión pixel perfect
+        float spriteWorldSize = sr.sprite.rect.width / sr.sprite.pixelsPerUnit;
+        // El radio del collider debe ser la mitad del tamaño del sprite
+        float colliderRadius = spriteWorldSize / 2f;
         
         CircleCollider2D collider = arc.AddComponent<CircleCollider2D>();
-        collider.radius = arcRadius;
+        collider.radius = colliderRadius;
         collider.isTrigger = true;
         
         // Agregar detector de colisiones
@@ -32,34 +41,21 @@ public class StaticArc : ObstacleBase
 
     private Sprite CreateArcSprite()
     {
-        int size = 64;
+        // Crear un sprite MUY grande y simple - un cuadrado sólido
+        int size = 256;
         Texture2D texture = new Texture2D(size, size);
         Color[] colors = new Color[size * size];
         
-        Vector2 center = new Vector2(size / 2f, size / 2f);
-        float radius = size / 2f - 2f;
-        
-        for (int y = 0; y < size; y++)
+        // Llenar todo el sprite de blanco (máxima visibilidad)
+        for (int i = 0; i < colors.Length; i++)
         {
-            for (int x = 0; x < size; x++)
-            {
-                Vector2 pos = new Vector2(x, y);
-                float dist = Vector2.Distance(pos, center);
-                
-                if (dist >= radius - arcWidth && dist <= radius)
-                {
-                    colors[y * size + x] = Color.white;
-                }
-                else
-                {
-                    colors[y * size + x] = Color.clear;
-                }
-            }
+            colors[i] = Color.white;
         }
         
         texture.SetPixels(colors);
         texture.Apply();
-        return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+        // Usar pixelsPerUnit más alto para hacer el sprite más pequeño - 200 hace que 256px = 1.28 unidades en el mundo
+        return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 200f);
     }
 }
 

@@ -67,6 +67,7 @@
     <Compile Include="Assets/Scripts/UI/MainMenuController.cs" />
     <Compile Include="Assets/Scripts/Managers/ObstacleManager.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleBase.cs" />
+    <Compile Include="Assets/Scripts/Obstacles/ObstacleMover.cs" />
     <Compile Include="Assets/Scripts/Player/PlayerOrbit.cs" />
     <Compile Include="Assets/Scripts/Obstacles/DoorFixed.cs" />
     <Compile Include="Assets/Scripts/Managers/GameInitializer.cs" />

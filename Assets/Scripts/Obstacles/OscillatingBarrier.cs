@@ -33,6 +33,12 @@ public class OscillatingBarrier : ObstacleBase
 
     private void Update()
     {
+        // Si tiene ObstacleMover, no oscilar (el movimiento lo maneja ObstacleMover)
+        if (GetComponent<ObstacleMover>() != null)
+        {
+            return;
+        }
+
         time += Time.deltaTime;
         float offset = Mathf.Sin(time * frequency) * amplitude;
         // Oscilar en dirección radial (hacia/desde el centro)
@@ -47,11 +53,15 @@ public class OscillatingBarrier : ObstacleBase
         
         SpriteRenderer sr = barrier.AddComponent<SpriteRenderer>();
         sr.sprite = CreateBarrierSprite();
-        sr.color = new Color(0.7f, 0.7f, 0.7f, 1f);
+        sr.color = new Color(1f, 1f, 0f, 1f); // Amarillo brillante
+        sr.sortingOrder = 5; // Asegurar que esté visible
+        sr.sortingLayerName = "Default";
         
-        // El collider debe estar orientado tangencialmente a la órbita
+        // Calcular el tamaño real del sprite en unidades del mundo para colisión pixel perfect
+        float spriteWorldSize = sr.sprite.rect.width / sr.sprite.pixelsPerUnit;
         BoxCollider2D collider = barrier.AddComponent<BoxCollider2D>();
-        collider.size = new Vector2(barrierLength, barrierWidth);
+        // Usar el tamaño del sprite para el collider
+        collider.size = new Vector2(spriteWorldSize, spriteWorldSize);
         collider.isTrigger = true;
         
         // Agregar detector de colisiones
@@ -60,15 +70,18 @@ public class OscillatingBarrier : ObstacleBase
 
     private Sprite CreateBarrierSprite()
     {
-        Texture2D texture = new Texture2D(32, 32);
-        Color[] colors = new Color[32 * 32];
+        // Crear un sprite MUY grande y simple - un cuadrado sólido
+        int size = 256;
+        Texture2D texture = new Texture2D(size, size);
+        Color[] colors = new Color[size * size];
         for (int i = 0; i < colors.Length; i++)
         {
             colors[i] = Color.white;
         }
         texture.SetPixels(colors);
         texture.Apply();
-        return Sprite.Create(texture, new Rect(0, 0, 32, 32), new Vector2(0.5f, 0.5f));
+        // Usar pixelsPerUnit más alto para hacer el sprite más pequeño - 200 hace que 256px = 1.28 unidades en el mundo
+        return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 200f);
     }
 }
 

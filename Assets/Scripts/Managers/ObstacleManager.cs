@@ -19,11 +19,33 @@ public class ObstacleManager : MonoBehaviour
     public Transform center;
     private PlayerOrbit playerOrbit;
 
+    [Header("Movement Settings")]
+    public float obstacleSpeed = 3f;
+    public float spawnDistanceFromScreen = 12f; // Distancia fuera de la pantalla para spawnear
+
+    private Camera mainCamera;
     private float timeSinceLastSpawn = 0f;
     private float nextSpawnTime;
 
     private void Start()
     {
+        Debug.Log("ObstacleManager: Start() called");
+        
+        mainCamera = Camera.main;
+        if (mainCamera == null)
+        {
+            mainCamera = FindObjectOfType<Camera>();
+        }
+
+        if (mainCamera == null)
+        {
+            Debug.LogError("ObstacleManager: No camera found in Start()!");
+        }
+        else
+        {
+            Debug.Log($"ObstacleManager: Camera found - Orthographic: {mainCamera.orthographic}, Size: {mainCamera.orthographicSize}");
+        }
+
         if (center == null)
         {
             GameObject centerObj = GameObject.Find("Center");
@@ -49,9 +71,20 @@ public class ObstacleManager : MonoBehaviour
         if (Application.isPlaying)
         {
             LoadPrefabsIfNeeded();
+            
+            // Verificar cuántos prefabs están cargados
+            int loadedPrefabs = 0;
+            if (doorFixedPrefab != null) loadedPrefabs++;
+            if (doorRandomPrefab != null) loadedPrefabs++;
+            if (oscillatingBarrierPrefab != null) loadedPrefabs++;
+            if (rotatingArcPrefab != null) loadedPrefabs++;
+            if (staticArcPrefab != null) loadedPrefabs++;
+            
+            Debug.Log($"ObstacleManager: Loaded {loadedPrefabs}/5 prefabs");
         }
 
         nextSpawnTime = Random.Range(minSpawnInterval, maxSpawnInterval);
+        Debug.Log($"ObstacleManager: Next spawn in {nextSpawnTime} seconds");
     }
 
     private void LoadPrefabsIfNeeded()
@@ -96,13 +129,17 @@ public class ObstacleManager : MonoBehaviour
 
     private void Update()
     {
+        if (!Application.isPlaying) return;
+        
         timeSinceLastSpawn += Time.deltaTime;
 
         if (timeSinceLastSpawn >= nextSpawnTime)
         {
+            Debug.Log($"ObstacleManager: Attempting to spawn obstacle (time: {timeSinceLastSpawn}, threshold: {nextSpawnTime})");
             SpawnObstacle();
             timeSinceLastSpawn = 0f;
             nextSpawnTime = Random.Range(minSpawnInterval, maxSpawnInterval);
+            Debug.Log($"ObstacleManager: Next spawn in {nextSpawnTime} seconds");
         }
     }
 
@@ -126,41 +163,127 @@ public class ObstacleManager : MonoBehaviour
             return;
         }
 
+        if (mainCamera == null)
+        {
+            Debug.LogWarning("ObstacleManager: No camera found!");
+            mainCamera = Camera.main;
+            if (mainCamera == null)
+            {
+                mainCamera = FindObjectOfType<Camera>();
+            }
+            if (mainCamera == null)
+            {
+                Debug.LogError("ObstacleManager: Still no camera found! Cannot spawn obstacles.");
+                return;
+            }
+        }
+
+        // Verificar que la cámara sea ortográfica
+        if (!mainCamera.orthographic)
+        {
+            Debug.LogWarning("ObstacleManager: Camera is not orthographic! Setting to orthographic.");
+            mainCamera.orthographic = true;
+        }
+
         // Select random prefab
         GameObject selectedPrefab = validPrefabs[Random.Range(0, validPrefabs.Count)];
 
-        // Spawn at random angle around center, en la misma órbita que el jugador
-        float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-        Vector3 spawnPosition = center.position + new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f) * spawnRadius;
+        // Obtener los límites de la pantalla en coordenadas del mundo
+        float screenHeight = mainCamera.orthographicSize * 2f;
+        float screenWidth = screenHeight * mainCamera.aspect;
+        Vector3 cameraPos = mainCamera.transform.position;
+        
+        // Obtener el radio de la órbita del jugador
+        float orbitRadius = spawnRadius; // Ya tenemos esto del Start()
+        if (playerOrbit != null)
+        {
+            orbitRadius = playerOrbit.radius;
+        }
+        
+        // Elegir un punto aleatorio en la órbita del jugador por donde debe pasar el obstáculo
+        float targetAngle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+        Vector3 targetPointOnOrbit = center.position + new Vector3(
+            Mathf.Cos(targetAngle) * orbitRadius,
+            Mathf.Sin(targetAngle) * orbitRadius,
+            0f
+        );
+        
+        // Calcular una posición de spawn fuera de la pantalla
+        // Elegir un ángulo aleatorio para spawnear (puede ser cualquier dirección)
+        float spawnAngle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+        
+        // Calcular la distancia desde el centro de la pantalla para spawnear fuera
+        float maxScreenDistance = Mathf.Max(screenWidth, screenHeight) / 2f + spawnDistanceFromScreen;
+        
+        // Spawnear en una posición fuera de la pantalla en la dirección del ángulo
+        // Forzar Z = 0 para que esté en el mismo plano que el jugador
+        Vector3 spawnPosition = new Vector3(
+            cameraPos.x + Mathf.Cos(spawnAngle) * maxScreenDistance,
+            cameraPos.y + Mathf.Sin(spawnAngle) * maxScreenDistance,
+            0f // Forzar Z = 0 explícitamente
+        );
+        
+        // Calcular la dirección de movimiento desde el spawn hacia el punto en la órbita
+        Vector2 movementDirection = (targetPointOnOrbit - spawnPosition).normalized;
 
-        // Determinar orientación según el tipo de obstáculo
+        // Determinar orientación según el tipo de obstáculo y dirección de movimiento
         float rotationAngle = 0f;
         string prefabName = selectedPrefab.name.ToLower();
         
+        // Calcular el ángulo de rotación basado en la dirección de movimiento
+        float directionAngle = Mathf.Atan2(movementDirection.y, movementDirection.x) * Mathf.Rad2Deg;
+        
         if (prefabName.Contains("door"))
         {
-            // Las puertas deben estar orientadas radialmente (hacia/desde el centro)
-            // El eje Y local apunta hacia el centro
-            rotationAngle = (angle * Mathf.Rad2Deg) + 90f; // +90 para que Y apunte hacia el centro
+            // Las puertas se orientan perpendicularmente a la dirección de movimiento
+            rotationAngle = directionAngle + 90f;
         }
         else if (prefabName.Contains("barrier"))
         {
-            // Las barreras oscilantes deben estar orientadas tangencialmente
-            rotationAngle = (angle * Mathf.Rad2Deg);
+            // Las barreras se orientan en la dirección de movimiento
+            rotationAngle = directionAngle;
         }
         else if (prefabName.Contains("arc"))
         {
-            // Los arcos rotan alrededor del centro, orientación inicial no importa mucho
-            rotationAngle = 0f;
+            // Los arcos pueden rotar, pero por ahora los orientamos según la dirección
+            rotationAngle = directionAngle;
         }
         else
         {
-            // Por defecto, orientar tangencialmente
-            rotationAngle = (angle * Mathf.Rad2Deg);
+            // Por defecto, orientar según la dirección de movimiento
+            rotationAngle = directionAngle;
         }
         
         Quaternion rotation = Quaternion.Euler(0, 0, rotationAngle);
         GameObject obstacle = Instantiate(selectedPrefab, spawnPosition, rotation);
+        
+        if (obstacle == null)
+        {
+            Debug.LogError("ObstacleManager: Failed to instantiate obstacle!");
+            return;
+        }
+        
+        // Forzar la posición Z del obstáculo a 0 después de instanciarlo
+        Vector3 pos = obstacle.transform.position;
+        obstacle.transform.position = new Vector3(pos.x, pos.y, 0f);
+        
+        // Agregar componente de movimiento al obstáculo
+        ObstacleMover mover = obstacle.GetComponent<ObstacleMover>();
+        if (mover == null)
+        {
+            mover = obstacle.AddComponent<ObstacleMover>();
+        }
+        
+        if (mover == null)
+        {
+            Debug.LogError("ObstacleManager: Failed to add ObstacleMover component!");
+            return;
+        }
+        
+        mover.SetDirection(movementDirection);
+        mover.SetSpeed(obstacleSpeed);
+        
+        Debug.Log($"ObstacleManager: Spawned {selectedPrefab.name} at {obstacle.transform.position} moving {movementDirection}");
     }
 }
 

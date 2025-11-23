@@ -1,0 +1,93 @@
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+public class MainMenuController : MonoBehaviour
+{
+    [Header("UI Settings")]
+    public bool createUIAtRuntime = true;
+    
+    private GameObject canvas;
+    private Text titleText;
+    private Text tapToStartText;
+
+    private void Start()
+    {
+        if (createUIAtRuntime)
+        {
+            CreateUI();
+        }
+    }
+
+    private void CreateUI()
+    {
+        // Create Canvas
+        canvas = new GameObject("Canvas");
+        Canvas canvasComponent = canvas.AddComponent<Canvas>();
+        canvasComponent.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.AddComponent<CanvasScaler>();
+        canvas.AddComponent<GraphicRaycaster>();
+        canvas.layer = 5; // UI layer
+
+        RectTransform canvasRect = canvas.GetComponent<RectTransform>();
+        canvasRect.anchorMin = Vector2.zero;
+        canvasRect.anchorMax = Vector2.one;
+        canvasRect.sizeDelta = Vector2.zero;
+
+        // Create Title Text
+        GameObject titleObj = new GameObject("TitleText");
+        titleObj.transform.SetParent(canvas.transform, false);
+        titleText = titleObj.AddComponent<Text>();
+        titleText.text = "ORBIT TAP";
+        titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        titleText.fontSize = 60;
+        titleText.fontStyle = FontStyle.Bold;
+        titleText.color = new Color(0f, 0.8784314f, 1f, 1f);
+        titleText.alignment = TextAnchor.MiddleCenter;
+
+        RectTransform titleRect = titleObj.GetComponent<RectTransform>();
+        titleRect.anchorMin = new Vector2(0.5f, 0.5f);
+        titleRect.anchorMax = new Vector2(0.5f, 0.5f);
+        titleRect.anchoredPosition = new Vector2(0, 100);
+        titleRect.sizeDelta = new Vector2(400, 100);
+
+        // Create Tap to Start Text
+        GameObject tapObj = new GameObject("TapToStartText");
+        tapObj.transform.SetParent(canvas.transform, false);
+        tapToStartText = tapObj.AddComponent<Text>();
+        tapToStartText.text = "Toca para comenzar";
+        tapToStartText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        tapToStartText.fontSize = 30;
+        tapToStartText.color = Color.white;
+        tapToStartText.alignment = TextAnchor.MiddleCenter;
+
+        RectTransform tapRect = tapObj.GetComponent<RectTransform>();
+        tapRect.anchorMin = new Vector2(0.5f, 0.5f);
+        tapRect.anchorMax = new Vector2(0.5f, 0.5f);
+        tapRect.anchoredPosition = new Vector2(0, -50);
+        tapRect.sizeDelta = new Vector2(300, 50);
+    }
+
+    private void Update()
+    {
+        // Detect touch or click
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+            if (touch.phase == TouchPhase.Began)
+            {
+                LoadGame();
+            }
+        }
+        else if (Input.GetMouseButtonDown(0))
+        {
+            LoadGame();
+        }
+    }
+
+    public void LoadGame()
+    {
+        SceneManager.LoadScene("Game");
+    }
+}
+

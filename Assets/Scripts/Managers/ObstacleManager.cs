@@ -97,8 +97,10 @@ public class ObstacleManager : MonoBehaviour
         currentMinSpawnInterval = minSpawnInterval;
         currentMaxSpawnInterval = maxSpawnInterval;
         
-        nextSpawnTime = Random.Range(currentMinSpawnInterval, currentMaxSpawnInterval);
-        Debug.Log($"ObstacleManager: Next spawn in {nextSpawnTime} seconds");
+        // Spawnear el primer obstáculo inmediatamente
+        nextSpawnTime = 0f;
+        timeSinceLastSpawn = 0f;
+        Debug.Log($"ObstacleManager: First obstacle will spawn immediately");
     }
 
     private void LoadPrefabsIfNeeded()

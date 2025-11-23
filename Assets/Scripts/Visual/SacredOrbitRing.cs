@@ -8,10 +8,11 @@ public class SacredOrbitRing : MonoBehaviour
 {
     [Header("Ring Settings")]
     public float radius = 2f;
-    public float lineWidth = 0.02f;
+    public float lineWidth = 0.08f; // Más grueso
     public int segments = 64;
     public Color ringColor = Color.white;
-    public float symbolOpacity = 0.15f;
+    public float symbolOpacity = 0.08f; // Más sutil
+    public float ringOpacity = 0.15f; // Opacidad muy baja para efecto difuminado
 
     private LineRenderer lineRenderer;
     private List<GameObject> symbols;
@@ -48,13 +49,35 @@ public class SacredOrbitRing : MonoBehaviour
         // Crear LineRenderer para el anillo
         lineRenderer = gameObject.AddComponent<LineRenderer>();
         lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-        lineRenderer.startColor = CosmicTheme.SoftGold;
-        lineRenderer.endColor = CosmicTheme.SoftGold;
+        
+        // Color más sutil y difuminado
+        Color subtleGold = new Color(
+            CosmicTheme.SoftGold.r,
+            CosmicTheme.SoftGold.g,
+            CosmicTheme.SoftGold.b,
+            ringOpacity
+        );
+        lineRenderer.startColor = subtleGold;
+        lineRenderer.endColor = subtleGold;
+        
         lineRenderer.startWidth = lineWidth;
         lineRenderer.endWidth = lineWidth;
         lineRenderer.useWorldSpace = false;
         lineRenderer.loop = true;
         lineRenderer.sortingOrder = 1;
+        
+        // Hacer el material más suave/difuminado
+        if (lineRenderer.material != null)
+        {
+            lineRenderer.material.SetFloat("_Mode", 2); // Fade mode para transparencia
+            lineRenderer.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            lineRenderer.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            lineRenderer.material.SetInt("_ZWrite", 0);
+            lineRenderer.material.DisableKeyword("_ALPHATEST_ON");
+            lineRenderer.material.EnableKeyword("_ALPHABLEND_ON");
+            lineRenderer.material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            lineRenderer.material.renderQueue = 3000;
+        }
 
         // Crear puntos del círculo
         Vector3[] points = new Vector3[segments + 1];
@@ -93,8 +116,22 @@ public class SacredOrbitRing : MonoBehaviour
 
             SpriteRenderer sr = symbol.AddComponent<SpriteRenderer>();
             sr.sprite = CreateRuneSprite();
+            // Color aún más sutil para los símbolos
             sr.color = new Color(CosmicTheme.SoftGold.r, CosmicTheme.SoftGold.g, CosmicTheme.SoftGold.b, symbolOpacity);
             sr.sortingOrder = 0;
+            
+            // Hacer el material más suave/difuminado
+            if (sr.material != null)
+            {
+                sr.material.SetFloat("_Mode", 2); // Fade mode
+                sr.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                sr.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                sr.material.SetInt("_ZWrite", 0);
+                sr.material.DisableKeyword("_ALPHATEST_ON");
+                sr.material.EnableKeyword("_ALPHABLEND_ON");
+                sr.material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                sr.material.renderQueue = 3000;
+            }
 
             symbols.Add(symbol);
         }

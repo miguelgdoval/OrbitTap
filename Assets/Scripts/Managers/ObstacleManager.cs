@@ -29,9 +29,13 @@ public class ObstacleManager : MonoBehaviour
     [Header("Difficulty Settings")]
     public ObstacleDifficultyLevel maxDifficultyLevel = ObstacleDifficultyLevel.VeryHard; // Dificultad máxima permitida
     public bool useDifficultyProgression = true; // Si true, aumenta la dificultad con el tiempo
-    public float timeToUnlockMedium = 20f; // Segundos para desbloquear obstáculos Medium (aumentado para progresión más gradual)
-    public float timeToUnlockHard = 50f; // Segundos para desbloquear obstáculos Hard (aumentado para progresión más gradual)
-    public float timeToUnlockVeryHard = 90f; // Segundos para desbloquear obstáculos VeryHard (aumentado para progresión más gradual)
+    public bool useScoreBasedDifficulty = true; // Si true, usa el score en lugar del tiempo para desbloquear dificultades
+    public float scoreToUnlockMedium = 15f; // Puntos para desbloquear obstáculos Medium
+    public float scoreToUnlockHard = 30f; // Puntos para desbloquear obstáculos Hard
+    public float scoreToUnlockVeryHard = 60f; // Puntos para desbloquear obstáculos VeryHard
+    public float timeToUnlockMedium = 20f; // Segundos para desbloquear obstáculos Medium (si useScoreBasedDifficulty es false)
+    public float timeToUnlockHard = 50f; // Segundos para desbloquear obstáculos Hard (si useScoreBasedDifficulty es false)
+    public float timeToUnlockVeryHard = 90f; // Segundos para desbloquear obstáculos VeryHard (si useScoreBasedDifficulty es false)
 
     [Header("Spawn Settings")]
     public float spawnRadius = 2f; // Mismo radio que la órbita del jugador
@@ -53,6 +57,7 @@ public class ObstacleManager : MonoBehaviour
     private float currentMinSpawnInterval;
     private float currentMaxSpawnInterval;
     private OrbitSafetySystem safetySystem;
+    private ScoreManager scoreManager; // Referencia al ScoreManager para obtener el score actual
 
     private void Start()
     {
@@ -124,6 +129,13 @@ public class ObstacleManager : MonoBehaviour
         // Inicializar intervalos actuales
         currentMinSpawnInterval = minSpawnInterval;
         currentMaxSpawnInterval = maxSpawnInterval;
+        
+        // Buscar ScoreManager para obtener el score actual
+        scoreManager = FindObjectOfType<ScoreManager>();
+        if (scoreManager == null)
+        {
+            Debug.LogWarning("ObstacleManager: ScoreManager no encontrado. La dificultad basada en score no funcionará.");
+        }
         
         // Spawnear el primer obstáculo inmediatamente
         nextSpawnTime = 0f;
@@ -256,7 +268,7 @@ public class ObstacleManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Obtiene el nivel de dificultad actual basado en el tiempo de juego
+    /// Obtiene el nivel de dificultad actual basado en el tiempo de juego o el score
     /// </summary>
     private ObstacleDifficultyLevel GetCurrentDifficultyLevel()
     {
@@ -265,21 +277,52 @@ public class ObstacleManager : MonoBehaviour
             return maxDifficultyLevel;
         }
         
-        if (gameTime >= timeToUnlockVeryHard)
+        float progressValue;
+        
+        if (useScoreBasedDifficulty && scoreManager != null)
         {
-            return ObstacleDifficultyLevel.VeryHard;
-        }
-        else if (gameTime >= timeToUnlockHard)
-        {
-            return ObstacleDifficultyLevel.Hard;
-        }
-        else if (gameTime >= timeToUnlockMedium)
-        {
-            return ObstacleDifficultyLevel.Medium;
+            // Usar el score actual para determinar la dificultad
+            progressValue = scoreManager.GetCurrentScore();
+            
+            // Log cada vez que cambia la dificultad (solo una vez por nivel)
+            if (progressValue >= scoreToUnlockVeryHard)
+            {
+                return ObstacleDifficultyLevel.VeryHard;
+            }
+            else if (progressValue >= scoreToUnlockHard)
+            {
+                return ObstacleDifficultyLevel.Hard;
+            }
+            else if (progressValue >= scoreToUnlockMedium)
+            {
+                return ObstacleDifficultyLevel.Medium;
+            }
+            else
+            {
+                return ObstacleDifficultyLevel.Easy;
+            }
         }
         else
         {
-            return ObstacleDifficultyLevel.Easy;
+            // Usar el tiempo de juego para determinar la dificultad (comportamiento anterior)
+            progressValue = gameTime;
+            
+            if (progressValue >= timeToUnlockVeryHard)
+            {
+                return ObstacleDifficultyLevel.VeryHard;
+            }
+            else if (progressValue >= timeToUnlockHard)
+            {
+                return ObstacleDifficultyLevel.Hard;
+            }
+            else if (progressValue >= timeToUnlockMedium)
+            {
+                return ObstacleDifficultyLevel.Medium;
+            }
+            else
+            {
+                return ObstacleDifficultyLevel.Easy;
+            }
         }
     }
     
@@ -454,6 +497,8 @@ public class ObstacleManager : MonoBehaviour
         
         // Filtrar prefabs válidos y que estén dentro del nivel de dificultad permitido
         System.Collections.Generic.List<GameObject> validPrefabs = new System.Collections.Generic.List<GameObject>();
+        bool hasComplexPrefabs = false;
+        
         foreach (GameObject prefab in allPrefabs)
         {
             if (prefab != null)
@@ -465,11 +510,28 @@ public class ObstacleManager : MonoBehaviour
                 if (prefabDifficulty <= maxDifficultyLevel && prefabDifficulty <= currentDifficulty)
                 {
                     validPrefabs.Add(prefab);
+                    
+                    // Verificar si es un obstáculo complejo (Hard)
+                    if (prefabDifficulty == ObstacleDifficultyLevel.Hard)
+                    {
+                        hasComplexPrefabs = true;
+                    }
                 }
             }
-            else
+        }
+
+        // Si la dificultad es Hard o superior pero no hay prefabs complejos disponibles,
+        // crear uno dinámicamente con cierta probabilidad
+        // La probabilidad aumenta con la dificultad: Hard = 40%, VeryHard = 60%
+        if (currentDifficulty >= ObstacleDifficultyLevel.Hard && !hasComplexPrefabs)
+        {
+            float complexSpawnChance = currentDifficulty == ObstacleDifficultyLevel.VeryHard ? 0.6f : 0.4f;
+            
+            if (Random.Range(0f, 1f) < complexSpawnChance)
             {
-                Debug.LogWarning($"ObstacleManager: Prefab is null in array");
+                Debug.Log($"ObstacleManager: Creating complex obstacle dynamically (difficulty: {currentDifficulty}, chance: {complexSpawnChance:P0})");
+                CreateComplexObstacleDynamically();
+                return;
             }
         }
 
@@ -486,7 +548,13 @@ public class ObstacleManager : MonoBehaviour
             return;
         }
         
-        Debug.Log($"ObstacleManager: Spawning obstacle (Current difficulty: {currentDifficulty}, Available prefabs: {validPrefabs.Count})");
+        // Log de debug con información del score si está disponible
+        string scoreInfo = "";
+        if (useScoreBasedDifficulty && scoreManager != null)
+        {
+            scoreInfo = $", Score: {scoreManager.GetCurrentScore()}";
+        }
+        Debug.Log($"ObstacleManager: Spawning obstacle (Current difficulty: {currentDifficulty}, Available prefabs: {validPrefabs.Count}, Has complex: {hasComplexPrefabs}{scoreInfo})");
 
         if (mainCamera == null)
         {

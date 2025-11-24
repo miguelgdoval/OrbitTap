@@ -44,6 +44,9 @@ public class GameInitializer : MonoBehaviour
             }
             
             player.transform.position = new Vector3(2, 0, 0);
+            
+            // Escalar el personaje al 80% del tamaño original
+            player.transform.localScale = Vector3.one * 0.8f;
 
             // SpriteRenderer - Estrella naciente
             SpriteRenderer sr = player.AddComponent<SpriteRenderer>();
@@ -57,8 +60,9 @@ public class GameInitializer : MonoBehaviour
             rb.gravityScale = 0f;
 
             // CircleCollider2D - debe ser trigger para detectar colisiones con obstáculos
+            // El collider se escalará automáticamente con el transform, pero ajustamos el radio base
             CircleCollider2D collider = player.AddComponent<CircleCollider2D>();
-            collider.radius = 0.5f;
+            collider.radius = 0.5f; // Este se escalará automáticamente a 0.4f (0.5 * 0.8)
             collider.isTrigger = true;
 
             // PlayerOrbit

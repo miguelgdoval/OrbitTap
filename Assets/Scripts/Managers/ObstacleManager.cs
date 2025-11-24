@@ -10,8 +10,9 @@ public class ObstacleManager : MonoBehaviour
     [Header("Difficulty Progression")]
     public float minSpawnIntervalMin = 0.5f; // Intervalo mínimo al máximo de dificultad
     public float maxSpawnIntervalMin = 1.0f; // Intervalo máximo al máximo de dificultad
-    public float difficultyIncreaseRate = 0.1f; // Reducción del intervalo por segundo de juego
+    public float difficultyIncreaseRate = 0.02f; // Reducción del intervalo por segundo de juego (reducido para progresión más gradual)
     public float difficultyUpdateInterval = 1f; // Cada cuánto actualizar la dificultad
+    public float maxDifficultyTime = 120f; // Tiempo en segundos para alcanzar la dificultad máxima (más tiempo = progresión más gradual)
 
     [Header("Obstacle Prefabs")]
     public GameObject doorFixedPrefab;
@@ -28,9 +29,9 @@ public class ObstacleManager : MonoBehaviour
     [Header("Difficulty Settings")]
     public ObstacleDifficultyLevel maxDifficultyLevel = ObstacleDifficultyLevel.VeryHard; // Dificultad máxima permitida
     public bool useDifficultyProgression = true; // Si true, aumenta la dificultad con el tiempo
-    public float timeToUnlockMedium = 10f; // Segundos para desbloquear obstáculos Medium
-    public float timeToUnlockHard = 30f; // Segundos para desbloquear obstáculos Hard
-    public float timeToUnlockVeryHard = 60f; // Segundos para desbloquear obstáculos VeryHard
+    public float timeToUnlockMedium = 20f; // Segundos para desbloquear obstáculos Medium (aumentado para progresión más gradual)
+    public float timeToUnlockHard = 50f; // Segundos para desbloquear obstáculos Hard (aumentado para progresión más gradual)
+    public float timeToUnlockVeryHard = 90f; // Segundos para desbloquear obstáculos VeryHard (aumentado para progresión más gradual)
 
     [Header("Spawn Settings")]
     public float spawnRadius = 2f; // Mismo radio que la órbita del jugador
@@ -215,17 +216,30 @@ public class ObstacleManager : MonoBehaviour
 
     private void UpdateDifficulty()
     {
-        // Reducir progresivamente los intervalos de spawn
-        // Cuanto más tiempo pase, más rápido aparecerán los obstáculos
-        float reduction = gameTime * difficultyIncreaseRate;
+        // Usar una curva de progresión más suave (logarítmica/cuadrática) en lugar de lineal
+        // Esto hace que la dificultad aumente más gradualmente al principio y más rápido después
         
-        // Calcular nuevos intervalos (reducir progresivamente)
+        // Calcular el progreso normalizado (0 a 1) basado en el tiempo
+        float progress = Mathf.Clamp01(gameTime / maxDifficultyTime);
+        
+        // Usar una curva cuadrática para suavizar la progresión
+        // Al principio (progress cerca de 0) la reducción es pequeña
+        // Al final (progress cerca de 1) la reducción es mayor
+        float smoothProgress = progress * progress; // Curva cuadrática (más suave)
+        // Alternativa: usar Mathf.SmoothStep para una curva aún más suave
+        // float smoothProgress = Mathf.SmoothStep(0f, 1f, progress);
+        
+        // Calcular la reducción total basada en el progreso suavizado
+        float totalReductionMin = (minSpawnInterval - minSpawnIntervalMin) * smoothProgress;
+        float totalReductionMax = (maxSpawnInterval - maxSpawnIntervalMin) * smoothProgress;
+        
+        // Calcular nuevos intervalos (reducir progresivamente de forma suave)
         float newMinInterval = Mathf.Max(
-            minSpawnInterval - reduction,
+            minSpawnInterval - totalReductionMin,
             minSpawnIntervalMin
         );
         float newMaxInterval = Mathf.Max(
-            maxSpawnInterval - reduction,
+            maxSpawnInterval - totalReductionMax,
             maxSpawnIntervalMin
         );
         
@@ -238,7 +252,7 @@ public class ObstacleManager : MonoBehaviour
         currentMinSpawnInterval = newMinInterval;
         currentMaxSpawnInterval = newMaxInterval;
         
-        Debug.Log($"ObstacleManager: Difficulty updated - Spawn intervals: {currentMinSpawnInterval:F2}s - {currentMaxSpawnInterval:F2}s (Game time: {gameTime:F1}s)");
+        Debug.Log($"ObstacleManager: Difficulty updated - Spawn intervals: {currentMinSpawnInterval:F2}s - {currentMaxSpawnInterval:F2}s (Game time: {gameTime:F1}s, Progress: {progress:P0})");
     }
 
     /// <summary>

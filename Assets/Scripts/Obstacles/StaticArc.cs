@@ -1,7 +1,12 @@
 using UnityEngine;
 
-public class StaticArc : ObstacleBase
+[ObstacleDifficulty(ObstacleDifficultyLevel.Easy)]
+public class StaticArc : ObstacleBase, IObstacleDifficulty
 {
+    public ObstacleDifficultyLevel GetDifficulty()
+    {
+        return ObstacleDifficultyLevel.Easy;
+    }
     [Header("Arc Settings")]
     public float arcRadius = 0.5f; // Radio del collider (más pequeño para que esté en la órbita)
     public float arcWidth = 0.2f;

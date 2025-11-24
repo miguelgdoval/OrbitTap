@@ -144,6 +144,12 @@ public class GameInitializer : MonoBehaviour
             om.rotatingArcPrefab = LoadPrefabByName("RotatingArc");
         if (om.staticArcPrefab == null)
             om.staticArcPrefab = LoadPrefabByName("StaticArc");
+        if (om.pulsatingRingPrefab == null)
+            om.pulsatingRingPrefab = LoadPrefabByName("PulsatingRing");
+        if (om.spiralFragmentPrefab == null)
+            om.spiralFragmentPrefab = LoadPrefabByName("SpiralFragment");
+        if (om.zigzagBarrierPrefab == null)
+            om.zigzagBarrierPrefab = LoadPrefabByName("ZigzagBarrier");
         #endif
     }
 

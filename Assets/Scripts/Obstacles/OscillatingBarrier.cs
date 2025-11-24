@@ -1,7 +1,12 @@
 using UnityEngine;
 
-public class OscillatingBarrier : ObstacleBase
+[ObstacleDifficulty(ObstacleDifficultyLevel.Medium)]
+public class OscillatingBarrier : ObstacleBase, IObstacleDifficulty
 {
+    public ObstacleDifficultyLevel GetDifficulty()
+    {
+        return ObstacleDifficultyLevel.Medium;
+    }
     [Header("Oscillation Settings")]
     public float amplitude = 2f;
     public float frequency = 1f;

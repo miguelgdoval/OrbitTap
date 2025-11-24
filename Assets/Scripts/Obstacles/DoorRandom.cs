@@ -1,7 +1,12 @@
 using UnityEngine;
 
-public class DoorRandom : ObstacleBase
+[ObstacleDifficulty(ObstacleDifficultyLevel.Medium)]
+public class DoorRandom : ObstacleBase, IObstacleDifficulty
 {
+    public ObstacleDifficultyLevel GetDifficulty()
+    {
+        return ObstacleDifficultyLevel.Medium;
+    }
     [Header("Door Settings")]
     public float gapSize = 1f;
     public float doorWidth = 0.2f;

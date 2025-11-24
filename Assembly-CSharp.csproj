@@ -79,16 +79,20 @@
     <Compile Include="Assets/Scripts/Obstacles/ObstacleGlow.cs" />
     <Compile Include="Assets/Scripts/Obstacles/OscillatingBarrier.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleSafetyTracker.cs" />
-    <Compile Include="Assets/Scripts/UI/GameOverController.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleCollisionDetector.cs" />
+    <Compile Include="Assets/Scripts/UI/GameOverController.cs" />
     <Compile Include="Assets/Scripts/Player/SpriteGenerator.cs" />
     <Compile Include="Assets/Scripts/Managers/GameManager.cs" />
     <Compile Include="Assets/Scripts/Obstacles/RotatingArc.cs" />
     <Compile Include="Assets/Scripts/Player/FlashEffect.cs" />
     <Compile Include="Assets/Scripts/Obstacles/DoorRandom.cs" />
+    <Compile Include="Assets/Scripts/Obstacles/ObstacleDifficulty.cs" />
+    <Compile Include="Assets/Scripts/Obstacles/Complex/PulsatingRing.cs" />
     <Compile Include="Assets/Scripts/Visual/CosmicBackground.cs" />
+    <Compile Include="Assets/Scripts/Obstacles/Complex/ZigzagBarrier.cs" />
     <Compile Include="Assets/Scripts/Visual/CosmicTheme.cs" />
     <Compile Include="Assets/Scripts/Managers/InputController.cs" />
+    <Compile Include="Assets/Scripts/Obstacles/Complex/SpiralFragment.cs" />
     <Compile Include="Assets/Scripts/Obstacles/StaticArc.cs" />
   </ItemGroup>
   <ItemGroup>

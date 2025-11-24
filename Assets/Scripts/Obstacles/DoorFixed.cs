@@ -1,7 +1,12 @@
 using UnityEngine;
 
-public class DoorFixed : ObstacleBase
+[ObstacleDifficulty(ObstacleDifficultyLevel.Easy)]
+public class DoorFixed : ObstacleBase, IObstacleDifficulty
 {
+    public ObstacleDifficultyLevel GetDifficulty()
+    {
+        return ObstacleDifficultyLevel.Easy;
+    }
     [Header("Door Settings")]
     public float gapSize = 1f;
     public float doorWidth = 0.2f;

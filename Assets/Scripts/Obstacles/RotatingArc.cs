@@ -1,7 +1,12 @@
 using UnityEngine;
 
-public class RotatingArc : ObstacleBase
+[ObstacleDifficulty(ObstacleDifficultyLevel.Medium)]
+public class RotatingArc : ObstacleBase, IObstacleDifficulty
 {
+    public ObstacleDifficultyLevel GetDifficulty()
+    {
+        return ObstacleDifficultyLevel.Medium;
+    }
     [Header("Rotation Settings")]
     public float rotationSpeed = 90f;
     public float arcRadius = 0.5f; // Radio del collider (más pequeño para que esté en la órbita)

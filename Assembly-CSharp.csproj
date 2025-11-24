@@ -68,6 +68,7 @@
     <Compile Include="Assets/Scripts/Visual/SacredOrbitRing.cs" />
     <Compile Include="Assets/Scripts/Managers/ObstacleManager.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleBase.cs" />
+    <Compile Include="Assets/Scripts/UI/ShopSection.cs" />
     <Compile Include="Assets/Scripts/Visual/ConstellationFragmentGenerator.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleMover.cs" />
     <Compile Include="Assets/Scripts/Player/PlayerOrbit.cs" />
@@ -76,14 +77,19 @@
     <Compile Include="Assets/Scripts/Managers/ScoreManager.cs" />
     <Compile Include="Assets/Scripts/Visual/StarParticleTrail.cs" />
     <Compile Include="Assets/Scripts/Managers/OrbitSafetySystem.cs" />
+    <Compile Include="Assets/Scripts/UI/SkinsSection.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleGlow.cs" />
     <Compile Include="Assets/Scripts/Obstacles/OscillatingBarrier.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleSafetyTracker.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleCollisionDetector.cs" />
     <Compile Include="Assets/Scripts/UI/GameOverController.cs" />
+    <Compile Include="Assets/Scripts/UI/CurrencyManager.cs" />
     <Compile Include="Assets/Scripts/Player/SpriteGenerator.cs" />
+    <Compile Include="Assets/Scripts/UI/SettingsPanel.cs" />
     <Compile Include="Assets/Scripts/Managers/GameManager.cs" />
     <Compile Include="Assets/Scripts/Obstacles/RotatingArc.cs" />
+    <Compile Include="Assets/Scripts/UI/MenuNavigation.cs" />
+    <Compile Include="Assets/Scripts/UI/MenuSection.cs" />
     <Compile Include="Assets/Scripts/Player/FlashEffect.cs" />
     <Compile Include="Assets/Scripts/Obstacles/DoorRandom.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleDifficulty.cs" />

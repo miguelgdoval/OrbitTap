@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d64c427dcbaad4e47aa572813d4f9cc7, type: 3}
+  m_Name: CosmicWinds
+  m_EditorClassIdentifier: 
+  presetName: Cosmic Winds
+  description: 'Preset: Cosmic Winds'
+  enableBase: 0
+  baseColor: {r: 0.2, g: 0.15, b: 0.3, a: 1}
+  baseSprite: {fileID: 21300000, guid: 4ef4711ca5d494b00a59fb37fe326a29, type: 3}
+  baseOpacity: 1
+  enableNebulas: 0
+  nebulaSprite: {fileID: 0}
+  nebulaScrollSpeed: 0.3
+  nebulaOpacity: 0.5
+  nebulaTint: {r: 0.6, g: 0.8, b: 1, a: 1}
+  nebulaDirection: 4
+  enableStarsFar: 1
+  starsFarSprite: {fileID: 0}
+  starsFarScrollSpeed: 0.7
+  starsFarOpacity: 0.2
+  starsFarParallax: 0.5
+  starsFarDensity: 2
+  enableStarsNear: 1
+  starsNearSprite: {fileID: 0}
+  starsNearScrollSpeed: 1.5
+  starsNearOpacity: 0.2
+  starsNearParallax: 1.2
+  starsNearDensity: 3
+  enableParticles: 0
+  particleSprite: {fileID: 0}
+  particleScrollSpeed: 2
+  particleOpacity: 0.8
+  particlePulsing: 0
+  particlePulseSpeed: 2
+  particleDensity: 4
+  globalDirection: 0
+  ambientColor: {r: 0.2, g: 0.15, b: 0.3, a: 1}
+  backgroundPrefab: {fileID: 8116604480820821413, guid: 9795b389fa58247a389d1535a64119b0, type: 3}

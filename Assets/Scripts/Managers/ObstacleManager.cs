@@ -149,7 +149,8 @@ public class ObstacleManager : MonoBehaviour
         {
             // Inicializar con el fondo de dificultad inicial
             ObstacleDifficultyLevel initialLevel = GetCurrentDifficultyLevel();
-            backgroundManager.UpdateDifficulty(initialLevel);
+            string presetName = GetPresetNameFromDifficulty(initialLevel);
+            BackgroundSystemAPI.SetPreset(presetName, 0f); // Sin transición al inicio
             lastDifficultyLevel = initialLevel;
         }
         
@@ -222,9 +223,10 @@ public class ObstacleManager : MonoBehaviour
             ObstacleDifficultyLevel currentLevel = GetCurrentDifficultyLevel();
             if (currentLevel != lastDifficultyLevel && backgroundManager != null)
             {
-                backgroundManager.UpdateDifficulty(currentLevel);
+                string presetName = GetPresetNameFromDifficulty(currentLevel);
+                BackgroundSystemAPI.SetPreset(presetName, 1f); // Transición de 1 segundo
                 lastDifficultyLevel = currentLevel;
-                Debug.Log($"ObstacleManager: Difficulty level changed to {currentLevel}, background updated");
+                Debug.Log($"ObstacleManager: Difficulty level changed to {currentLevel}, background updated to {presetName}");
             }
             
             timeSinceDifficultyUpdate = 0f;
@@ -293,6 +295,26 @@ public class ObstacleManager : MonoBehaviour
         Debug.Log($"ObstacleManager: Difficulty updated - Spawn intervals: {currentMinSpawnInterval:F2}s - {currentMaxSpawnInterval:F2}s (Game time: {gameTime:F1}s, Progress: {progress:P0})");
     }
 
+    /// <summary>
+    /// Mapea el nivel de dificultad al nombre del preset de fondo
+    /// </summary>
+    private string GetPresetNameFromDifficulty(ObstacleDifficultyLevel level)
+    {
+        switch (level)
+        {
+            case ObstacleDifficultyLevel.Easy:
+                return "Void Space";
+            case ObstacleDifficultyLevel.Medium:
+                return "Blue Drift";
+            case ObstacleDifficultyLevel.Hard:
+                return "Nebula Storm";
+            case ObstacleDifficultyLevel.VeryHard:
+                return "Cosmic Winds";
+            default:
+                return "Supernova Echo";
+        }
+    }
+    
     /// <summary>
     /// Obtiene el nivel de dificultad actual basado en el tiempo de juego o el score
     /// </summary>

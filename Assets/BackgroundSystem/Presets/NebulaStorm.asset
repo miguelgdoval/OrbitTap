@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d64c427dcbaad4e47aa572813d4f9cc7, type: 3}
+  m_Name: NebulaStorm
+  m_EditorClassIdentifier: 
+  presetName: Nebula Storm
+  description: 'Preset: Nebula Storm'
+  enableBase: 0
+  baseColor: {r: 0.15, g: 0.1, b: 0.25, a: 1}
+  baseSprite: {fileID: 21300000, guid: 2ed994e4d2b3c445b80dcf5970260945, type: 3}
+  baseOpacity: 1
+  enableNebulas: 0
+  nebulaSprite: {fileID: 0}
+  nebulaScrollSpeed: 0.4
+  nebulaOpacity: 0.8
+  nebulaTint: {r: 0.8, g: 0.4, b: 1, a: 1}
+  nebulaDirection: 0
+  enableStarsFar: 1
+  starsFarSprite: {fileID: 0}
+  starsFarScrollSpeed: 0.6
+  starsFarOpacity: 0.2
+  starsFarParallax: 0.5
+  starsFarDensity: 3
+  enableStarsNear: 1
+  starsNearSprite: {fileID: 0}
+  starsNearScrollSpeed: 1.2
+  starsNearOpacity: 0.2
+  starsNearParallax: 1.2
+  starsNearDensity: 3
+  enableParticles: 0
+  particleSprite: {fileID: 0}
+  particleScrollSpeed: 1.5
+  particleOpacity: 0.7
+  particlePulsing: 0
+  particlePulseSpeed: 2
+  particleDensity: 3
+  globalDirection: 0
+  ambientColor: {r: 0.15, g: 0.1, b: 0.25, a: 1}
+  backgroundPrefab: {fileID: 9019989814018617407, guid: ae468d06d4334496983ebd34cd83dd3c, type: 3}

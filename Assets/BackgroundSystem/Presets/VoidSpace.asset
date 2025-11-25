@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d64c427dcbaad4e47aa572813d4f9cc7, type: 3}
+  m_Name: VoidSpace
+  m_EditorClassIdentifier: 
+  presetName: Void Space
+  description: 'Preset: Void Space'
+  enableBase: 0
+  baseColor: {r: 0.05, g: 0.05, b: 0.1, a: 1}
+  baseSprite: {fileID: 21300000, guid: 70dff2c36fccd4d72b1ce37280de789a, type: 3}
+  baseOpacity: 1
+  enableNebulas: 0
+  nebulaSprite: {fileID: 0}
+  nebulaScrollSpeed: 0.2
+  nebulaOpacity: 0.6
+  nebulaTint: {r: 1, g: 1, b: 1, a: 1}
+  nebulaDirection: 0
+  enableStarsFar: 1
+  starsFarSprite: {fileID: 0}
+  starsFarScrollSpeed: 0.3
+  starsFarOpacity: 0.2
+  starsFarParallax: 0.5
+  starsFarDensity: 1
+  enableStarsNear: 0
+  starsNearSprite: {fileID: 0}
+  starsNearScrollSpeed: 1
+  starsNearOpacity: 0.2
+  starsNearParallax: 1.2
+  starsNearDensity: 2
+  enableParticles: 0
+  particleSprite: {fileID: 0}
+  particleScrollSpeed: 1.5
+  particleOpacity: 0.7
+  particlePulsing: 0
+  particlePulseSpeed: 2
+  particleDensity: 3
+  globalDirection: 0
+  ambientColor: {r: 0.05, g: 0.05, b: 0.1, a: 1}
+  backgroundPrefab: {fileID: 1049158513454552338, guid: ac25584498baa447bb5f6b3805c5af09, type: 3}

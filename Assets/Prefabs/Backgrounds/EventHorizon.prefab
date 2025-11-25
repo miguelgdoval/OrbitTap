@@ -129,13 +129,24 @@ MonoBehaviour:
   m_GameObject: {fileID: 6177201477607061822}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7d75ff6b66549426fa7c07138cfc19ad, type: 3}
+  m_Script: {fileID: 11500000, guid: 6982d41df85384b33950026f10d73e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scrollSpeed: 1.6
-  isStaticLayer: 0
+  scrollSpeed: 1
+  direction: 0
+  parallaxMultiplier: 1
+  infiniteScroll: 1
+  spriteDensity: 1
+  randomizeOffsets: 1
+  randomOffsetRange: {x: 0.5, y: 2}
+  enablePulsing: 0
+  pulseSpeed: 1
+  pulseScaleMin: 0.95
+  pulseScaleMax: 1.05
+  opacity: 1
   useUVScrolling: 1
-  texturePropertyName: _MainTex
+  autoScaleToScreen: 1
+  scaleMultiplier: 1.1
 --- !u!1 &6528969308927708795
 GameObject:
   m_ObjectHideFlags: 0
@@ -230,13 +241,24 @@ MonoBehaviour:
   m_GameObject: {fileID: 6528969308927708795}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7d75ff6b66549426fa7c07138cfc19ad, type: 3}
+  m_Script: {fileID: 11500000, guid: 6982d41df85384b33950026f10d73e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scrollSpeed: 0.7
-  isStaticLayer: 0
+  scrollSpeed: 1
+  direction: 0
+  parallaxMultiplier: 1
+  infiniteScroll: 1
+  spriteDensity: 1
+  randomizeOffsets: 1
+  randomOffsetRange: {x: 0.5, y: 2}
+  enablePulsing: 0
+  pulseSpeed: 1
+  pulseScaleMin: 0.95
+  pulseScaleMax: 1.05
+  opacity: 1
   useUVScrolling: 1
-  texturePropertyName: _MainTex
+  autoScaleToScreen: 1
+  scaleMultiplier: 1.1
 --- !u!1 &6954005080799007730
 GameObject:
   m_ObjectHideFlags: 0
@@ -331,13 +353,24 @@ MonoBehaviour:
   m_GameObject: {fileID: 6954005080799007730}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7d75ff6b66549426fa7c07138cfc19ad, type: 3}
+  m_Script: {fileID: 11500000, guid: 6982d41df85384b33950026f10d73e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scrollSpeed: 1.3
-  isStaticLayer: 0
+  scrollSpeed: 1
+  direction: 0
+  parallaxMultiplier: 1
+  infiniteScroll: 1
+  spriteDensity: 1
+  randomizeOffsets: 1
+  randomOffsetRange: {x: 0.5, y: 2}
+  enablePulsing: 0
+  pulseSpeed: 1
+  pulseScaleMin: 0.95
+  pulseScaleMax: 1.05
+  opacity: 1
   useUVScrolling: 1
-  texturePropertyName: _MainTex
+  autoScaleToScreen: 1
+  scaleMultiplier: 1.1
 --- !u!1 &7699547973698933424
 GameObject:
   m_ObjectHideFlags: 0
@@ -432,10 +465,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 7699547973698933424}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7d75ff6b66549426fa7c07138cfc19ad, type: 3}
+  m_Script: {fileID: 11500000, guid: 6982d41df85384b33950026f10d73e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scrollSpeed: 1.8
-  isStaticLayer: 0
+  scrollSpeed: 1
+  direction: 0
+  parallaxMultiplier: 1
+  infiniteScroll: 1
+  spriteDensity: 1
+  randomizeOffsets: 1
+  randomOffsetRange: {x: 0.5, y: 2}
+  enablePulsing: 0
+  pulseSpeed: 1
+  pulseScaleMin: 0.95
+  pulseScaleMax: 1.05
+  opacity: 1
   useUVScrolling: 1
-  texturePropertyName: _MainTex
+  autoScaleToScreen: 1
+  scaleMultiplier: 1.1

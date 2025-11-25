@@ -66,12 +66,15 @@
   <ItemGroup>
     <Compile Include="Assets/Scripts/UI/MainMenuController.cs" />
     <Compile Include="Assets/Scripts/Visual/SacredOrbitRing.cs" />
+    <Compile Include="Assets/BackgroundSystem/Scripts/TestBackgroundSystem.cs" />
     <Compile Include="Assets/Scripts/Managers/ObstacleManager.cs" />
-    <Compile Include="Assets/Scripts/Visual/BackgroundLayer.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleBase.cs" />
     <Compile Include="Assets/Scripts/UI/ShopSection.cs" />
     <Compile Include="Assets/Scripts/Visual/ConstellationFragmentGenerator.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleMover.cs" />
+    <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundDiagnostics.cs" />
+    <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundPreset.cs" />
+    <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundManager.cs" />
     <Compile Include="Assets/Scripts/Player/PlayerOrbit.cs" />
     <Compile Include="Assets/Scripts/Obstacles/DoorFixed.cs" />
     <Compile Include="Assets/Scripts/Managers/GameInitializer.cs" />
@@ -88,20 +91,23 @@
     <Compile Include="Assets/Scripts/UI/CurrencyManager.cs" />
     <Compile Include="Assets/Scripts/Player/SpriteGenerator.cs" />
     <Compile Include="Assets/Scripts/UI/SettingsPanel.cs" />
+    <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundTroubleshooter.cs" />
     <Compile Include="Assets/Scripts/Managers/GameManager.cs" />
     <Compile Include="Assets/Scripts/Obstacles/RotatingArc.cs" />
     <Compile Include="Assets/Scripts/UI/MenuNavigation.cs" />
     <Compile Include="Assets/Scripts/UI/MenuSection.cs" />
     <Compile Include="Assets/Scripts/Player/FlashEffect.cs" />
     <Compile Include="Assets/Scripts/Obstacles/DoorRandom.cs" />
-    <Compile Include="Assets/Scripts/Managers/BackgroundManager.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleDifficulty.cs" />
+    <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundDebug.cs" />
+    <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundSystemAPI.cs" />
     <Compile Include="Assets/Scripts/Obstacles/Complex/PulsatingRing.cs" />
     <Compile Include="Assets/Scripts/Visual/CosmicBackground.cs" />
     <Compile Include="Assets/Scripts/Obstacles/Complex/ZigzagBarrier.cs" />
     <Compile Include="Assets/Scripts/Visual/CosmicTheme.cs" />
     <Compile Include="Assets/Scripts/Managers/InputController.cs" />
     <Compile Include="Assets/Scripts/Obstacles/Complex/SpiralFragment.cs" />
+    <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundLayer.cs" />
     <Compile Include="Assets/Scripts/Obstacles/StaticArc.cs" />
   </ItemGroup>
   <ItemGroup>

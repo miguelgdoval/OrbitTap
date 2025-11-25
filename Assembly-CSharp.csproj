@@ -67,6 +67,7 @@
     <Compile Include="Assets/Scripts/UI/MainMenuController.cs" />
     <Compile Include="Assets/Scripts/Visual/SacredOrbitRing.cs" />
     <Compile Include="Assets/Scripts/Managers/ObstacleManager.cs" />
+    <Compile Include="Assets/Scripts/Visual/BackgroundLayer.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleBase.cs" />
     <Compile Include="Assets/Scripts/UI/ShopSection.cs" />
     <Compile Include="Assets/Scripts/Visual/ConstellationFragmentGenerator.cs" />
@@ -80,6 +81,7 @@
     <Compile Include="Assets/Scripts/UI/SkinsSection.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleGlow.cs" />
     <Compile Include="Assets/Scripts/Obstacles/OscillatingBarrier.cs" />
+    <Compile Include="Assets/Scripts/Visual/BackgroundSetupHelper.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleSafetyTracker.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleCollisionDetector.cs" />
     <Compile Include="Assets/Scripts/UI/GameOverController.cs" />
@@ -92,6 +94,7 @@
     <Compile Include="Assets/Scripts/UI/MenuSection.cs" />
     <Compile Include="Assets/Scripts/Player/FlashEffect.cs" />
     <Compile Include="Assets/Scripts/Obstacles/DoorRandom.cs" />
+    <Compile Include="Assets/Scripts/Managers/BackgroundManager.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleDifficulty.cs" />
     <Compile Include="Assets/Scripts/Obstacles/Complex/PulsatingRing.cs" />
     <Compile Include="Assets/Scripts/Visual/CosmicBackground.cs" />

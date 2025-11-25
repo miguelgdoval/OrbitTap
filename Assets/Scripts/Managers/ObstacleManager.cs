@@ -58,6 +58,8 @@ public class ObstacleManager : MonoBehaviour
     private float currentMaxSpawnInterval;
     private OrbitSafetySystem safetySystem;
     private ScoreManager scoreManager; // Referencia al ScoreManager para obtener el score actual
+    private BackgroundManager backgroundManager; // Referencia al BackgroundManager para cambiar fondos
+    private ObstacleDifficultyLevel lastDifficultyLevel = ObstacleDifficultyLevel.Easy; // Trackear cambios de dificultad
 
     private void Start()
     {
@@ -137,6 +139,20 @@ public class ObstacleManager : MonoBehaviour
             Debug.LogWarning("ObstacleManager: ScoreManager no encontrado. La dificultad basada en score no funcionará.");
         }
         
+        // Buscar BackgroundManager para cambiar fondos según dificultad
+        backgroundManager = FindObjectOfType<BackgroundManager>();
+        if (backgroundManager == null)
+        {
+            Debug.LogWarning("ObstacleManager: BackgroundManager no encontrado. Los fondos no cambiarán automáticamente.");
+        }
+        else
+        {
+            // Inicializar con el fondo de dificultad inicial
+            ObstacleDifficultyLevel initialLevel = GetCurrentDifficultyLevel();
+            backgroundManager.UpdateDifficulty(initialLevel);
+            lastDifficultyLevel = initialLevel;
+        }
+        
         // Spawnear el primer obstáculo inmediatamente
         nextSpawnTime = 0f;
         timeSinceLastSpawn = 0f;
@@ -201,6 +217,16 @@ public class ObstacleManager : MonoBehaviour
         if (timeSinceDifficultyUpdate >= difficultyUpdateInterval)
         {
             UpdateDifficulty();
+            
+            // Verificar si cambió el nivel de dificultad y actualizar fondo
+            ObstacleDifficultyLevel currentLevel = GetCurrentDifficultyLevel();
+            if (currentLevel != lastDifficultyLevel && backgroundManager != null)
+            {
+                backgroundManager.UpdateDifficulty(currentLevel);
+                lastDifficultyLevel = currentLevel;
+                Debug.Log($"ObstacleManager: Difficulty level changed to {currentLevel}, background updated");
+            }
+            
             timeSinceDifficultyUpdate = 0f;
         }
 

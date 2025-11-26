@@ -394,6 +394,10 @@ public class MainMenuController : MonoBehaviour
         orbit.angularSpeed = 1f; // Más lento que en el juego
         orbit.center = center.transform;
         
+        // PlanetSurface - Rotación de superficie del planeta
+        PlanetSurface planetSurface = player.AddComponent<PlanetSurface>();
+        planetSurface.rotationSpeed = 20f; // Misma velocidad que en el juego
+        
         playerDemo = player;
     }
     

@@ -641,22 +641,60 @@ public class BackgroundLayer : MonoBehaviour
     /// </summary>
     public void RefreshInfiniteScroll()
     {
-        // Limpiar instancias anteriores
+        // Limpiar instancias anteriores completamente
         if (spriteInstances != null)
         {
             foreach (GameObject instance in spriteInstances)
             {
                 if (instance != null)
                 {
-                    Destroy(instance);
+                    if (Application.isPlaying)
+                        Destroy(instance);
+                    else
+                        DestroyImmediate(instance);
                 }
             }
+            spriteInstances = null;
+        }
+        
+        // Mostrar el sprite original temporalmente mientras se reconfigura
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.enabled = true;
         }
         
         // Reconfigurar si es necesario
         if (infiniteScroll && spriteDensity > 1 && spriteRenderer != null && spriteRenderer.sprite != null)
         {
             SetupInfiniteScroll();
+            Debug.Log($"[BackgroundLayer] {gameObject.name}: Scroll infinito refrescado - {spriteDensity} instancias recreadas");
+        }
+    }
+    
+    /// <summary>
+    /// Limpia completamente todas las instancias (útil para transiciones)
+    /// </summary>
+    public void ClearInstances()
+    {
+        if (spriteInstances != null)
+        {
+            foreach (GameObject instance in spriteInstances)
+            {
+                if (instance != null)
+                {
+                    if (Application.isPlaying)
+                        Destroy(instance);
+                    else
+                        DestroyImmediate(instance);
+                }
+            }
+            spriteInstances = null;
+        }
+        
+        // Mostrar el sprite original
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.enabled = true;
         }
     }
     

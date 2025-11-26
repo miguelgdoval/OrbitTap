@@ -23,7 +23,7 @@ public class BackgroundManager : MonoBehaviour
     [SerializeField] private int defaultPresetIndex = 0;
     
     [Header("Transition Settings")]
-    [SerializeField] private float defaultTransitionDuration = 1f;
+    [SerializeField] private float defaultTransitionDuration = 1.5f; // Duración de transición por defecto (aumentada para mejor visibilidad)
     [SerializeField] private AnimationCurve transitionCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
     
     [Header("Current State")]
@@ -324,6 +324,15 @@ public class BackgroundManager : MonoBehaviour
             if (currentLayers[i] != null)
             {
                 currentLayers[i].SetOpacity(targetOpacities[i]);
+            }
+        }
+        
+        // Limpiar instancias de scroll infinito de las capas antiguas antes de destruirlas
+        for (int i = 0; i < oldLayers.Length; i++)
+        {
+            if (oldLayers[i] != null)
+            {
+                oldLayers[i].ClearInstances();
             }
         }
         

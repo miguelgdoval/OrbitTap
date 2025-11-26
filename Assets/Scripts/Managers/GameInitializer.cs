@@ -88,6 +88,10 @@ public class GameInitializer : MonoBehaviour
             
             // StarParticleTrail - Cola de partículas
             player.AddComponent<StarParticleTrail>();
+            
+            // PlanetSurface - Rotación de superficie del planeta
+            PlanetSurface planetSurface = player.AddComponent<PlanetSurface>();
+            planetSurface.rotationSpeed = 20f; // Grados por segundo
         }
 
         // Crear fondo cósmico

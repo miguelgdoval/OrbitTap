@@ -248,7 +248,7 @@ MonoBehaviour:
   direction: 0
   parallaxMultiplier: 1
   infiniteScroll: 1
-  spriteDensity: 1
+  spriteDensity: 3
   randomizeOffsets: 1
   randomOffsetRange: {x: 0.5, y: 2}
   enablePulsing: 0
@@ -256,7 +256,7 @@ MonoBehaviour:
   pulseScaleMin: 0.95
   pulseScaleMax: 1.05
   opacity: 0.2
-  useUVScrolling: 1
+  useUVScrolling: 0
   autoScaleToScreen: 1
   scaleMultiplier: 1.1
 --- !u!1 &6878079022148642770

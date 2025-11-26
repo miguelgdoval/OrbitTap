@@ -592,6 +592,14 @@ public class BackgroundManager : MonoBehaviour
                     useUVField.SetValue(layer, false);
                 }
                 
+                // Forzar reconfiguración del scroll infinito si está habilitado
+                // Esto asegura que se creen las instancias necesarias para scroll infinito
+                if (Application.isPlaying)
+                {
+                    // Esperar un frame para que Start() se ejecute, luego refrescar
+                    StartCoroutine(RefreshLayerAfterFrame(layer));
+                }
+                
                 // Guardar referencias de capas (para transiciones) pero RESPETAR valores del prefab
                 if (layerName.Contains("base"))
                 {

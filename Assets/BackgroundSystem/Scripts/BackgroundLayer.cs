@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Reflection;
 
 /// <summary>
 /// Componente avanzado para capas de fondo con parallax, scroll infinito, pulsing y más.
@@ -75,6 +76,20 @@ public class BackgroundLayer : MonoBehaviour
         {
             materialInstance = new Material(spriteRenderer.material);
             spriteRenderer.material = materialInstance;
+            
+            // Configurar wrap mode repeat para la textura del sprite
+            if (spriteRenderer.sprite != null && spriteRenderer.sprite.texture != null)
+            {
+                Texture2D spriteTexture = spriteRenderer.sprite.texture;
+                // Nota: No podemos cambiar el wrap mode de una textura importada directamente
+                // El wrap mode debe configurarse en los Import Settings de la textura
+                // Pero podemos verificar que esté configurado correctamente
+                if (spriteTexture.wrapMode != TextureWrapMode.Repeat)
+                {
+                    Debug.LogWarning($"[BackgroundLayer] {gameObject.name}: La textura '{spriteTexture.name}' no tiene Wrap Mode = Repeat. " +
+                        "Configúralo en los Import Settings de la textura para que el scroll infinito funcione correctamente.");
+                }
+            }
         }
         
         // Calcular dimensiones de pantalla
@@ -91,18 +106,84 @@ public class BackgroundLayer : MonoBehaviour
     
     private void Start()
     {
+        // Log inicial para todas las capas
+        Debug.Log($"[BackgroundLayer] {gameObject.name}: Start() llamado - infiniteScroll={infiniteScroll}, spriteDensity={spriteDensity}, scrollSpeed={scrollSpeed}");
+        
         // Aplicar opacidad inicial
         SetOpacity(opacity);
         
+        // Verificar valores serializados (debug)
+        var densityField = typeof(BackgroundLayer).GetField("spriteDensity", 
+            BindingFlags.NonPublic | BindingFlags.Instance);
+        if (densityField != null)
+        {
+            int serializedDensity = (int)densityField.GetValue(this);
+            Debug.Log($"[BackgroundLayer] {gameObject.name}: spriteDensity - Serializado={serializedDensity}, Propiedad={spriteDensity}, infiniteScroll={infiniteScroll}");
+            
+            if (serializedDensity != spriteDensity)
+            {
+                Debug.LogWarning($"[BackgroundLayer] {gameObject.name}: Discrepancia detectada. Usando valor serializado: {serializedDensity}");
+                spriteDensity = serializedDensity;
+            }
+        }
+        
+        // Si es una capa de estrellas y tiene infiniteScroll pero spriteDensity=1, forzar a 3
+        string layerName = gameObject.name.ToLower();
+        if (layerName.Contains("star") && infiniteScroll && spriteDensity == 1)
+        {
+            Debug.LogWarning($"[BackgroundLayer] {gameObject.name}: Forzando spriteDensity a 3 para scroll infinito de estrellas");
+            spriteDensity = 3;
+            if (densityField != null)
+            {
+                densityField.SetValue(this, 3);
+            }
+        }
+        
+        // Verificar condiciones para scroll infinito
+        bool hasSprite = spriteRenderer != null && spriteRenderer.sprite != null;
+        Debug.Log($"[BackgroundLayer] {gameObject.name}: Condiciones - infiniteScroll={infiniteScroll}, spriteDensity={spriteDensity}, hasSprite={hasSprite}, spriteName={spriteRenderer?.sprite?.name ?? "NULL"}");
+        
         // Configurar scroll infinito después de que todas las propiedades estén configuradas
-        if (infiniteScroll && spriteDensity > 1 && spriteRenderer != null && spriteRenderer.sprite != null)
+        // Si spriteDensity = 1 y useUVScrolling está habilitado, usar UV scrolling (permite wrap mode repeat)
+        // Si spriteDensity > 1, usar método Transform con múltiples instancias
+        if (infiniteScroll && spriteDensity > 1 && hasSprite)
         {
             SetupInfiniteScroll();
-            Debug.Log($"[BackgroundLayer] {gameObject.name}: Scroll infinito configurado (Density={spriteDensity}, Speed={scrollSpeed})");
+            Debug.Log($"[BackgroundLayer] {gameObject.name}: ✅ Scroll infinito configurado (Density={spriteDensity}, Speed={scrollSpeed}, Instances={spriteInstances?.Length ?? 0})");
+        }
+        else if (infiniteScroll && spriteDensity == 1 && useUVScrolling && materialInstance != null)
+        {
+            // UV scrolling con wrap mode repeat - no necesita instancias
+            Sprite sprite = spriteRenderer.sprite;
+            if (sprite != null && sprite.texture != null)
+            {
+                Debug.Log($"[BackgroundLayer] {gameObject.name}: ✅ Scroll infinito UV configurado (Wrap Mode: {sprite.texture.wrapMode}, Speed={scrollSpeed}, Texture: {sprite.texture.name})");
+                if (sprite.texture.wrapMode != TextureWrapMode.Repeat)
+                {
+                    Debug.LogError($"[BackgroundLayer] {gameObject.name}: ⚠️ La textura '{sprite.texture.name}' NO tiene Wrap Mode = Repeat! " +
+                        "Ve a los Import Settings de la textura y cambia Wrap Mode a Repeat para que funcione el scroll infinito.");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[BackgroundLayer] {gameObject.name}: ⚠️ No se puede configurar UV scrolling - sprite o textura es NULL");
+            }
         }
         else if (scrollSpeed > 0)
         {
+            if (infiniteScroll && spriteDensity <= 1)
+            {
+                Debug.LogWarning($"[BackgroundLayer] {gameObject.name}: ⚠️ Scroll infinito habilitado pero spriteDensity={spriteDensity}. Necesita > 1 para funcionar.");
+            }
+            if (infiniteScroll && !hasSprite)
+            {
+                Debug.LogWarning($"[BackgroundLayer] {gameObject.name}: ⚠️ Scroll infinito habilitado pero no hay sprite asignado.");
+            }
             Debug.Log($"[BackgroundLayer] {gameObject.name}: Scroll simple activo (Speed={scrollSpeed}, Density={spriteDensity})");
+        }
+        else
+        {
+            Debug.Log($"[BackgroundLayer] {gameObject.name}: Sin scroll (Speed={scrollSpeed})");
         }
     }
     
@@ -182,6 +263,8 @@ public class BackgroundLayer : MonoBehaviour
         float spacing = spriteHeight;
         
         // Crear instancias duplicadas
+        // Para scroll infinito, necesitamos instancias que cubran desde -spacing hasta spacing * (density-1)
+        // Esto asegura que siempre haya sprites visibles mientras otros se reposicionan
         for (int i = 0; i < spriteDensity; i++)
         {
             GameObject instance = new GameObject($"{gameObject.name}_Instance_{i}");
@@ -191,10 +274,20 @@ public class BackgroundLayer : MonoBehaviour
             instanceSR.sprite = spriteRenderer.sprite;
             instanceSR.material = spriteRenderer.material;
             instanceSR.sortingOrder = spriteRenderer.sortingOrder;
-            instanceSR.color = spriteRenderer.color;
             
-            // Posición con offset aleatorio si está habilitado
-            float offset = i * spacing;
+            // Aplicar color y opacidad correctamente a las instancias
+            Color instanceColor = spriteRenderer.color;
+            instanceColor.a = opacity; // Asegurar que la opacidad sea la correcta
+            instanceSR.color = instanceColor;
+            
+            // Asegurar que la instancia esté activa y visible
+            instance.SetActive(true);
+            instanceSR.enabled = true;
+            
+            // Posición inicial: espaciadas uniformemente alrededor del origen
+            // Para scroll hacia abajo, empezamos desde arriba (positivo) y vamos hacia abajo (negativo)
+            // Con 3 instancias: offset será -spacing, 0, spacing (centradas en 0)
+            float offset = (i - (spriteDensity - 1) * 0.5f) * spacing;
             if (randomizeOffsets && i > 0)
             {
                 offset += Random.Range(-randomOffsetRange.x, randomOffsetRange.x);
@@ -202,16 +295,39 @@ public class BackgroundLayer : MonoBehaviour
             
             Vector3 position = GetScrollDirectionVector() * offset;
             instance.transform.localPosition = position;
-            instance.transform.localScale = Vector3.one;
+            // Usar la misma escala que el objeto padre para que las instancias tengan el tamaño correcto
+            instance.transform.localScale = transform.localScale;
             
             spriteInstances[i] = instance;
             spritePositions[i] = position;
+            
+            // Debug log para verificar creación (solo para estrellas para no saturar)
+            if (gameObject.name.Contains("Star"))
+            {
+                Debug.Log($"[BackgroundLayer] {gameObject.name} Instance {i} creada - Sprite: {instanceSR.sprite?.name ?? "NULL"}, Color: {instanceColor}, Opacity: {opacity}, Enabled: {instanceSR.enabled}, Active: {instance.activeSelf}, Position: {position}, Offset: {offset:F2}, Spacing: {spacing:F2}");
+            }
         }
         
         // Ocultar el sprite original si tenemos instancias
         if (spriteDensity > 1)
         {
             spriteRenderer.enabled = false;
+            Debug.Log($"[BackgroundLayer] {gameObject.name}: Sprite original ocultado, usando {spriteDensity} instancias");
+            
+            // Verificar que las instancias se crearon correctamente
+            int activeInstances = 0;
+            for (int i = 0; i < spriteInstances.Length; i++)
+            {
+                if (spriteInstances[i] != null && spriteInstances[i].activeSelf)
+                {
+                    SpriteRenderer sr = spriteInstances[i].GetComponent<SpriteRenderer>();
+                    if (sr != null && sr.enabled && sr.sprite != null)
+                    {
+                        activeInstances++;
+                    }
+                }
+            }
+            Debug.Log($"[BackgroundLayer] {gameObject.name}: {activeInstances}/{spriteDensity} instancias activas y visibles");
         }
     }
     
@@ -220,8 +336,7 @@ public class BackgroundLayer : MonoBehaviour
         Vector2 directionVector = GetScrollDirectionVector();
         float deltaMovement = scrollSpeed * parallaxMultiplier * Time.deltaTime;
         
-        // Siempre usar método Transform para prefabs (más confiable)
-        // El método UV puede fallar si el material no está configurado correctamente
+        // Usar método de múltiples instancias para scroll infinito (más confiable que UV scrolling)
         if (infiniteScroll && spriteInstances != null && spriteInstances.Length > 0)
         {
             // Método Transform: para scroll infinito con múltiples sprites
@@ -231,27 +346,170 @@ public class BackgroundLayer : MonoBehaviour
                 float spriteHeight = sprite.bounds.size.y * transform.localScale.y;
                 if (spriteHeight <= 0) spriteHeight = 10f; // Fallback
                 
-                float resetDistance = spriteHeight * spriteDensity;
+                // Calcular el rango de posiciones válidas
+                float spacing = spriteHeight;
+                float totalRange = spacing * spriteDensity;
                 
                 for (int i = 0; i < spriteInstances.Length; i++)
                 {
                     if (spriteInstances[i] != null)
                     {
+                        // Mover la instancia
                         spriteInstances[i].transform.localPosition += (Vector3)(directionVector * deltaMovement);
                         
-                        // Resetear posición cuando se sale de pantalla
+                        // Obtener posición actual
                         Vector3 pos = spriteInstances[i].transform.localPosition;
-                        float distance = Mathf.Abs(pos.y); // Usar distancia absoluta en Y para scroll vertical
                         
-                        if (distance > resetDistance)
+                        // Para scroll vertical (Down/Up)
+                        if (direction == ScrollDirection.Down || direction == ScrollDirection.Up)
                         {
-                            // Reposicionar al inicio
-                            float newOffset = -resetDistance + (spriteHeight * 0.5f);
+                            float posY = pos.y;
+                            
+                            // Para scroll hacia abajo (direction = Down)
+                            if (direction == ScrollDirection.Down)
+                            {
+                                // Calcular el rango visible de la pantalla
+                                float screenHeight = mainCamera != null && mainCamera.orthographic ? 
+                                    mainCamera.orthographicSize * 2f : 10f;
+                                float topScreen = screenHeight * 0.5f; // Límite superior visible
+                                float bottomScreen = -screenHeight * 0.5f; // Límite inferior visible
+                                
+                                // Encontrar la instancia más arriba (mayor Y) pero solo dentro de un rango razonable
+                                // Limitar la búsqueda a instancias que estén cerca de la pantalla visible
+                                float maxY = float.MinValue;
+                                float searchRange = screenHeight * 1.5f; // Buscar en un rango de 1.5 pantallas
+                                
+                                for (int j = 0; j < spriteInstances.Length; j++)
+                                {
+                                    if (j != i && spriteInstances[j] != null)
+                                    {
+                                        float otherY = spriteInstances[j].transform.localPosition.y;
+                                        // Solo considerar instancias que estén en un rango razonable (cerca de la pantalla)
+                                        if (otherY > maxY && otherY <= topScreen + searchRange && otherY >= bottomScreen - searchRange)
+                                        {
+                                            maxY = otherY;
+                                        }
+                                    }
+                                }
+                                
+                                // Si no hay otras instancias válidas, usar un valor por defecto razonable
+                                if (maxY == float.MinValue)
+                                {
+                                    maxY = topScreen;
+                                }
+                                
+                                // Reposicionar cuando la instancia esté fuera de la pantalla por abajo
+                                // Y esté más de spacing por debajo de la más alta
+                                // Esto asegura que siempre haya instancias visibles
+                                if (posY < bottomScreen - spacing && posY < maxY - spacing)
+                                {
+                                    float oldY = posY;
+                                    // Reposicionar justo arriba de la más alta
+                                    posY = maxY + spacing;
+                                    if (randomizeOffsets)
+                                    {
+                                        posY += Random.Range(-randomOffsetRange.x, randomOffsetRange.x);
+                                    }
+                                    // Asegurar que la nueva posición esté en un rango visible razonable
+                                    // Limitar a no más de 1 pantalla arriba del límite superior
+                                    float maxAllowedY = topScreen + screenHeight;
+                                    float minAllowedY = bottomScreen - screenHeight * 0.5f;
+                                    posY = Mathf.Clamp(posY, minAllowedY, maxAllowedY);
+                                    spriteInstances[i].transform.localPosition = new Vector3(pos.x, posY, pos.z);
+                                    
+                                    // Debug log para estrellas (solo ocasionalmente)
+                                    if (gameObject.name.Contains("Star") && Random.Range(0, 200) == 0)
+                                    {
+                                        Debug.Log($"[BackgroundLayer] {gameObject.name} Instance {i} reposicionada: {oldY:F2} -> {posY:F2} (maxY={maxY:F2}, spacing={spacing:F2}, clamped to [{minAllowedY:F2}, {maxAllowedY:F2}])");
+                                    }
+                                }
+                            }
+                            // Para scroll hacia arriba (direction = Up)
+                            else
+                            {
+                                // Encontrar la instancia más abajo (menor Y)
+                                float minY = float.MaxValue;
+                                bool foundOther = false;
+                                
+                                for (int j = 0; j < spriteInstances.Length; j++)
+                                {
+                                    if (j != i && spriteInstances[j] != null)
+                                    {
+                                        float otherY = spriteInstances[j].transform.localPosition.y;
+                                        if (otherY < minY) minY = otherY;
+                                        foundOther = true;
+                                    }
+                                }
+                                
+                                // Si no hay otras instancias, usar un valor por defecto
+                                if (!foundOther)
+                                {
+                                    float screenHeight = mainCamera != null && mainCamera.orthographic ? 
+                                        mainCamera.orthographicSize * 2f : 10f;
+                                    minY = -screenHeight * 0.5f;
+                                }
+                                
+                                // Si esta instancia está más de (spacing) por arriba de la más baja,
+                                // reposicionarla debajo de la más baja para crear un loop continuo
+                                if (posY > minY + spacing)
+                                {
+                                    float oldY = posY;
+                                    posY = minY - spacing;
+                                    if (randomizeOffsets)
+                                    {
+                                        posY += Random.Range(-randomOffsetRange.x, randomOffsetRange.x);
+                                    }
+                                    spriteInstances[i].transform.localPosition = new Vector3(pos.x, posY, pos.z);
+                                    
+                                    // Debug log para estrellas
+                                    if (gameObject.name.Contains("Star"))
+                                    {
+                                        Debug.Log($"[BackgroundLayer] {gameObject.name} Instance {i} reposicionada (Up): {oldY:F2} -> {posY:F2} (minY={minY:F2}, spacing={spacing:F2})");
+                                    }
+                                }
+                            }
+                        }
+                        // Para scroll horizontal (Left/Right)
+                        else if (direction == ScrollDirection.Left || direction == ScrollDirection.Right)
+                        {
+                            float posX = pos.x;
+                            float threshold = totalRange * 0.5f;
+                            
+                            if (posX < -threshold)
+                            {
+                                posX += totalRange;
+                                if (randomizeOffsets)
+                                {
+                                    posX += Random.Range(-randomOffsetRange.x, randomOffsetRange.x);
+                                }
+                                spriteInstances[i].transform.localPosition = new Vector3(posX, pos.y, pos.z);
+                            }
+                            else if (posX > threshold)
+                            {
+                                posX -= totalRange;
+                                if (randomizeOffsets)
+                                {
+                                    posX += Random.Range(-randomOffsetRange.x, randomOffsetRange.x);
+                                }
+                                spriteInstances[i].transform.localPosition = new Vector3(posX, pos.y, pos.z);
+                            }
+                        }
+                        // Para scroll diagonal, usar la componente principal
+                        else
+                        {
+                            // Para diagonales, usar la distancia desde el origen
+                            float distance = Vector3.Distance(pos, Vector3.zero);
+                            if (distance > totalRange)
+                            {
+                                // Reposicionar al inicio del loop
+                                Vector2 dir = GetScrollDirectionVector();
+                                float newOffset = -totalRange * 0.5f;
                             if (randomizeOffsets)
                             {
                                 newOffset += Random.Range(-randomOffsetRange.x, randomOffsetRange.x);
+                                }
+                                spriteInstances[i].transform.localPosition = (Vector3)(dir * newOffset);
                             }
-                            spriteInstances[i].transform.localPosition = GetScrollDirectionVector() * newOffset;
                         }
                     }
                 }
@@ -339,7 +597,11 @@ public class BackgroundLayer : MonoBehaviour
                         Color c = sr.color;
                         c.a = opacity;
                         sr.color = c;
+                        // Asegurar que el sprite renderer esté habilitado
+                        sr.enabled = true;
                     }
+                    // Asegurar que el GameObject esté activo
+                    instance.SetActive(true);
                 }
             }
         }

@@ -468,11 +468,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6982d41df85384b33950026f10d73e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scrollSpeed: 0.2
+  scrollSpeed: 0.1
   direction: 0
   parallaxMultiplier: 1
   infiniteScroll: 1
-  spriteDensity: 1
+  spriteDensity: 3
   randomizeOffsets: 1
   randomOffsetRange: {x: 0.5, y: 2}
   enablePulsing: 0
@@ -480,6 +480,6 @@ MonoBehaviour:
   pulseScaleMin: 0.95
   pulseScaleMax: 1.05
   opacity: 0.2
-  useUVScrolling: 1
+  useUVScrolling: 0
   autoScaleToScreen: 1
   scaleMultiplier: 1.1

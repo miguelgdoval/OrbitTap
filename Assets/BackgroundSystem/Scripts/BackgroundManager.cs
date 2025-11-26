@@ -59,8 +59,9 @@ public class BackgroundManager : MonoBehaviour
     
     private void Start()
     {
-        // Cargar preset por defecto
-        if (presets != null && presets.Length > 0)
+        // Cargar preset por defecto solo si no hay uno ya aplicado
+        // Esto previene duplicados si Start() se llama múltiples veces
+        if (currentPreset == null && presets != null && presets.Length > 0)
         {
             int index = Mathf.Clamp(defaultPresetIndex, 0, presets.Length - 1);
             ApplyPreset(presets[index], 0f); // Sin transición al inicio
@@ -255,12 +256,36 @@ public class BackgroundManager : MonoBehaviour
         // Esperar un frame para que se creen las nuevas capas
         yield return null;
         
-        // Inicializar nuevas capas como invisibles
+        // Guardar opacidades objetivo ANTES de ponerlas a 0
+        // Si hay prefab, usar valores del prefab; si no, usar valores del preset
+        float[] targetOpacities = new float[5];
         for (int i = 0; i < currentLayers.Length; i++)
         {
             if (currentLayers[i] != null)
             {
+                if (newPreset.backgroundPrefab != null)
+                {
+                    // Guardar el valor del prefab antes de modificarlo
+                    targetOpacities[i] = currentLayers[i].GetOpacity();
+                }
+                else
+                {
+                    // Usar valores del preset
+                    switch(i)
+                    {
+                        case 0: targetOpacities[i] = newPreset.baseOpacity; break;
+                        case 1: targetOpacities[i] = newPreset.nebulaOpacity; break;
+                        case 2: targetOpacities[i] = newPreset.starsFarOpacity; break;
+                        case 3: targetOpacities[i] = newPreset.starsNearOpacity; break;
+                        case 4: targetOpacities[i] = newPreset.particleOpacity; break;
+                    }
+                }
+                // Ahora sí, poner a 0 para el fade in
                 currentLayers[i].SetOpacity(0f);
+            }
+            else
+            {
+                targetOpacities[i] = 0f;
             }
         }
         
@@ -281,31 +306,24 @@ public class BackgroundManager : MonoBehaviour
                 }
             }
             
-            // Fade in de capas nuevas
-            if (currentLayers[0] != null) currentLayers[0].SetOpacity(Mathf.Lerp(0f, newPreset.baseOpacity, t));
-            if (currentLayers[1] != null) currentLayers[1].SetOpacity(Mathf.Lerp(0f, newPreset.nebulaOpacity, t));
-            if (currentLayers[2] != null) currentLayers[2].SetOpacity(Mathf.Lerp(0f, newPreset.starsFarOpacity, t));
-            if (currentLayers[3] != null) currentLayers[3].SetOpacity(Mathf.Lerp(0f, newPreset.starsNearOpacity, t));
-            if (currentLayers[4] != null) currentLayers[4].SetOpacity(Mathf.Lerp(0f, newPreset.particleOpacity, t));
+            // Fade in de capas nuevas usando los valores objetivo guardados
+            for (int i = 0; i < currentLayers.Length; i++)
+            {
+                if (currentLayers[i] != null)
+                {
+                    currentLayers[i].SetOpacity(Mathf.Lerp(0f, targetOpacities[i], t));
+                }
+            }
             
             yield return null;
         }
         
-        // Asegurar valores finales
+        // Asegurar valores finales usando los valores objetivo guardados
         for (int i = 0; i < currentLayers.Length; i++)
         {
             if (currentLayers[i] != null)
             {
-                float finalOpacity = 0f;
-                switch(i)
-                {
-                    case 0: finalOpacity = newPreset.baseOpacity; break;
-                    case 1: finalOpacity = newPreset.nebulaOpacity; break;
-                    case 2: finalOpacity = newPreset.starsFarOpacity; break;
-                    case 3: finalOpacity = newPreset.starsNearOpacity; break;
-                    case 4: finalOpacity = newPreset.particleOpacity; break;
-                }
-                currentLayers[i].SetOpacity(finalOpacity);
+                currentLayers[i].SetOpacity(targetOpacities[i]);
             }
         }
         
@@ -396,11 +414,11 @@ public class BackgroundManager : MonoBehaviour
                 SpriteRenderer sr = layer.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
-                    // Ajustar Sorting Order para estar detrás de todo
+                    // Solo ajustar Sorting Order para estar detrás de todo
                     sr.sortingOrder = -20 + layerIndex;
                 }
                 
-                // Configurar velocidades desde el preset
+                // Identificar el tipo de capa (pero RESPETAR valores del prefab)
                 string layerName = layer.gameObject.name.ToLower();
                 
                 // Desactivar UV scrolling
@@ -411,44 +429,29 @@ public class BackgroundManager : MonoBehaviour
                     useUVField.SetValue(layer, false);
                 }
                 
+                // Guardar referencias de capas (las opacidades se manejarán en la transición)
                 if (layerName.Contains("base"))
                 {
-                    layer.SetScrollSpeed(0f);
                     currentLayers[0] = layer;
                 }
                 else if (layerName.Contains("nebula"))
                 {
-                    float speed = preset.nebulaScrollSpeed > 0 ? preset.nebulaScrollSpeed : 0.2f;
-                    layer.SetScrollSpeed(speed);
                     currentLayers[1] = layer;
                 }
                 else if (layerName.Contains("star"))
                 {
                     if (layerIndex == 2 || layerName.Contains("far"))
                     {
-                        float speed = preset.starsFarScrollSpeed > 0 ? preset.starsFarScrollSpeed : 0.5f;
-                        layer.SetScrollSpeed(speed);
-                        layer.SetParallaxMultiplier(preset.starsFarParallax);
                         currentLayers[2] = layer;
                     }
                     else
                     {
-                        float speed = preset.starsNearScrollSpeed > 0 ? preset.starsNearScrollSpeed : 1.0f;
-                        layer.SetScrollSpeed(speed);
-                        layer.SetParallaxMultiplier(preset.starsNearParallax);
                         currentLayers[3] = layer;
                     }
                 }
                 else if (layerName.Contains("particle"))
                 {
-                    float speed = preset.particleScrollSpeed > 0 ? preset.particleScrollSpeed : 1.5f;
-                    layer.SetScrollSpeed(speed);
-                    layer.SetPulsing(preset.particlePulsing, preset.particlePulseSpeed);
                     currentLayers[4] = layer;
-                }
-                else
-                {
-                    layer.SetScrollSpeed(0.5f);
                 }
                 
                 layer.enabled = true;
@@ -464,7 +467,7 @@ public class BackgroundManager : MonoBehaviour
             Camera.main.backgroundColor = preset.ambientColor;
         }
         
-        Debug.Log($"✅ BackgroundManager: Nuevo preset '{preset.presetName}' preparado para transición ({layers.Length} layers)");
+        Debug.Log($"✅ BackgroundManager: Nuevo preset '{preset.presetName}' preparado para transición - Valores del prefab respetados");
     }
     
     
@@ -532,6 +535,7 @@ public class BackgroundManager : MonoBehaviour
     
     /// <summary>
     /// Aplica un preset usando un prefab directamente
+    /// RESPETA los valores del prefab (opacity, scrollSpeed, etc.) y NO los sobrescribe con el preset
     /// </summary>
     private void ApplyPrefabPreset(BackgroundPreset preset)
     {
@@ -568,7 +572,7 @@ public class BackgroundManager : MonoBehaviour
                 SpriteRenderer sr = layer.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
-                    // Ajustar Sorting Order para estar detrás de todo
+                    // Solo ajustar Sorting Order para estar detrás de todo (necesario)
                     sr.sortingOrder = -20 + layerIndex;
                     Debug.Log($"  ✅ Capa {layerIndex}: {layer.gameObject.name}, Sprite: {(sr.sprite != null ? sr.sprite.name : "NULL")}, SortingOrder: {sr.sortingOrder}");
                 }
@@ -577,7 +581,7 @@ public class BackgroundManager : MonoBehaviour
                     Debug.LogWarning($"  ⚠️ Capa {layerIndex}: {layer.gameObject.name} NO tiene SpriteRenderer!");
                 }
                 
-                // Configurar velocidades desde el preset
+                // Identificar el tipo de capa para guardar referencia (pero NO modificar valores)
                 string layerName = layer.gameObject.name.ToLower();
                 
                 // Desactivar UV scrolling para usar Transform (más confiable con prefabs)
@@ -588,58 +592,39 @@ public class BackgroundManager : MonoBehaviour
                     useUVField.SetValue(layer, false);
                 }
                 
+                // Guardar referencias de capas (para transiciones) pero RESPETAR valores del prefab
                 if (layerName.Contains("base"))
                 {
-                    layer.SetScrollSpeed(0f); // Base no se mueve
-                    layer.SetOpacity(preset.baseOpacity);
                     currentLayers[0] = layer;
-                    Debug.Log($"    → Configurada como Base (Speed=0)");
+                    Debug.Log($"    → Identificada como Base (usando valores del prefab: opacity={layer.GetOpacity()}, speed={layer.GetScrollSpeed()})");
                 }
                 else if (layerName.Contains("nebula"))
                 {
-                    float speed = preset.nebulaScrollSpeed > 0 ? preset.nebulaScrollSpeed : 0.2f;
-                    layer.SetScrollSpeed(speed);
-                    layer.SetOpacity(preset.nebulaOpacity);
                     currentLayers[1] = layer;
-                    Debug.Log($"    → Configurada como Nebula (Speed={speed})");
+                    Debug.Log($"    → Identificada como Nebula (usando valores del prefab: opacity={layer.GetOpacity()}, speed={layer.GetScrollSpeed()})");
                 }
                 else if (layerName.Contains("star"))
                 {
                     // Determinar si es far o near por el nombre o posición
                     if (layerIndex == 2 || layerName.Contains("far"))
                     {
-                        float speed = preset.starsFarScrollSpeed > 0 ? preset.starsFarScrollSpeed : 0.5f;
-                        layer.SetScrollSpeed(speed);
-                        layer.SetParallaxMultiplier(preset.starsFarParallax);
-                        layer.SetOpacity(preset.starsFarOpacity);
                         currentLayers[2] = layer;
-                        Debug.Log($"    → Configurada como StarsFar (Speed={speed})");
+                        Debug.Log($"    → Identificada como StarsFar (usando valores del prefab: opacity={layer.GetOpacity()}, speed={layer.GetScrollSpeed()})");
                     }
                     else
                     {
-                        float speed = preset.starsNearScrollSpeed > 0 ? preset.starsNearScrollSpeed : 1.0f;
-                        layer.SetScrollSpeed(speed);
-                        layer.SetParallaxMultiplier(preset.starsNearParallax);
-                        layer.SetOpacity(preset.starsNearOpacity);
                         currentLayers[3] = layer;
-                        Debug.Log($"    → Configurada como StarsNear (Speed={speed})");
+                        Debug.Log($"    → Identificada como StarsNear (usando valores del prefab: opacity={layer.GetOpacity()}, speed={layer.GetScrollSpeed()})");
                     }
                 }
                 else if (layerName.Contains("particle"))
                 {
-                    float speed = preset.particleScrollSpeed > 0 ? preset.particleScrollSpeed : 1.5f;
-                    layer.SetScrollSpeed(speed);
-                    layer.SetOpacity(preset.particleOpacity);
-                    layer.SetPulsing(preset.particlePulsing, preset.particlePulseSpeed);
                     currentLayers[4] = layer;
-                    Debug.Log($"    → Configurada como Particles (Speed={speed})");
+                    Debug.Log($"    → Identificada como Particles (usando valores del prefab: opacity={layer.GetOpacity()}, speed={layer.GetScrollSpeed()})");
                 }
                 else
                 {
-                    // Capa no reconocida, usar velocidad por defecto
-                    float defaultSpeed = 0.5f;
-                    layer.SetScrollSpeed(defaultSpeed);
-                    Debug.LogWarning($"    ⚠️ Capa no reconocida: {layerName}, usando velocidad por defecto ({defaultSpeed})");
+                    Debug.LogWarning($"    ⚠️ Capa no reconocida: {layerName} (usando valores del prefab)");
                 }
                 
                 // Asegurar que la capa esté activa y habilitada
@@ -650,13 +635,13 @@ public class BackgroundManager : MonoBehaviour
             }
         }
         
-        // Aplicar color ambiente
+        // Aplicar color ambiente de la cámara (útil para el fondo general)
         if (Camera.main != null)
         {
             Camera.main.backgroundColor = preset.ambientColor;
         }
         
-        Debug.Log($"✅ BackgroundManager: Applied prefab preset '{preset.presetName}' ({layers.Length} layers configured)");
+        Debug.Log($"✅ BackgroundManager: Applied prefab '{preset.presetName}' - Valores del prefab respetados (NO sobrescritos por preset)");
     }
     
     private void CreateBaseLayer(BackgroundPreset preset)
@@ -855,7 +840,28 @@ public class BackgroundManager : MonoBehaviour
     
     private void ClearLayers()
     {
-        // Destruir capas anteriores
+        // IMPORTANTE: Destruir instancias del prefab completo primero
+        // Esto previene duplicados cuando se aplica un nuevo preset
+        if (currentPrefabInstance != null)
+        {
+            if (Application.isPlaying)
+                Destroy(currentPrefabInstance);
+            else
+                DestroyImmediate(currentPrefabInstance);
+            currentPrefabInstance = null;
+        }
+        
+        // También limpiar la instancia antigua si existe
+        if (oldPrefabInstance != null)
+        {
+            if (Application.isPlaying)
+                Destroy(oldPrefabInstance);
+            else
+                DestroyImmediate(oldPrefabInstance);
+            oldPrefabInstance = null;
+        }
+        
+        // Destruir capas anteriores de los contenedores
         foreach (Transform child in layerBase)
         {
             if (Application.isPlaying)

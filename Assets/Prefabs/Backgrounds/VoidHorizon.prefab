@@ -109,7 +109,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -9
-  m_Sprite: {fileID: 21300000, guid: 70dff2c36fccd4d72b1ce37280de789a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 4ce77903987b04bc4b489f0d7ec28cad, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -132,18 +132,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6982d41df85384b33950026f10d73e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scrollSpeed: 0.2
+  scrollSpeed: 0.1
   direction: 0
-  parallaxMultiplier: 1
+  parallaxMultiplier: 0.1
   infiniteScroll: 1
-  spriteDensity: 1
+  spriteDensity: 2
   randomizeOffsets: 1
   randomOffsetRange: {x: 0.5, y: 2}
   enablePulsing: 0
   pulseSpeed: 1
   pulseScaleMin: 0.95
   pulseScaleMax: 1.05
-  opacity: 1
+  opacity: 0.03
   useUVScrolling: 1
   autoScaleToScreen: 1
   scaleMultiplier: 1.1
@@ -221,7 +221,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -8
-  m_Sprite: {fileID: 21300000, guid: 70dff2c36fccd4d72b1ce37280de789a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 26db87440b39d4ecc8bf1e4fbd34f112, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -244,7 +244,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6982d41df85384b33950026f10d73e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scrollSpeed: 0.5
+  scrollSpeed: 0.1
   direction: 0
   parallaxMultiplier: 1
   infiniteScroll: 1
@@ -255,7 +255,7 @@ MonoBehaviour:
   pulseSpeed: 1
   pulseScaleMin: 0.95
   pulseScaleMax: 1.05
-  opacity: 1
+  opacity: 0.2
   useUVScrolling: 1
   autoScaleToScreen: 1
   scaleMultiplier: 1.1
@@ -333,7 +333,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -7
-  m_Sprite: {fileID: 21300000, guid: 70dff2c36fccd4d72b1ce37280de789a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ca9bbc9a56be64d278fd28356bac75ac, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -356,18 +356,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6982d41df85384b33950026f10d73e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scrollSpeed: 0.8
-  direction: 0
-  parallaxMultiplier: 1
+  scrollSpeed: 0.1
+  direction: 1
+  parallaxMultiplier: 0.2
   infiniteScroll: 1
-  spriteDensity: 1
+  spriteDensity: 2
   randomizeOffsets: 1
   randomOffsetRange: {x: 0.5, y: 2}
   enablePulsing: 0
   pulseSpeed: 1
   pulseScaleMin: 0.95
   pulseScaleMax: 1.05
-  opacity: 1
+  opacity: 0
   useUVScrolling: 1
   autoScaleToScreen: 1
   scaleMultiplier: 1.1
@@ -468,7 +468,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6982d41df85384b33950026f10d73e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scrollSpeed: 1
+  scrollSpeed: 0
   direction: 0
   parallaxMultiplier: 1
   infiniteScroll: 1

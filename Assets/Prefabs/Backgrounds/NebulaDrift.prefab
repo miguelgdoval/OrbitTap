@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 529714095192709016}
   - component: {fileID: 4629092730335403596}
-  - component: {fileID: 2849827756330588672}
+  - component: {fileID: 8687098488051535179}
   m_Layer: 0
   m_Name: BG_Nebula
   m_TagString: Untagged
@@ -74,7 +74,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -9
-  m_Sprite: {fileID: 21300000, guid: 71a8606f8652e4d66994f8264e760741, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ca9bbc9a56be64d278fd28356bac75ac, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -85,7 +85,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &2849827756330588672
+--- !u!114 &8687098488051535179
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -94,43 +94,24 @@ MonoBehaviour:
   m_GameObject: {fileID: 1071378098157778859}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 63969e8f343bd45e8bba8170694174b5, type: 3}
+  m_Script: {fileID: 11500000, guid: 6982d41df85384b33950026f10d73e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  layerBase: {fileID: 0}
-  layerNebulas: {fileID: 0}
-  layerStarsFar: {fileID: 0}
-  layerStarsNear: {fileID: 0}
-  layerParticles: {fileID: 0}
-  presets: []
-  defaultPresetIndex: 0
-  defaultTransitionDuration: 1
-  transitionCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  currentPresetName: 
-  currentPreset: {fileID: 0}
+  scrollSpeed: 0
+  direction: 0
+  parallaxMultiplier: 1
+  infiniteScroll: 1
+  spriteDensity: 1
+  randomizeOffsets: 1
+  randomOffsetRange: {x: 0.5, y: 2}
+  enablePulsing: 0
+  pulseSpeed: 1
+  pulseScaleMin: 0.95
+  pulseScaleMax: 1.05
+  opacity: 0.02
+  useUVScrolling: 1
+  autoScaleToScreen: 1
+  scaleMultiplier: 1.1
 --- !u!1 &2323116946666835913
 GameObject:
   m_ObjectHideFlags: 0
@@ -263,7 +244,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6982d41df85384b33950026f10d73e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scrollSpeed: 1
+  scrollSpeed: 0
   direction: 0
   parallaxMultiplier: 1
   infiniteScroll: 1
@@ -352,7 +333,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -7
-  m_Sprite: {fileID: 21300000, guid: 71a8606f8652e4d66994f8264e760741, type: 3}
+  m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -360,7 +341,7 @@ SpriteRenderer:
   m_Size: {x: 10.24, y: 10.24}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!114 &73658501727503455
@@ -464,7 +445,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -8
-  m_Sprite: {fileID: 21300000, guid: 71a8606f8652e4d66994f8264e760741, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 26db87440b39d4ecc8bf1e4fbd34f112, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -487,7 +468,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6982d41df85384b33950026f10d73e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scrollSpeed: 1
+  scrollSpeed: 0.2
   direction: 0
   parallaxMultiplier: 1
   infiniteScroll: 1
@@ -498,7 +479,7 @@ MonoBehaviour:
   pulseSpeed: 1
   pulseScaleMin: 0.95
   pulseScaleMax: 1.05
-  opacity: 1
+  opacity: 0.2
   useUVScrolling: 1
   autoScaleToScreen: 1
   scaleMultiplier: 1.1

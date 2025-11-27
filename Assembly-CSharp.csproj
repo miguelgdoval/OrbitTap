@@ -105,6 +105,7 @@
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundSystemAPI.cs" />
     <Compile Include="Assets/Scripts/Obstacles/Complex/PulsatingRing.cs" />
     <Compile Include="Assets/Scripts/Visual/CosmicBackground.cs" />
+    <Compile Include="Assets/Scripts/UI/SettingsParticleBackground.cs" />
     <Compile Include="Assets/Scripts/Obstacles/Complex/ZigzagBarrier.cs" />
     <Compile Include="Assets/Scripts/Visual/CosmicTheme.cs" />
     <Compile Include="Assets/Scripts/Managers/InputController.cs" />

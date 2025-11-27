@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
@@ -19,11 +20,19 @@ public class SettingsPanel : MonoBehaviour
     
     [Header("UI References")]
     private GameObject panel;
+    private GameObject mainContent; // Panel principal de contenido
     private GameObject leftPanel; // Panel lateral con botones de sección
     private GameObject rightPanel; // Panel derecho con contenido
     private Button closeButton;
+    private SettingsParticleBackground particleBackground;
+    
+    [Header("Animation Settings")]
+    [SerializeField] private float panelFadeInDuration = 0.3f;
+    [SerializeField] private float panelFadeOutDuration = 0.2f;
+    [SerializeField] private float sectionTransitionDuration = 0.25f;
     
     private SettingsSection currentSection = SettingsSection.Sound;
+    private Coroutine currentTransitionCoroutine;
     
     // Referencias a elementos de UI
     private Dictionary<SettingsSection, GameObject> sectionContent = new Dictionary<SettingsSection, GameObject>();
@@ -50,15 +59,21 @@ public class SettingsPanel : MonoBehaviour
         {
             CreatePanel();
         }
+        
+        if (!panel.activeSelf)
+        {
         panel.SetActive(true);
+            StartCoroutine(AnimatePanelEnter());
+        }
+        
         ShowSection(currentSection);
     }
     
     public void Hide()
     {
-        if (panel != null)
+        if (panel != null && panel.activeSelf)
         {
-            panel.SetActive(false);
+            StartCoroutine(AnimatePanelExit());
         }
     }
     
@@ -83,7 +98,7 @@ public class SettingsPanel : MonoBehaviour
         backgroundButton.onClick.AddListener(Hide);
         
         // Panel principal de contenido (centrado)
-        GameObject mainContent = new GameObject("MainContent");
+        mainContent = new GameObject("MainContent");
         mainContent.transform.SetParent(panel.transform, false);
         RectTransform mainRect = mainContent.AddComponent<RectTransform>();
         mainRect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -96,6 +111,17 @@ public class SettingsPanel : MonoBehaviour
         
         // Añadir efecto de borde luminiscente
         AddGlowEffect(mainContent, CosmicTheme.NeonCyan, 0.3f);
+        
+        // Crear sistema de partículas de fondo
+        GameObject particleObj = new GameObject("ParticleBackground");
+        particleObj.transform.SetParent(mainContent.transform, false);
+        RectTransform particleRect = particleObj.AddComponent<RectTransform>();
+        particleRect.anchorMin = Vector2.zero;
+        particleRect.anchorMax = Vector2.one;
+        particleRect.sizeDelta = Vector2.zero;
+        particleRect.anchoredPosition = Vector2.zero;
+        
+        particleBackground = particleObj.AddComponent<SettingsParticleBackground>();
         
         // Botón cerrar (arriba derecha)
         CreateCloseButton(mainContent);
@@ -813,20 +839,196 @@ public class SettingsPanel : MonoBehaviour
     
     private void ShowSection(SettingsSection section)
     {
-        currentSection = section;
-        
-        // Ocultar todas las secciones
-        foreach (var kvp in sectionContent)
+        if (currentSection == section && sectionContent.ContainsKey(section) && sectionContent[section] != null && sectionContent[section].activeSelf)
         {
-            if (kvp.Value != null)
-                kvp.Value.SetActive(false);
+            return; // Ya está mostrada
         }
         
-        // Mostrar la sección seleccionada
-        if (sectionContent.ContainsKey(section) && sectionContent[section] != null)
+        // Cancelar transición anterior si existe
+        if (currentTransitionCoroutine != null)
         {
-            sectionContent[section].SetActive(true);
+            StopCoroutine(currentTransitionCoroutine);
         }
+        
+        currentTransitionCoroutine = StartCoroutine(AnimateSectionTransition(section));
+    }
+    
+    private IEnumerator AnimateSectionTransition(SettingsSection newSection)
+    {
+        GameObject oldSection = null;
+        if (sectionContent.ContainsKey(currentSection) && sectionContent[currentSection] != null)
+        {
+            oldSection = sectionContent[currentSection];
+        }
+        
+        GameObject newSectionObj = null;
+        if (sectionContent.ContainsKey(newSection) && sectionContent[newSection] != null)
+        {
+            newSectionObj = sectionContent[newSection];
+        }
+        
+        // Si hay una sección anterior, hacer fade out + slide out
+        if (oldSection != null && oldSection.activeSelf)
+        {
+            RectTransform oldRect = oldSection.GetComponent<RectTransform>();
+            CanvasGroup oldCanvasGroup = oldSection.GetComponent<CanvasGroup>();
+            if (oldCanvasGroup == null)
+            {
+                oldCanvasGroup = oldSection.AddComponent<CanvasGroup>();
+            }
+            
+            Vector3 oldStartPos = oldRect.anchoredPosition;
+            float elapsed = 0f;
+            
+            while (elapsed < sectionTransitionDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / sectionTransitionDuration;
+                float easeT = 1f - Mathf.Pow(1f - t, 3f); // Ease out cubic
+                
+                oldCanvasGroup.alpha = 1f - easeT;
+                oldRect.anchoredPosition = oldStartPos + new Vector3(30f * easeT, 0, 0);
+                
+                yield return null;
+            }
+            
+            oldSection.SetActive(false);
+            oldCanvasGroup.alpha = 1f;
+            oldRect.anchoredPosition = oldStartPos;
+        }
+        
+        // Mostrar nueva sección con fade in + slide in
+        if (newSectionObj != null)
+        {
+            newSectionObj.SetActive(true);
+            RectTransform newRect = newSectionObj.GetComponent<RectTransform>();
+            CanvasGroup newCanvasGroup = newSectionObj.GetComponent<CanvasGroup>();
+            if (newCanvasGroup == null)
+            {
+                newCanvasGroup = newSectionObj.AddComponent<CanvasGroup>();
+            }
+            
+            Vector3 newStartPos = newRect.anchoredPosition;
+            newRect.anchoredPosition = newStartPos + new Vector3(-30f, 0, 0);
+            newCanvasGroup.alpha = 0f;
+            
+            float elapsed = 0f;
+            
+            while (elapsed < sectionTransitionDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / sectionTransitionDuration;
+                float easeT = 1f - Mathf.Pow(1f - t, 3f); // Ease out cubic
+                
+                newCanvasGroup.alpha = easeT;
+                newRect.anchoredPosition = Vector3.Lerp(newStartPos + new Vector3(-30f, 0, 0), newStartPos, easeT);
+                
+                yield return null;
+            }
+            
+            newCanvasGroup.alpha = 1f;
+            newRect.anchoredPosition = newStartPos;
+        }
+        
+        currentSection = newSection;
+        currentTransitionCoroutine = null;
+    }
+    
+    private IEnumerator AnimatePanelEnter()
+    {
+        if (mainContent == null) yield break;
+        
+        RectTransform mainRect = mainContent.GetComponent<RectTransform>();
+        CanvasGroup mainCanvasGroup = mainContent.GetComponent<CanvasGroup>();
+        if (mainCanvasGroup == null)
+        {
+            mainCanvasGroup = mainContent.AddComponent<CanvasGroup>();
+        }
+        
+        Image panelBg = panel.GetComponent<Image>();
+        
+        // Estado inicial
+        mainCanvasGroup.alpha = 0f;
+        mainRect.localScale = Vector3.one * 0.9f;
+        Color bgColor = panelBg.color;
+        bgColor.a = 0f;
+        panelBg.color = bgColor;
+        
+        // Activar partículas
+        if (particleBackground != null)
+        {
+            particleBackground.SetActive(true);
+        }
+        
+        float elapsed = 0f;
+        
+        while (elapsed < panelFadeInDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / panelFadeInDuration;
+            float easeT = 1f - Mathf.Pow(1f - t, 3f); // Ease out cubic
+            
+            mainCanvasGroup.alpha = easeT;
+            mainRect.localScale = Vector3.Lerp(Vector3.one * 0.9f, Vector3.one, easeT);
+            bgColor.a = 0.85f * easeT;
+            panelBg.color = bgColor;
+            
+            yield return null;
+        }
+        
+        mainCanvasGroup.alpha = 1f;
+        mainRect.localScale = Vector3.one;
+        bgColor.a = 0.85f;
+        panelBg.color = bgColor;
+    }
+    
+    private IEnumerator AnimatePanelExit()
+    {
+        if (mainContent == null)
+        {
+            panel.SetActive(false);
+            yield break;
+        }
+        
+        RectTransform mainRect = mainContent.GetComponent<RectTransform>();
+        CanvasGroup mainCanvasGroup = mainContent.GetComponent<CanvasGroup>();
+        if (mainCanvasGroup == null)
+        {
+            mainCanvasGroup = mainContent.AddComponent<CanvasGroup>();
+        }
+        
+        Image panelBg = panel.GetComponent<Image>();
+        Color bgColor = panelBg.color;
+        
+        // Desactivar partículas
+        if (particleBackground != null)
+        {
+            particleBackground.SetActive(false);
+        }
+        
+        float elapsed = 0f;
+        
+        while (elapsed < panelFadeOutDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / panelFadeOutDuration;
+            float easeT = t * t; // Ease in quadratic
+            
+            mainCanvasGroup.alpha = 1f - easeT;
+            mainRect.localScale = Vector3.Lerp(Vector3.one, Vector3.one * 0.95f, easeT);
+            bgColor.a = 0.85f * (1f - easeT);
+            panelBg.color = bgColor;
+            
+            yield return null;
+        }
+        
+        panel.SetActive(false);
+        
+        // Resetear estado
+        mainCanvasGroup.alpha = 1f;
+        mainRect.localScale = Vector3.one;
+        bgColor.a = 0.85f;
+        panelBg.color = bgColor;
     }
     
     private void AddGlowEffect(GameObject obj, Color glowColor, float intensity)

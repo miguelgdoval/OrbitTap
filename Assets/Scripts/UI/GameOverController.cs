@@ -182,6 +182,9 @@ public class GameOverController : MonoBehaviour
 
     public void GoToMainMenu()
     {
+        // Limpiar elementos visuales de la escena Game antes de volver al menú
+        GameManager.CleanupGameScene();
+        
         SceneManager.LoadScene("MainMenu");
     }
 

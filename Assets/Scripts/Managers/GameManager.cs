@@ -110,6 +110,42 @@ public class GameManager : MonoBehaviour
             Debug.LogError("GameManager: Error al cargar escena GameOver: " + e.Message);
         }
     }
+    
+    public static void CleanupGameScene()
+    {
+        Debug.Log("GameManager: Limpiando elementos de la escena Game...");
+        
+        // Destruir CosmicBackground de la escena Game
+        GameObject cosmicBg = GameObject.Find("CosmicBackground");
+        if (cosmicBg != null)
+        {
+            Debug.Log("GameManager: Destruyendo CosmicBackground...");
+            Destroy(cosmicBg);
+        }
+        
+        // Limpiar BackgroundManager y sus capas
+        BackgroundManager bgManager = FindObjectOfType<BackgroundManager>();
+        if (bgManager != null)
+        {
+            Debug.Log("GameManager: Limpiando BackgroundManager...");
+            // Destruir el BackgroundManager completo (incluye todas las capas)
+            Destroy(bgManager.gameObject);
+        }
+        
+        // Buscar objetos por nombre que puedan ser parte del sistema de fondo
+        string[] backgroundNames = { "BackgroundManager", "LayerBase", "LayerNebulas", "LayerStarsFar", "LayerStarsNear", "LayerParticles" };
+        foreach (string name in backgroundNames)
+        {
+            GameObject obj = GameObject.Find(name);
+            if (obj != null)
+            {
+                Debug.Log($"GameManager: Destruyendo objeto: {name}");
+                Destroy(obj);
+            }
+        }
+        
+        Debug.Log("GameManager: Limpieza completada");
+    }
 
     public void RestartGame()
     {

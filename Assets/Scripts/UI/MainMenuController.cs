@@ -346,19 +346,19 @@ public class MainMenuController : MonoBehaviour
         GameObject playTextObj = new GameObject("Text");
         playTextObj.transform.SetParent(playBtnObj.transform, false);
         playButtonText = playTextObj.AddComponent<Text>();
-        playButtonText.text = "TAP TO PLAY";
+            playButtonText.text = "TAP TO PLAY";
         playButtonText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         playButtonText.fontSize = 20;
-        playButtonText.fontStyle = FontStyle.Bold;
-        playButtonText.alignment = TextAnchor.MiddleCenter;
+            playButtonText.fontStyle = FontStyle.Bold;
+            playButtonText.alignment = TextAnchor.MiddleCenter;
         playButtonText.color = CosmicTheme.SpaceWhite;
         playButtonText.raycastTarget = false;
-        
-        RectTransform textRect = playTextObj.GetComponent<RectTransform>();
+            
+            RectTransform textRect = playTextObj.GetComponent<RectTransform>();
         textRect.anchorMin = new Vector2(0.5f, 0.1f);
         textRect.anchorMax = new Vector2(0.5f, 0.35f);
         textRect.pivot = new Vector2(0.5f, 0.5f);
-        textRect.anchoredPosition = Vector2.zero;
+            textRect.anchoredPosition = Vector2.zero;
         textRect.sizeDelta = new Vector2(350, 30);
         
         // Añadir Image al botón para que pueda recibir clicks
@@ -444,7 +444,7 @@ public class MainMenuController : MonoBehaviour
         navRect.anchorMax = new Vector2(0.5f, 0f);
         navRect.pivot = new Vector2(0.5f, 0f);
         navRect.anchoredPosition = new Vector2(0, 30);
-        navRect.sizeDelta = new Vector2(1200, 100); // Barra más ancha
+        navRect.sizeDelta = new Vector2(1500, 130); // Panel más ancho y alto
         
         // Fondo con esquinas redondeadas (simulado con Image)
         Image navBg = bottomNavPanel.AddComponent<Image>();
@@ -474,27 +474,28 @@ public class MainMenuController : MonoBehaviour
         // No añadir Image al contenedor para que no bloquee
         
         // Crear botones en el orden: Skins, Store, Play (centro grande), Missions, Leaderboard
-        float buttonSpacing = 200f; // Más espaciado para barra más ancha
-        float startX = -400f; // Ajustado para barra más ancha
+        float buttonSpacing = 250f; // Más espaciado para panel más ancho
+        float startX = -500f; // Ajustado para panel más ancho
+        float buttonSize = 90f; // Botones más grandes (crecerán a 115px cuando estén activos)
         
         // Botón Skins (todos empiezan con el mismo tamaño, el seleccionado crecerá)
-        skinsNavButton = CreateBottomNavButton("SkinsButton", "Skins", buttonsContainer.transform, startX, 70f, false);
+        skinsNavButton = CreateBottomNavButton("SkinsButton", "Skins", buttonsContainer.transform, startX, buttonSize, false);
         skinsNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Skins));
         
         // Botón Store
-        storeNavButton = CreateBottomNavButton("StoreButton", "Store", buttonsContainer.transform, startX + buttonSpacing, 70f, false);
+        storeNavButton = CreateBottomNavButton("StoreButton", "Store", buttonsContainer.transform, startX + buttonSpacing, buttonSize, false);
         storeNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Shop));
         
         // Botón Play (centro, mismo tamaño inicial)
-        playNavButton = CreateBottomNavButton("PlayButton", "Play", buttonsContainer.transform, 0, 70f, false);
+        playNavButton = CreateBottomNavButton("PlayButton", "Play", buttonsContainer.transform, 0, buttonSize, false);
         playNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Play));
         
         // Botón Missions
-        missionsNavButton = CreateBottomNavButton("MissionsButton", "Missions", buttonsContainer.transform, -startX - buttonSpacing, 70f, false);
+        missionsNavButton = CreateBottomNavButton("MissionsButton", "Missions", buttonsContainer.transform, -startX - buttonSpacing, buttonSize, false);
         missionsNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Missions));
         
         // Botón Leaderboard
-        leaderboardNavButton = CreateBottomNavButton("LeaderboardButton", "Leaderboard", buttonsContainer.transform, -startX, 70f, false);
+        leaderboardNavButton = CreateBottomNavButton("LeaderboardButton", "Leaderboard", buttonsContainer.transform, -startX, buttonSize, false);
         leaderboardNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Leaderboard));
         
         // Añadir partículas sutiles detrás de la barra (al final para que no bloqueen)
@@ -592,7 +593,7 @@ public class MainMenuController : MonoBehaviour
             }
             iconText.text = iconSymbol;
             iconText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            iconText.fontSize = 40;
+            iconText.fontSize = 50; // Iconos más grandes
             iconText.alignment = TextAnchor.MiddleCenter;
             iconText.color = CosmicTheme.NeonCyan;
             iconText.raycastTarget = false;
@@ -616,7 +617,7 @@ public class MainMenuController : MonoBehaviour
         Text labelText = labelObj.AddComponent<Text>();
         labelText.text = label;
         labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        labelText.fontSize = 14;
+        labelText.fontSize = 16; // Texto más grande
         labelText.alignment = TextAnchor.MiddleCenter;
         labelText.color = CosmicTheme.SpaceWhite;
         labelText.raycastTarget = false; // No bloquear raycasts
@@ -1016,7 +1017,7 @@ public class MainMenuController : MonoBehaviour
         if (button == null) return;
         
         RectTransform btnRect = button.GetComponent<RectTransform>();
-        float targetSize = isActive ? 90f : 70f; // El botón activo es más grande
+        float targetSize = isActive ? 115f : 90f; // El botón activo es más grande
         
         // Cambiar el glow y escala del icono según si está activo
         Transform iconTransform = button.transform.Find("Icon");

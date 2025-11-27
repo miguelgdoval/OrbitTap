@@ -249,15 +249,20 @@ public class MainMenuController : MonoBehaviour
         playRect.anchorMax = Vector2.one;
         playRect.sizeDelta = Vector2.zero;
         
-        // Título
+        // Título con estética AstroNeon
         GameObject titleObj = new GameObject("TitleText");
         titleObj.transform.SetParent(playSection.transform, false);
         titleText = titleObj.AddComponent<Text>();
-        titleText.text = "STARBOUND ORBIT";
+        
+        // Tracking amplio (espaciado entre letras) - simulado con espacios
+        titleText.text = "S T A R B O U N D   O R B I T";
         titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        titleText.fontSize = 50;
+        titleText.fontSize = 72; // Más grande para impacto visual
         titleText.fontStyle = FontStyle.Bold;
-        titleText.color = CosmicTheme.SoftGold;
+        
+        // Color principal: degradado cian-violeta (usamos cian brillante como base)
+        titleText.color = new Color(0.2f, 0.9f, 1f, 1f); // Cian brillante
+        
         titleText.alignment = TextAnchor.MiddleCenter;
         titleText.horizontalOverflow = HorizontalWrapMode.Overflow;
         
@@ -266,10 +271,43 @@ public class MainMenuController : MonoBehaviour
         titleRect.anchorMax = new Vector2(0.5f, 0.5f);
         titleRect.pivot = new Vector2(0.5f, 0.5f);
         titleRect.anchoredPosition = new Vector2(0, 200); // Más arriba para dejar espacio
-        titleRect.sizeDelta = new Vector2(600, 80);
+        titleRect.sizeDelta = new Vector2(1000, 100); // Más ancho para el tracking amplio
         
-        // Animación de pulso para el título
+        // Stroke externo fino cian brillante
+        Outline titleOutline = titleObj.AddComponent<Outline>();
+        titleOutline.effectColor = new Color(0f, 0.9f, 1f, 0.8f); // Cian brillante
+        titleOutline.effectDistance = new Vector2(2, 2);
+        
+        // Glow suave alrededor de las letras (usando Shadow para efecto de glow)
+        Shadow titleGlow = titleObj.AddComponent<Shadow>();
+        titleGlow.effectColor = new Color(0.2f, 0.7f, 1f, 0.4f); // Cian suave para glow
+        titleGlow.effectDistance = new Vector2(0, 0);
+        
+        // Fondo translúcido opcional (glow muy leve detrás)
+        GameObject titleBg = new GameObject("TitleBackground");
+        titleBg.transform.SetParent(titleObj.transform, false);
+        titleBg.transform.SetAsFirstSibling(); // Detrás del texto
+        Image bgImg = titleBg.AddComponent<Image>();
+        bgImg.color = new Color(0.1f, 0.3f, 0.5f, 0.15f); // Glow azul muy suave
+        bgImg.raycastTarget = false;
+        
+        RectTransform bgRect = titleBg.GetComponent<RectTransform>();
+        bgRect.anchorMin = Vector2.zero;
+        bgRect.anchorMax = Vector2.one;
+        bgRect.sizeDelta = new Vector2(50, 30); // Más grande que el texto para el glow
+        bgRect.anchoredPosition = Vector2.zero;
+        
+        // Animación de entrada inicial
+        titleObj.transform.localScale = Vector3.one * 0.92f;
+        CanvasGroup titleCanvasGroup = titleObj.AddComponent<CanvasGroup>();
+        titleCanvasGroup.alpha = 0f;
+        StartCoroutine(AnimateTitleEntry(titleObj.transform, titleCanvasGroup));
+        
+        // Animación idle (pulsación lenta)
         StartCoroutine(PulseTitle());
+        
+        // Partículas ascendiendo detrás del título
+        StartCoroutine(CreateTitleParticles(titleObj.transform));
         
         // Botón Play (debajo del centro) - Estilo Space Neon Minimal
         GameObject playBtnObj = new GameObject("PlayButton");
@@ -1172,25 +1210,144 @@ public class MainMenuController : MonoBehaviour
         }
     }
     
+    private IEnumerator AnimateTitleEntry(Transform titleTransform, CanvasGroup canvasGroup)
+    {
+        // Fade in + scale from 0.92 → 1 (0.4s)
+        float duration = 0.4f;
+        float elapsed = 0f;
+        Vector3 startScale = Vector3.one * 0.92f;
+        Vector3 endScale = Vector3.one;
+        float startAlpha = 0f;
+        float endAlpha = 1f;
+        
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            // Ease out cubic para suavidad
+            float easeT = 1f - Mathf.Pow(1f - t, 3f);
+            
+            titleTransform.localScale = Vector3.Lerp(startScale, endScale, easeT);
+            canvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, easeT);
+            
+            yield return null;
+        }
+        
+        titleTransform.localScale = endScale;
+        canvasGroup.alpha = endAlpha;
+    }
+    
     private IEnumerator PulseTitle()
     {
+        // Esperar a que termine la animación de entrada
+        yield return new WaitForSeconds(0.4f);
+        
         while (true)
         {
             float time = 0f;
-            float duration = 2f;
-            float minScale = 0.98f;
-            float maxScale = 1.02f;
+            float duration = 4f; // Pulsación cada 4 segundos
+            float minScale = 1.00f;
+            float maxScale = 1.015f; // Pulsación muy sutil
             
             while (time < duration)
             {
                 time += Time.deltaTime;
-                float scale = Mathf.Lerp(minScale, maxScale, Mathf.Sin(time / duration * Mathf.PI));
+                // Usar seno para movimiento suave de ida y vuelta
+                float t = Mathf.Sin(time / duration * Mathf.PI * 2f) * 0.5f + 0.5f;
+                float scale = Mathf.Lerp(minScale, maxScale, t);
+                
                 if (titleText != null)
                 {
                     titleText.transform.localScale = Vector3.one * scale;
+                    
+                    // Parallax leve (0.5-1px de desplazamiento)
+                    RectTransform titleRect = titleText.GetComponent<RectTransform>();
+                    if (titleRect != null)
+                    {
+                        float parallaxOffset = Mathf.Sin(time * 0.5f) * 0.8f;
+                        titleRect.anchoredPosition = new Vector2(parallaxOffset, 200);
+                    }
                 }
                 yield return null;
             }
+        }
+    }
+    
+    private IEnumerator CreateTitleParticles(Transform titleParent)
+    {
+        // Esperar a que termine la animación de entrada
+        yield return new WaitForSeconds(0.4f);
+        
+        while (true)
+        {
+            // Crear partícula cada 1-2 segundos
+            yield return new WaitForSeconds(Random.Range(1f, 2f));
+            
+            if (titleText == null || titleParent == null) break;
+            
+            // Crear partícula pequeña ascendiendo
+            GameObject particle = new GameObject("TitleParticle");
+            particle.transform.SetParent(titleParent, false);
+            particle.transform.SetAsFirstSibling(); // Detrás del texto
+            
+            Image particleImg = particle.AddComponent<Image>();
+            particleImg.color = new Color(0.2f, 0.9f, 1f, 0.6f); // Cian brillante
+            particleImg.sprite = SpriteGenerator.CreateStarSprite(0.1f, Color.white);
+            particleImg.raycastTarget = false;
+            
+            RectTransform particleRect = particle.GetComponent<RectTransform>();
+            RectTransform titleRect = titleText.GetComponent<RectTransform>();
+            
+            // Posición inicial: debajo del título, aleatoria en X
+            float startX = Random.Range(-titleRect.sizeDelta.x * 0.4f, titleRect.sizeDelta.x * 0.4f);
+            particleRect.anchorMin = new Vector2(0.5f, 0f);
+            particleRect.anchorMax = new Vector2(0.5f, 0f);
+            particleRect.pivot = new Vector2(0.5f, 0.5f);
+            particleRect.anchoredPosition = new Vector2(startX, -60);
+            particleRect.sizeDelta = new Vector2(4, 4);
+            
+            // Animar partícula ascendiendo
+            StartCoroutine(AnimateTitleParticle(particle, titleRect.sizeDelta.y + 40));
+        }
+    }
+    
+    private IEnumerator AnimateTitleParticle(GameObject particle, float targetY)
+    {
+        if (particle == null) yield break;
+        
+        RectTransform rect = particle.GetComponent<RectTransform>();
+        Image img = particle.GetComponent<Image>();
+        
+        float startY = rect.anchoredPosition.y;
+        float duration = Random.Range(2f, 3.5f); // Ascenso lento
+        float elapsed = 0f;
+        
+        while (elapsed < duration && particle != null)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            
+            // Movimiento vertical suave
+            float currentY = Mathf.Lerp(startY, targetY, t);
+            rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, currentY);
+            
+            // Fade out gradual
+            if (img != null)
+            {
+                float alpha = Mathf.Lerp(0.6f, 0f, t);
+                img.color = new Color(0.2f, 0.9f, 1f, alpha);
+            }
+            
+            // Movimiento horizontal leve (flotación)
+            float floatX = Mathf.Sin(t * Mathf.PI * 2f) * 10f;
+            rect.anchoredPosition = new Vector2(rect.anchoredPosition.x + floatX * Time.deltaTime, currentY);
+            
+            yield return null;
+        }
+        
+        if (particle != null)
+        {
+            Destroy(particle);
         }
     }
     

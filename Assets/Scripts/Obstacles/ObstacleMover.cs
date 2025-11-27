@@ -10,7 +10,6 @@ public class ObstacleMover : MonoBehaviour
     public Vector2 direction = Vector2.zero; // Se establecerá al spawnear
 
     private Camera mainCamera;
-    private float destroyDistance = 15f; // Distancia fuera de la pantalla para destruir
     private bool hasEnteredScreen = false; // Para saber si ya entró a la pantalla
     private float spawnTime;
 

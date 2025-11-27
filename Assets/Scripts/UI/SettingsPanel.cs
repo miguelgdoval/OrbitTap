@@ -37,6 +37,9 @@ public class SettingsPanel : MonoBehaviour
     
     // Referencias a elementos de UI
     private Dictionary<SettingsSection, GameObject> sectionContent = new Dictionary<SettingsSection, GameObject>();
+    private Dictionary<SettingsSection, Button> sectionButtons = new Dictionary<SettingsSection, Button>();
+    private Dictionary<SettingsSection, Image> sectionButtonImages = new Dictionary<SettingsSection, Image>();
+    private Dictionary<SettingsSection, Text> sectionButtonTexts = new Dictionary<SettingsSection, Text>();
     
     private enum SettingsSection
     {
@@ -65,6 +68,12 @@ public class SettingsPanel : MonoBehaviour
         {
         panel.SetActive(true);
             StartCoroutine(AnimatePanelEnter());
+        }
+        
+        // Asegurar que el botón seleccionado tenga el estilo correcto
+        if (sectionButtons.ContainsKey(currentSection))
+        {
+            UpdateButtonStyle(currentSection, true);
         }
         
         ShowSection(currentSection);
@@ -168,6 +177,12 @@ public class SettingsPanel : MonoBehaviour
         CreateAllSections();
         
         panel.SetActive(false);
+        
+        // Inicializar el estilo del botón seleccionado por defecto
+        if (sectionButtons.ContainsKey(currentSection))
+        {
+            UpdateButtonStyle(currentSection, true);
+        }
     }
     
     private void CreateCloseButton(GameObject parent)
@@ -247,6 +262,7 @@ public class SettingsPanel : MonoBehaviour
         Button btn = btnObj.AddComponent<Button>();
         
         Image btnImg = btnObj.AddComponent<Image>();
+        // Color inicial (no seleccionado)
         btnImg.color = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.1f);
         
         RectTransform btnRect = btnObj.GetComponent<RectTransform>();
@@ -272,7 +288,55 @@ public class SettingsPanel : MonoBehaviour
         textRect.sizeDelta = Vector2.zero;
         textRect.anchoredPosition = new Vector2(15, 0);
         
+        // Guardar referencias
+        sectionButtons[section] = btn;
+        sectionButtonImages[section] = btnImg;
+        sectionButtonTexts[section] = text;
+        
         btn.onClick.AddListener(() => ShowSection(section));
+        
+        // Aplicar estilo inicial (no seleccionado)
+        UpdateButtonStyle(section, false);
+    }
+    
+    private void UpdateButtonStyle(SettingsSection section, bool isSelected)
+    {
+        if (!sectionButtonImages.ContainsKey(section) || !sectionButtonTexts.ContainsKey(section))
+            return;
+        
+        Image btnImg = sectionButtonImages[section];
+        Text text = sectionButtonTexts[section];
+        
+        if (isSelected)
+        {
+            // Estilo seleccionado: fondo más brillante con color neon cian, texto en neon cian brillante
+            btnImg.color = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.3f);
+            text.color = CosmicTheme.NeonCyan;
+            text.fontStyle = FontStyle.Bold;
+            
+            // Añadir efecto de borde luminiscente
+            Outline outline = btnImg.gameObject.GetComponent<Outline>();
+            if (outline == null)
+            {
+                outline = btnImg.gameObject.AddComponent<Outline>();
+            }
+            outline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.5f);
+            outline.effectDistance = new Vector2(2, 0); // Borde a la derecha
+        }
+        else
+        {
+            // Estilo no seleccionado: fondo tenue, texto blanco azulado
+            btnImg.color = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.1f);
+            text.color = CosmicTheme.SpaceWhite;
+            text.fontStyle = FontStyle.Normal;
+            
+            // Remover outline si existe
+            Outline outline = btnImg.gameObject.GetComponent<Outline>();
+            if (outline != null)
+            {
+                Destroy(outline);
+            }
+        }
     }
     
     private void CreateRightPanel(GameObject parent)
@@ -876,21 +940,62 @@ public class SettingsPanel : MonoBehaviour
             return; // Ya está mostrada
         }
         
-        // Cancelar transición anterior si existe
+        // Guardar la sección anterior antes de actualizar
+        SettingsSection previousSection = currentSection;
+        
+        // ACTUALIZAR currentSection INMEDIATAMENTE para evitar estados inconsistentes
+        currentSection = section;
+        
+        // Actualizar estilos de botones INMEDIATAMENTE
+        if (sectionButtons.ContainsKey(previousSection))
+        {
+            UpdateButtonStyle(previousSection, false); // Deseleccionar el anterior
+        }
+        if (sectionButtons.ContainsKey(section))
+        {
+            UpdateButtonStyle(section, true); // Seleccionar el nuevo
+        }
+        
+        // Cancelar transición anterior si existe y resetear estados
         if (currentTransitionCoroutine != null)
         {
             StopCoroutine(currentTransitionCoroutine);
+            // Resetear estados visuales de las secciones que estaban en transición
+            ResetSectionVisualStates(previousSection);
         }
         
-        currentTransitionCoroutine = StartCoroutine(AnimateSectionTransition(section));
+        currentTransitionCoroutine = StartCoroutine(AnimateSectionTransition(previousSection, section));
     }
     
-    private IEnumerator AnimateSectionTransition(SettingsSection newSection)
+    private void ResetSectionVisualStates(SettingsSection section)
+    {
+        // Resetear estados visuales de una sección después de cancelar una transición
+        if (sectionContent.ContainsKey(section) && sectionContent[section] != null)
+        {
+            GameObject sectionObj = sectionContent[section];
+            RectTransform rect = sectionObj.GetComponent<RectTransform>();
+            CanvasGroup canvasGroup = sectionObj.GetComponent<CanvasGroup>();
+            
+            if (rect != null)
+            {
+                // Resetear posición
+                rect.anchoredPosition = Vector3.zero;
+            }
+            
+            if (canvasGroup != null)
+            {
+                // Resetear alpha
+                canvasGroup.alpha = sectionObj.activeSelf ? 1f : 0f;
+            }
+        }
+    }
+    
+    private IEnumerator AnimateSectionTransition(SettingsSection oldSectionKey, SettingsSection newSection)
     {
         GameObject oldSection = null;
-        if (sectionContent.ContainsKey(currentSection) && sectionContent[currentSection] != null)
+        if (sectionContent.ContainsKey(oldSectionKey) && sectionContent[oldSectionKey] != null)
         {
-            oldSection = sectionContent[currentSection];
+            oldSection = sectionContent[oldSectionKey];
         }
         
         GameObject newSectionObj = null;
@@ -962,7 +1067,7 @@ public class SettingsPanel : MonoBehaviour
             newRect.anchoredPosition = newStartPos;
         }
         
-        currentSection = newSection;
+        // currentSection ya fue actualizado en ShowSection, solo limpiar la coroutine
         currentTransitionCoroutine = null;
     }
     

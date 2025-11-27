@@ -7,7 +7,9 @@ public enum MenuSection
 {
     Play,
     Skins,
-    Shop
+    Shop,
+    Missions,
+    Leaderboard
 }
 
 /// <summary>

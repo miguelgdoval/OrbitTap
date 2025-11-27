@@ -17,6 +17,8 @@ public class MainMenuController : MonoBehaviour
     private GameObject playSection;
     private GameObject skinsSection;
     private GameObject shopSection;
+    private GameObject missionsSection;
+    private GameObject leaderboardSection;
     private SettingsPanel settingsPanel;
     
     [Header("Play Section")]
@@ -31,9 +33,12 @@ public class MainMenuController : MonoBehaviour
     private Button settingsButton;
     
     [Header("Bottom Navigation")]
-    private Button homeButton;
+    private GameObject bottomNavPanel;
     private Button skinsNavButton;
-    private Button shopNavButton;
+    private Button storeNavButton;
+    private Button playNavButton;
+    private Button missionsNavButton;
+    private Button leaderboardNavButton;
     
     private MenuSection currentSection = MenuSection.Play;
     private CurrencyManager currencyManager;
@@ -266,114 +271,622 @@ public class MainMenuController : MonoBehaviour
         // Animación de pulso para el título
         StartCoroutine(PulseTitle());
         
-        // Botón Play (debajo del centro)
+        // Botón Play (debajo del centro) - Estilo Space Neon Minimal
         GameObject playBtnObj = new GameObject("PlayButton");
         playBtnObj.transform.SetParent(playSection.transform, false);
-        playButton = playBtnObj.AddComponent<Button>();
-        Image playImg = playBtnObj.AddComponent<Image>();
-        playImg.color = new Color(CosmicTheme.SoftGold.r, CosmicTheme.SoftGold.g, CosmicTheme.SoftGold.b, 0.8f);
-        playImg.raycastTarget = true; // Asegurar que recibe raycasts
         
-        RectTransform playBtnRect = playBtnObj.GetComponent<RectTransform>();
+        // Añadir RectTransform primero (se añade automáticamente al añadir UI components, pero lo hacemos explícito)
+        RectTransform playBtnRect = playBtnObj.AddComponent<RectTransform>();
         playBtnRect.anchorMin = new Vector2(0.5f, 0.5f);
         playBtnRect.anchorMax = new Vector2(0.5f, 0.5f);
         playBtnRect.pivot = new Vector2(0.5f, 0.5f);
-        playBtnRect.anchoredPosition = new Vector2(0, -50); // Más cerca del centro
-        playBtnRect.sizeDelta = new Vector2(300, 80);
+        playBtnRect.anchoredPosition = new Vector2(0, -50);
+        playBtnRect.sizeDelta = new Vector2(350, 100);
         
-        // Crear objeto hijo para el texto
+        playButton = playBtnObj.AddComponent<Button>();
+        
+        // Fondo del botón (placa circular flotante)
+        GameObject plateObj = new GameObject("Plate");
+        plateObj.transform.SetParent(playBtnObj.transform, false);
+        Image plateImg = plateObj.AddComponent<Image>();
+        plateImg.color = new Color(CosmicTheme.SpaceBlack.r, CosmicTheme.SpaceBlack.g, CosmicTheme.SpaceBlack.b, 0.5f);
+        plateImg.raycastTarget = false;
+        
+        RectTransform plateRect = plateObj.GetComponent<RectTransform>();
+        plateRect.anchorMin = Vector2.zero;
+        plateRect.anchorMax = Vector2.one;
+        plateRect.sizeDelta = Vector2.zero;
+        plateRect.anchoredPosition = Vector2.zero;
+        
+        // Glow suave en la placa
+        Outline plateOutline = plateObj.AddComponent<Outline>();
+        plateOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.4f);
+        plateOutline.effectDistance = new Vector2(3, 3);
+        
+        // Icono de play
+        GameObject iconObj = new GameObject("Icon");
+        iconObj.transform.SetParent(playBtnObj.transform, false);
+        Text iconText = iconObj.AddComponent<Text>();
+        iconText.text = "▶";
+        iconText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        iconText.fontSize = 50;
+        iconText.alignment = TextAnchor.MiddleCenter;
+        iconText.color = CosmicTheme.NeonCyan;
+        iconText.raycastTarget = false;
+        
+        RectTransform iconRect = iconObj.GetComponent<RectTransform>();
+        iconRect.anchorMin = new Vector2(0.5f, 0.6f);
+        iconRect.anchorMax = new Vector2(0.5f, 0.6f);
+        iconRect.pivot = new Vector2(0.5f, 0.5f);
+        iconRect.anchoredPosition = Vector2.zero;
+        iconRect.sizeDelta = new Vector2(350, 60);
+        
+        // Glow en el icono
+        Outline iconOutline = iconObj.AddComponent<Outline>();
+        iconOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.5f);
+        iconOutline.effectDistance = new Vector2(2, 2);
+        
+        // Texto debajo del icono
         GameObject playTextObj = new GameObject("Text");
         playTextObj.transform.SetParent(playBtnObj.transform, false);
         playButtonText = playTextObj.AddComponent<Text>();
-        if (playButtonText != null)
-        {
-            playButtonText.text = "TAP TO PLAY";
-            Font defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (defaultFont != null)
-            {
-                playButtonText.font = defaultFont;
-            }
-            playButtonText.fontSize = 32;
-            playButtonText.fontStyle = FontStyle.Bold;
-            playButtonText.alignment = TextAnchor.MiddleCenter;
-            playButtonText.color = Color.white;
-            
-            RectTransform textRect = playTextObj.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.sizeDelta = Vector2.zero;
-            textRect.anchoredPosition = Vector2.zero;
-        }
+        playButtonText.text = "TAP TO PLAY";
+        playButtonText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        playButtonText.fontSize = 20;
+        playButtonText.fontStyle = FontStyle.Bold;
+        playButtonText.alignment = TextAnchor.MiddleCenter;
+        playButtonText.color = CosmicTheme.SpaceWhite;
+        playButtonText.raycastTarget = false;
+        
+        RectTransform textRect = playTextObj.GetComponent<RectTransform>();
+        textRect.anchorMin = new Vector2(0.5f, 0.1f);
+        textRect.anchorMax = new Vector2(0.5f, 0.35f);
+        textRect.pivot = new Vector2(0.5f, 0.5f);
+        textRect.anchoredPosition = Vector2.zero;
+        textRect.sizeDelta = new Vector2(350, 30);
+        
+        // Añadir Image al botón para que pueda recibir clicks
+        Image btnImage = playBtnObj.AddComponent<Image>();
+        btnImage.color = Color.clear; // Transparente pero recibe raycasts
+        btnImage.raycastTarget = true;
+        
+        // Añadir efectos de interacción similares a los botones de navegación
+        AddPlayButtonEffects(playButton, iconObj, plateObj);
         
         playButton.onClick.AddListener(LoadGame);
+    }
+    
+    private void AddPlayButtonEffects(Button button, GameObject icon, GameObject plate)
+    {
+        EventTrigger trigger = button.gameObject.GetComponent<EventTrigger>();
+        if (trigger == null)
+        {
+            trigger = button.gameObject.AddComponent<EventTrigger>();
+        }
         
-        // Animación de pulso para el botón
-        StartCoroutine(PulseButton(playBtnRect));
+        // Hover: aumentar glow
+        EventTrigger.Entry pointerEnter = new EventTrigger.Entry();
+        pointerEnter.eventID = EventTriggerType.PointerEnter;
+        pointerEnter.callback.AddListener((data) => {
+            Outline iconOutline = icon.GetComponent<Outline>();
+            if (iconOutline != null)
+            {
+                iconOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.8f);
+                iconOutline.effectDistance = new Vector2(4, 4);
+            }
+            Outline plateOutline = plate.GetComponent<Outline>();
+            if (plateOutline != null)
+            {
+                plateOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.6f);
+                plateOutline.effectDistance = new Vector2(4, 4);
+            }
+        });
+        trigger.triggers.Add(pointerEnter);
+        
+        EventTrigger.Entry pointerExit = new EventTrigger.Entry();
+        pointerExit.eventID = EventTriggerType.PointerExit;
+        pointerExit.callback.AddListener((data) => {
+            Outline iconOutline = icon.GetComponent<Outline>();
+            if (iconOutline != null)
+            {
+                iconOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.5f);
+                iconOutline.effectDistance = new Vector2(2, 2);
+            }
+            Outline plateOutline = plate.GetComponent<Outline>();
+            if (plateOutline != null)
+            {
+                plateOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.4f);
+                plateOutline.effectDistance = new Vector2(3, 3);
+            }
+        });
+        trigger.triggers.Add(pointerExit);
+        
+        // Tap: escala y partículas
+        EventTrigger.Entry pointerDown = new EventTrigger.Entry();
+        pointerDown.eventID = EventTriggerType.PointerDown;
+        pointerDown.callback.AddListener((data) => {
+            StartCoroutine(AnimateButtonTap(icon.transform, plate.transform));
+            CreateTapParticles(button.transform.position);
+        });
+        trigger.triggers.Add(pointerDown);
+        
+        EventTrigger.Entry pointerUp = new EventTrigger.Entry();
+        pointerUp.eventID = EventTriggerType.PointerUp;
+        pointerUp.callback.AddListener((data) => {
+            StartCoroutine(AnimateButtonRelease(icon.transform, plate.transform));
+        });
+        trigger.triggers.Add(pointerUp);
     }
     
     private void CreateBottomNavigation()
     {
-        // Panel de navegación inferior
-        GameObject navPanel = new GameObject("NavigationPanel");
-        navPanel.transform.SetParent(canvas.transform, false);
-        RectTransform navRect = navPanel.AddComponent<RectTransform>();
-        navRect.anchorMin = new Vector2(0, 0);
-        navRect.anchorMax = new Vector2(1, 0);
+        // Panel de navegación inferior con estilo Space Neon Minimal
+        bottomNavPanel = new GameObject("BottomNavigationPanel");
+        bottomNavPanel.transform.SetParent(canvas.transform, false);
+        RectTransform navRect = bottomNavPanel.AddComponent<RectTransform>();
+        navRect.anchorMin = new Vector2(0.5f, 0f);
+        navRect.anchorMax = new Vector2(0.5f, 0f);
         navRect.pivot = new Vector2(0.5f, 0f);
-        navRect.anchoredPosition = new Vector2(0, 40); // Positivo para estar dentro de la pantalla
-        navRect.sizeDelta = new Vector2(0, 80);
+        navRect.anchoredPosition = new Vector2(0, 30);
+        navRect.sizeDelta = new Vector2(1200, 100); // Barra más ancha
         
-        Image navImg = navPanel.AddComponent<Image>();
-        navImg.color = new Color(0, 0, 0, 0.5f);
+        // Fondo con esquinas redondeadas (simulado con Image)
+        Image navBg = bottomNavPanel.AddComponent<Image>();
+        navBg.color = new Color(CosmicTheme.SpaceBlack.r, CosmicTheme.SpaceBlack.g, CosmicTheme.SpaceBlack.b, 0.7f);
+        navBg.raycastTarget = false; // IMPORTANTE: No bloquear raycasts para que los botones funcionen
         
-        // Botón Home
-        homeButton = CreateNavButton("HomeButton", "🏠", navPanel.transform, -100);
-        homeButton.onClick.AddListener(() => NavigateTo(MenuSection.Play));
+        // Borde luminiscente
+        Outline navOutline = bottomNavPanel.AddComponent<Outline>();
+        navOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.6f);
+        navOutline.effectDistance = new Vector2(1, 1);
         
-        // Botón Skins
-        skinsNavButton = CreateNavButton("SkinsButton", "🎨", navPanel.transform, 0);
+        // Sombra suave
+        Shadow navShadow = bottomNavPanel.AddComponent<Shadow>();
+        navShadow.effectColor = new Color(0, 0.3f, 0.5f, 0.4f);
+        navShadow.effectDistance = new Vector2(0, -5);
+        
+        // Crear contenedor para los botones
+        GameObject buttonsContainer = new GameObject("ButtonsContainer");
+        buttonsContainer.transform.SetParent(bottomNavPanel.transform, false);
+        RectTransform containerRect = buttonsContainer.AddComponent<RectTransform>();
+        containerRect.anchorMin = Vector2.zero;
+        containerRect.anchorMax = Vector2.one;
+        containerRect.sizeDelta = Vector2.zero;
+        containerRect.anchoredPosition = Vector2.zero;
+        
+        // Asegurar que el contenedor no bloquee raycasts
+        // No añadir Image al contenedor para que no bloquee
+        
+        // Crear botones en el orden: Skins, Store, Play (centro grande), Missions, Leaderboard
+        float buttonSpacing = 200f; // Más espaciado para barra más ancha
+        float startX = -400f; // Ajustado para barra más ancha
+        
+        // Botón Skins (todos empiezan con el mismo tamaño, el seleccionado crecerá)
+        skinsNavButton = CreateBottomNavButton("SkinsButton", "Skins", buttonsContainer.transform, startX, 70f, false);
         skinsNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Skins));
         
-        // Botón Shop
-        shopNavButton = CreateNavButton("ShopButton", "🛒", navPanel.transform, 100);
-        shopNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Shop));
+        // Botón Store
+        storeNavButton = CreateBottomNavButton("StoreButton", "Store", buttonsContainer.transform, startX + buttonSpacing, 70f, false);
+        storeNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Shop));
+        
+        // Botón Play (centro, mismo tamaño inicial)
+        playNavButton = CreateBottomNavButton("PlayButton", "Play", buttonsContainer.transform, 0, 70f, false);
+        playNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Play));
+        
+        // Botón Missions
+        missionsNavButton = CreateBottomNavButton("MissionsButton", "Missions", buttonsContainer.transform, -startX - buttonSpacing, 70f, false);
+        missionsNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Missions));
+        
+        // Botón Leaderboard
+        leaderboardNavButton = CreateBottomNavButton("LeaderboardButton", "Leaderboard", buttonsContainer.transform, -startX, 70f, false);
+        leaderboardNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Leaderboard));
+        
+        // Añadir partículas sutiles detrás de la barra (al final para que no bloqueen)
+        // Las partículas se crean después de los botones para que estén en el fondo
+        StartCoroutine(CreateNavigationParticlesDelayed());
     }
     
-    private Button CreateNavButton(string name, string icon, Transform parent, float xPos)
+    private IEnumerator CreateNavigationParticlesDelayed()
+    {
+        // Esperar un frame para que los botones se creen primero
+        yield return null;
+        CreateNavigationParticles();
+    }
+    
+    private Button CreateBottomNavButton(string name, string label, Transform parent, float xPos, float size, bool isPlayButton)
     {
         GameObject btnObj = new GameObject(name);
         btnObj.transform.SetParent(parent, false);
         Button btn = btnObj.AddComponent<Button>();
-        Image img = btnObj.AddComponent<Image>();
-        img.color = new Color(1, 1, 1, 0.2f);
         
-        RectTransform rect = btnObj.GetComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = new Vector2(xPos, 0);
-        rect.sizeDelta = new Vector2(60, 60);
+        // Añadir Image al botón para que pueda recibir clicks (Button necesita un Image)
+        Image btnImage = btnObj.AddComponent<Image>();
+        btnImage.color = Color.clear; // Transparente pero recibe raycasts
+        btnImage.raycastTarget = true; // IMPORTANTE: Debe recibir raycasts para funcionar
         
-        // Crear objeto hijo para el texto
-        GameObject textObj = new GameObject("Text");
-        textObj.transform.SetParent(btnObj.transform, false);
-        Text text = textObj.AddComponent<Text>();
-        text.text = icon;
-        Font defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (defaultFont != null)
+        RectTransform btnRect = btnObj.GetComponent<RectTransform>();
+        btnRect.anchorMin = new Vector2(0.5f, 0.5f);
+        btnRect.anchorMax = new Vector2(0.5f, 0.5f);
+        btnRect.pivot = new Vector2(0.5f, 0.5f);
+        btnRect.anchoredPosition = new Vector2(xPos, 0);
+        btnRect.sizeDelta = new Vector2(size, size);
+        
+        // Placa circular flotante (fondo del botón)
+        GameObject plateObj = new GameObject("Plate");
+        plateObj.transform.SetParent(btnObj.transform, false);
+        Image plateImg = plateObj.AddComponent<Image>();
+        plateImg.color = new Color(CosmicTheme.SpaceBlack.r, CosmicTheme.SpaceBlack.g, CosmicTheme.SpaceBlack.b, 0.4f);
+        plateImg.raycastTarget = false; // No bloquear raycasts
+        
+        RectTransform plateRect = plateObj.GetComponent<RectTransform>();
+        plateRect.anchorMin = Vector2.zero;
+        plateRect.anchorMax = Vector2.one;
+        plateRect.sizeDelta = Vector2.zero;
+        plateRect.anchoredPosition = Vector2.zero;
+        
+        // Glow suave en la placa
+        Outline plateOutline = plateObj.AddComponent<Outline>();
+        plateOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.3f);
+        plateOutline.effectDistance = new Vector2(2, 2);
+        
+        // Indicador de sección activa (línea debajo del botón)
+        GameObject indicatorObj = new GameObject("Indicator");
+        indicatorObj.transform.SetParent(btnObj.transform, false);
+        Image indicatorImg = indicatorObj.AddComponent<Image>();
+        indicatorImg.color = CosmicTheme.NeonCyan;
+        indicatorImg.raycastTarget = false;
+        
+        RectTransform indicatorRect = indicatorObj.GetComponent<RectTransform>();
+        indicatorRect.anchorMin = new Vector2(0.5f, 0f);
+        indicatorRect.anchorMax = new Vector2(0.5f, 0f);
+        indicatorRect.pivot = new Vector2(0.5f, 0f);
+        indicatorRect.anchoredPosition = new Vector2(0, -size * 0.6f);
+        indicatorRect.sizeDelta = new Vector2(size * 0.6f, 3);
+        
+        // Inicialmente oculto, se mostrará cuando el botón esté activo
+        indicatorObj.SetActive(false);
+        
+        // Icono (usando texto por ahora, luego se pueden añadir sprites)
+        GameObject iconObj = new GameObject("Icon");
+        iconObj.transform.SetParent(btnObj.transform, false);
+        Text iconText = iconObj.AddComponent<Text>();
+        
+        // Iconos según el botón
+        string iconSymbol = "●";
+        switch (name)
         {
-            text.font = defaultFont;
+            case "SkinsButton": iconSymbol = "🎨"; break;
+            case "StoreButton": iconSymbol = "🛒"; break;
+            case "PlayButton": iconSymbol = "▶"; break;
+            case "MissionsButton": iconSymbol = "🏆"; break;
+            case "LeaderboardButton": iconSymbol = "📊"; break;
         }
-        text.fontSize = 30;
-        text.alignment = TextAnchor.MiddleCenter;
-        text.color = CosmicTheme.SoftGold;
         
-        RectTransform textRect = textObj.GetComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.sizeDelta = Vector2.zero;
-        textRect.anchoredPosition = Vector2.zero;
+        iconText.text = iconSymbol;
+        iconText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        iconText.fontSize = 40; // Todos con el mismo tamaño inicial, se escalará si está activo
+        iconText.alignment = TextAnchor.MiddleCenter;
+        iconText.color = CosmicTheme.NeonCyan;
+        iconText.raycastTarget = false; // No bloquear raycasts
+        
+        RectTransform iconRect = iconObj.GetComponent<RectTransform>();
+        iconRect.anchorMin = new Vector2(0.5f, 0.6f);
+        iconRect.anchorMax = new Vector2(0.5f, 0.6f);
+        iconRect.pivot = new Vector2(0.5f, 0.5f);
+        iconRect.anchoredPosition = Vector2.zero;
+        iconRect.sizeDelta = new Vector2(size, size * 0.6f);
+        
+        // Glow mínimo en el icono
+        Outline iconOutline = iconObj.AddComponent<Outline>();
+        iconOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.4f);
+        iconOutline.effectDistance = new Vector2(1, 1);
+        
+        // Texto debajo del icono
+        GameObject labelObj = new GameObject("Label");
+        labelObj.transform.SetParent(btnObj.transform, false);
+        Text labelText = labelObj.AddComponent<Text>();
+        labelText.text = label;
+        labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        labelText.fontSize = 14;
+        labelText.alignment = TextAnchor.MiddleCenter;
+        labelText.color = CosmicTheme.SpaceWhite;
+        labelText.raycastTarget = false; // No bloquear raycasts
+        
+        RectTransform labelRect = labelObj.GetComponent<RectTransform>();
+        labelRect.anchorMin = new Vector2(0.5f, 0.1f);
+        labelRect.anchorMax = new Vector2(0.5f, 0.3f);
+        labelRect.pivot = new Vector2(0.5f, 0.5f);
+        labelRect.anchoredPosition = Vector2.zero;
+        labelRect.sizeDelta = new Vector2(size, size * 0.2f);
+        
+        // Añadir efectos de interacción
+        AddNavigationButtonEffects(btn, iconObj, plateObj);
         
         return btn;
+    }
+    
+    private void AddNavigationButtonEffects(Button button, GameObject icon, GameObject plate)
+    {
+        EventTrigger trigger = button.gameObject.GetComponent<EventTrigger>();
+        if (trigger == null)
+        {
+            trigger = button.gameObject.AddComponent<EventTrigger>();
+        }
+        
+        // Hover/Tap: aumentar glow
+        EventTrigger.Entry pointerEnter = new EventTrigger.Entry();
+        pointerEnter.eventID = EventTriggerType.PointerEnter;
+        pointerEnter.callback.AddListener((data) => {
+            Outline iconOutline = icon.GetComponent<Outline>();
+            if (iconOutline != null)
+            {
+                iconOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.7f);
+                iconOutline.effectDistance = new Vector2(3, 3);
+            }
+            Outline plateOutline = plate.GetComponent<Outline>();
+            if (plateOutline != null)
+            {
+                plateOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.5f);
+            }
+        });
+        trigger.triggers.Add(pointerEnter);
+        
+        EventTrigger.Entry pointerExit = new EventTrigger.Entry();
+        pointerExit.eventID = EventTriggerType.PointerExit;
+        pointerExit.callback.AddListener((data) => {
+            Outline iconOutline = icon.GetComponent<Outline>();
+            if (iconOutline != null)
+            {
+                iconOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.4f);
+                iconOutline.effectDistance = new Vector2(1, 1);
+            }
+            Outline plateOutline = plate.GetComponent<Outline>();
+            if (plateOutline != null)
+            {
+                plateOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.3f);
+            }
+        });
+        trigger.triggers.Add(pointerExit);
+        
+        // Tap: escala y partículas
+        EventTrigger.Entry pointerDown = new EventTrigger.Entry();
+        pointerDown.eventID = EventTriggerType.PointerDown;
+        pointerDown.callback.AddListener((data) => {
+            StartCoroutine(AnimateButtonTap(icon.transform, plate.transform));
+            CreateTapParticles(button.transform.position);
+        });
+        trigger.triggers.Add(pointerDown);
+        
+        EventTrigger.Entry pointerUp = new EventTrigger.Entry();
+        pointerUp.eventID = EventTriggerType.PointerUp;
+        pointerUp.callback.AddListener((data) => {
+            StartCoroutine(AnimateButtonRelease(icon.transform, plate.transform));
+        });
+        trigger.triggers.Add(pointerUp);
+    }
+    
+    private IEnumerator AnimateButtonTap(Transform icon, Transform plate)
+    {
+        Vector3 targetScale = Vector3.one * 1.05f;
+        float duration = 0.1f;
+        float elapsed = 0f;
+        Vector3 startScale = icon.localScale;
+        
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            icon.localScale = Vector3.Lerp(startScale, targetScale, t);
+            plate.localScale = Vector3.Lerp(Vector3.one, targetScale * 0.98f, t);
+            yield return null;
+        }
+        
+        icon.localScale = targetScale;
+        plate.localScale = targetScale * 0.98f;
+    }
+    
+    private IEnumerator AnimateButtonRelease(Transform icon, Transform plate)
+    {
+        Vector3 targetScale = Vector3.one;
+        float duration = 0.15f;
+        float elapsed = 0f;
+        Vector3 startScale = icon.localScale;
+        
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            float easeT = 1f - Mathf.Pow(1f - t, 3f); // Ease out
+            icon.localScale = Vector3.Lerp(startScale, targetScale, easeT);
+            plate.localScale = Vector3.Lerp(plate.localScale, Vector3.one, easeT);
+            yield return null;
+        }
+        
+        icon.localScale = targetScale;
+        plate.localScale = Vector3.one;
+    }
+    
+    private void CreateTapParticles(Vector3 position)
+    {
+        // Crear partículas cian que salen durante 0.2s
+        for (int i = 0; i < 5; i++)
+        {
+            GameObject particle = new GameObject("TapParticle");
+            particle.transform.SetParent(canvas.transform, false);
+            particle.transform.position = position;
+            
+            Image particleImg = particle.AddComponent<Image>();
+            particleImg.color = CosmicTheme.NeonCyan;
+            particleImg.sprite = SpriteGenerator.CreateStarSprite(0.1f, CosmicTheme.NeonCyan);
+            particleImg.raycastTarget = false; // IMPORTANTE: No bloquear raycasts
+            
+            RectTransform particleRect = particle.GetComponent<RectTransform>();
+            particleRect.sizeDelta = new Vector2(8, 8);
+            
+            StartCoroutine(AnimateParticle(particle, position));
+        }
+    }
+    
+    private IEnumerator AnimateParticle(GameObject particle, Vector3 startPos)
+    {
+        RectTransform rect = particle.GetComponent<RectTransform>();
+        Image img = particle.GetComponent<Image>();
+        
+        // Asegurar que la partícula no bloquee raycasts
+        if (img != null)
+        {
+            img.raycastTarget = false;
+        }
+        
+        Vector2 direction = new Vector2(Random.Range(-1f, 1f), Random.Range(0.5f, 1f)).normalized;
+        float speed = 100f;
+        float duration = 0.2f;
+        float elapsed = 0f;
+        
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            
+            rect.anchoredPosition = startPos + (Vector3)(direction * speed * t);
+            
+            Color c = img.color;
+            c.a = 1f - t;
+            img.color = c;
+            
+            rect.localScale = Vector3.one * (1f - t * 0.5f);
+            
+            yield return null;
+        }
+        
+        Destroy(particle);
+    }
+    
+    private void CreateNavigationParticles()
+    {
+        // Crear 2-5 partículas sutiles detrás de la barra
+        // IMPORTANTE: Estas partículas deben estar DETRÁS de los botones en la jerarquía
+        // para que no bloqueen los clicks, incluso si se mueven
+        for (int i = 0; i < 3; i++)
+        {
+            GameObject particle = new GameObject($"NavParticle_{i}");
+            // Añadir al fondo del panel, NO al contenedor de botones
+            particle.transform.SetParent(bottomNavPanel.transform, false);
+            
+            // Asegurar que la partícula esté al principio de la jerarquía (detrás)
+            particle.transform.SetAsFirstSibling();
+            
+            Image particleImg = particle.AddComponent<Image>();
+            particleImg.color = new Color(1, 1, 1, 0.3f);
+            particleImg.sprite = SpriteGenerator.CreateStarSprite(0.15f, Color.white);
+            particleImg.raycastTarget = false; // IMPORTANTE: No bloquear raycasts
+            
+            // Asegurar que el CanvasGroup no bloquee (si existe)
+            CanvasGroup canvasGroup = particle.GetComponent<CanvasGroup>();
+            if (canvasGroup == null)
+            {
+                canvasGroup = particle.AddComponent<CanvasGroup>();
+            }
+            canvasGroup.blocksRaycasts = false;
+            canvasGroup.ignoreParentGroups = true;
+            
+            RectTransform particleRect = particle.GetComponent<RectTransform>();
+            particleRect.anchorMin = new Vector2(Random.Range(0.1f, 0.9f), 0.5f);
+            particleRect.anchorMax = new Vector2(Random.Range(0.1f, 0.9f), 0.5f);
+            particleRect.pivot = new Vector2(0.5f, 0.5f);
+            particleRect.sizeDelta = new Vector2(6, 6);
+            
+            StartCoroutine(AnimateNavigationParticle(particle));
+        }
+    }
+    
+    private IEnumerator AnimateNavigationParticle(GameObject particle)
+    {
+        RectTransform rect = particle.GetComponent<RectTransform>();
+        Image img = particle.GetComponent<Image>();
+        
+        // Asegurar que la partícula no bloquee raycasts
+        if (img != null)
+        {
+            img.raycastTarget = false;
+        }
+        
+        float floatSpeed = Random.Range(0.3f, 0.6f);
+        float floatRange = Random.Range(5f, 15f);
+        float startY = rect.anchoredPosition.y;
+        
+        while (particle != null)
+        {
+            float time = Time.time * floatSpeed;
+            float newY = startY + Mathf.Sin(time) * floatRange;
+            rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, newY);
+            
+            // Fade sutil
+            float alpha = 0.2f + Mathf.Sin(time * 0.7f) * 0.1f;
+            Color c = img.color;
+            c.a = alpha;
+            img.color = c;
+            
+            yield return null;
+        }
+    }
+    
+    private void CreateMissionsSection()
+    {
+        missionsSection = new GameObject("MissionsSection");
+        missionsSection.transform.SetParent(canvas.transform, false);
+        RectTransform missionsRect = missionsSection.AddComponent<RectTransform>();
+        missionsRect.anchorMin = Vector2.zero;
+        missionsRect.anchorMax = Vector2.one;
+        missionsRect.sizeDelta = Vector2.zero;
+        
+        // Placeholder para Missions
+        GameObject placeholder = new GameObject("Placeholder");
+        placeholder.transform.SetParent(missionsSection.transform, false);
+        Text placeholderText = placeholder.AddComponent<Text>();
+        placeholderText.text = "Missions / Challenges\n\nPróximamente...";
+        placeholderText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        placeholderText.fontSize = 32;
+        placeholderText.color = CosmicTheme.NeonCyan;
+        placeholderText.alignment = TextAnchor.MiddleCenter;
+        
+        RectTransform placeholderRect = placeholder.GetComponent<RectTransform>();
+        placeholderRect.anchorMin = new Vector2(0.5f, 0.5f);
+        placeholderRect.anchorMax = new Vector2(0.5f, 0.5f);
+        placeholderRect.pivot = new Vector2(0.5f, 0.5f);
+        placeholderRect.anchoredPosition = Vector2.zero;
+        placeholderRect.sizeDelta = new Vector2(600, 200);
+        
+        missionsSection.SetActive(false);
+    }
+    
+    private void CreateLeaderboardSection()
+    {
+        leaderboardSection = new GameObject("LeaderboardSection");
+        leaderboardSection.transform.SetParent(canvas.transform, false);
+        RectTransform leaderboardRect = leaderboardSection.AddComponent<RectTransform>();
+        leaderboardRect.anchorMin = Vector2.zero;
+        leaderboardRect.anchorMax = Vector2.one;
+        leaderboardRect.sizeDelta = Vector2.zero;
+        
+        // Placeholder para Leaderboard
+        GameObject placeholder = new GameObject("Placeholder");
+        placeholder.transform.SetParent(leaderboardSection.transform, false);
+        Text placeholderText = placeholder.AddComponent<Text>();
+        placeholderText.text = "Leaderboard\n\nPróximamente...";
+        placeholderText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        placeholderText.fontSize = 32;
+        placeholderText.color = CosmicTheme.NeonCyan;
+        placeholderText.alignment = TextAnchor.MiddleCenter;
+        
+        RectTransform placeholderRect = placeholder.GetComponent<RectTransform>();
+        placeholderRect.anchorMin = new Vector2(0.5f, 0.5f);
+        placeholderRect.anchorMax = new Vector2(0.5f, 0.5f);
+        placeholderRect.pivot = new Vector2(0.5f, 0.5f);
+        placeholderRect.anchoredPosition = Vector2.zero;
+        placeholderRect.sizeDelta = new Vector2(600, 200);
+        
+        leaderboardSection.SetActive(false);
     }
     
     private void CreatePlayerDemo()
@@ -452,6 +965,103 @@ public class MainMenuController : MonoBehaviour
         if (playSection != null) playSection.SetActive(section == MenuSection.Play);
         if (skinsSection != null) skinsSection.SetActive(section == MenuSection.Skins);
         if (shopSection != null) shopSection.SetActive(section == MenuSection.Shop);
+        if (missionsSection != null) missionsSection.SetActive(section == MenuSection.Missions);
+        if (leaderboardSection != null) leaderboardSection.SetActive(section == MenuSection.Leaderboard);
+        
+        // Actualizar estado visual de los botones de navegación
+        UpdateNavigationButtons(section);
+    }
+    
+    private void UpdateNavigationButtons(MenuSection activeSection)
+    {
+        // Actualizar el estado visual de cada botón según la sección activa
+        SetButtonActive(skinsNavButton, activeSection == MenuSection.Skins);
+        SetButtonActive(storeNavButton, activeSection == MenuSection.Shop);
+        SetButtonActive(playNavButton, activeSection == MenuSection.Play);
+        SetButtonActive(missionsNavButton, activeSection == MenuSection.Missions);
+        SetButtonActive(leaderboardNavButton, activeSection == MenuSection.Leaderboard);
+    }
+    
+    private void SetButtonActive(Button button, bool isActive)
+    {
+        if (button == null) return;
+        
+        RectTransform btnRect = button.GetComponent<RectTransform>();
+        float targetSize = isActive ? 90f : 70f; // El botón activo es más grande
+        
+        // Cambiar el glow y escala del icono según si está activo
+        Transform iconTransform = button.transform.Find("Icon");
+        if (iconTransform != null)
+        {
+            Outline outline = iconTransform.GetComponent<Outline>();
+            if (outline == null)
+            {
+                outline = iconTransform.gameObject.AddComponent<Outline>();
+            }
+            
+            if (isActive)
+            {
+                outline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.8f);
+                outline.effectDistance = new Vector2(3, 3);
+                iconTransform.localScale = Vector3.one * 1.1f;
+            }
+            else
+            {
+                outline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.3f);
+                outline.effectDistance = new Vector2(2, 2);
+                iconTransform.localScale = Vector3.one;
+            }
+        }
+        
+        // Mostrar/ocultar indicador de sección activa
+        Transform indicatorTransform = button.transform.Find("Indicator");
+        RectTransform indicatorRect = indicatorTransform != null ? indicatorTransform.GetComponent<RectTransform>() : null;
+        
+        if (indicatorTransform != null)
+        {
+            indicatorTransform.gameObject.SetActive(isActive);
+        }
+        
+        // Animar el cambio de tamaño del botón y actualizar el indicador
+        if (btnRect != null)
+        {
+            StartCoroutine(AnimateButtonSize(btnRect, targetSize, indicatorRect, isActive));
+        }
+    }
+    
+    private IEnumerator AnimateButtonSize(RectTransform btnRect, float targetSize, RectTransform indicatorRect, bool isActive)
+    {
+        float currentSize = btnRect.sizeDelta.x;
+        float duration = 0.2f;
+        float elapsed = 0f;
+        
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            float easeT = 1f - Mathf.Pow(1f - t, 3f); // Ease out cubic
+            
+            float newSize = Mathf.Lerp(currentSize, targetSize, easeT);
+            btnRect.sizeDelta = new Vector2(newSize, newSize);
+            
+            // Actualizar el indicador durante la animación
+            if (indicatorRect != null && isActive)
+            {
+                indicatorRect.sizeDelta = new Vector2(newSize * 0.6f, 3);
+                indicatorRect.anchoredPosition = new Vector2(0, -newSize * 0.6f);
+            }
+            
+            yield return null;
+        }
+        
+        btnRect.sizeDelta = new Vector2(targetSize, targetSize);
+        
+        // Asegurar que el indicador tenga el tamaño final correcto
+        if (indicatorRect != null && isActive)
+        {
+            indicatorRect.sizeDelta = new Vector2(targetSize * 0.6f, 3);
+            indicatorRect.anchoredPosition = new Vector2(0, -targetSize * 0.6f);
+        }
     }
     
     public void NavigateTo(MenuSection section)

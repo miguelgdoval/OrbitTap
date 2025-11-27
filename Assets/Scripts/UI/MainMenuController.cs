@@ -303,16 +303,32 @@ public class MainMenuController : MonoBehaviour
         plateOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.4f);
         plateOutline.effectDistance = new Vector2(3, 3);
         
-        // Icono de play
+        // Icono de play (usando sprite)
         GameObject iconObj = new GameObject("Icon");
         iconObj.transform.SetParent(playBtnObj.transform, false);
-        Text iconText = iconObj.AddComponent<Text>();
-        iconText.text = "▶";
-        iconText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        iconText.fontSize = 50;
-        iconText.alignment = TextAnchor.MiddleCenter;
-        iconText.color = CosmicTheme.NeonCyan;
-        iconText.raycastTarget = false;
+        
+        // Cargar el sprite del icono de play
+        Sprite playIconSprite = LoadNavIcon("PlayButton");
+        if (playIconSprite != null)
+        {
+            // Usar Image con sprite
+            Image iconImg = iconObj.AddComponent<Image>();
+            iconImg.sprite = playIconSprite;
+            iconImg.color = CosmicTheme.NeonCyan;
+            iconImg.preserveAspect = true;
+            iconImg.raycastTarget = false;
+        }
+        else
+        {
+            // Fallback a emoji si no se encuentra
+            Text iconText = iconObj.AddComponent<Text>();
+            iconText.text = "▶";
+            iconText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            iconText.fontSize = 50;
+            iconText.alignment = TextAnchor.MiddleCenter;
+            iconText.color = CosmicTheme.NeonCyan;
+            iconText.raycastTarget = false;
+        }
         
         RectTransform iconRect = iconObj.GetComponent<RectTransform>();
         iconRect.anchorMin = new Vector2(0.5f, 0.6f);
@@ -546,28 +562,41 @@ public class MainMenuController : MonoBehaviour
         // Inicialmente oculto, se mostrará cuando el botón esté activo
         indicatorObj.SetActive(false);
         
-        // Icono (usando texto por ahora, luego se pueden añadir sprites)
+        // Icono (usando sprite de imagen)
         GameObject iconObj = new GameObject("Icon");
         iconObj.transform.SetParent(btnObj.transform, false);
-        Text iconText = iconObj.AddComponent<Text>();
         
-        // Iconos según el botón
-        string iconSymbol = "●";
-        switch (name)
+        // Cargar el sprite del icono según el botón
+        Sprite iconSprite = LoadNavIcon(name);
+        if (iconSprite != null)
         {
-            case "SkinsButton": iconSymbol = "🎨"; break;
-            case "StoreButton": iconSymbol = "🛒"; break;
-            case "PlayButton": iconSymbol = "▶"; break;
-            case "MissionsButton": iconSymbol = "🏆"; break;
-            case "LeaderboardButton": iconSymbol = "📊"; break;
+            // Usar Image con sprite
+            Image iconImg = iconObj.AddComponent<Image>();
+            iconImg.sprite = iconSprite;
+            iconImg.color = CosmicTheme.NeonCyan;
+            iconImg.preserveAspect = true;
+            iconImg.raycastTarget = false; // No bloquear raycasts
         }
-        
-        iconText.text = iconSymbol;
-        iconText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        iconText.fontSize = 40; // Todos con el mismo tamaño inicial, se escalará si está activo
-        iconText.alignment = TextAnchor.MiddleCenter;
-        iconText.color = CosmicTheme.NeonCyan;
-        iconText.raycastTarget = false; // No bloquear raycasts
+        else
+        {
+            // Fallback a emoji si no se encuentra el icono
+            Text iconText = iconObj.AddComponent<Text>();
+            string iconSymbol = "●";
+            switch (name)
+            {
+                case "SkinsButton": iconSymbol = "🎨"; break;
+                case "StoreButton": iconSymbol = "🛒"; break;
+                case "PlayButton": iconSymbol = "▶"; break;
+                case "MissionsButton": iconSymbol = "🏆"; break;
+                case "LeaderboardButton": iconSymbol = "📊"; break;
+            }
+            iconText.text = iconSymbol;
+            iconText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            iconText.fontSize = 40;
+            iconText.alignment = TextAnchor.MiddleCenter;
+            iconText.color = CosmicTheme.NeonCyan;
+            iconText.raycastTarget = false;
+        }
         
         RectTransform iconRect = iconObj.GetComponent<RectTransform>();
         iconRect.anchorMin = new Vector2(0.5f, 0.6f);
@@ -1256,6 +1285,59 @@ public class MainMenuController : MonoBehaviour
         }
         return null;
     }
+    
+    private Sprite LoadNavIcon(string buttonName)
+    {
+        if (!Application.isPlaying) return null;
+        
+        try
+        {
+            // Determinar el nombre del icono según el botón
+            string iconName = "";
+            switch (buttonName)
+            {
+                case "SkinsButton": iconName = "SkinIcon"; break;
+                case "StoreButton": iconName = "StoreIcon"; break;
+                case "PlayButton": iconName = "PlayIcon"; break;
+                case "MissionsButton": iconName = "MissionsIcon"; break;
+                case "LeaderboardButton": iconName = "LeaderboardIcon"; break;
+                default: return null;
+            }
+            
+            if (string.IsNullOrEmpty(iconName)) return null;
+            
+            // Buscar el sprite del icono
+            string[] guids = AssetDatabase.FindAssets(iconName + " t:Sprite");
+            if (guids.Length == 0)
+            {
+                // Intentar como Texture2D
+                guids = AssetDatabase.FindAssets(iconName + " t:Texture2D");
+            }
+            
+            if (guids.Length > 0)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite != null)
+                {
+                    return sprite;
+                }
+                
+                // Si no se encuentra como Sprite, intentar como Texture2D
+                Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                if (texture != null)
+                {
+                    // Crear sprite desde texture
+                    return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
+                }
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"No se pudo cargar el icono {buttonName}: {e.Message}");
+        }
+        return null;
+    }
     #else
     private Sprite LoadPlayerSprite()
     {
@@ -1267,6 +1349,28 @@ public class MainMenuController : MonoBehaviour
     {
         // En build, intentar cargar desde Resources
         return Resources.Load<Sprite>("Art/Icons/OptionsIcon");
+    }
+    
+    private Sprite LoadNavIcon(string buttonName)
+    {
+        if (!Application.isPlaying) return null;
+        
+        // Determinar el nombre del icono según el botón
+        string iconName = "";
+        switch (buttonName)
+        {
+            case "SkinsButton": iconName = "SkinIcon"; break;
+            case "StoreButton": iconName = "StoreIcon"; break;
+            case "PlayButton": iconName = "PlayIcon"; break;
+            case "MissionsButton": iconName = "MissionsIcon"; break;
+            case "LeaderboardButton": iconName = "LeaderboardIcon"; break;
+            default: return null;
+        }
+        
+        if (string.IsNullOrEmpty(iconName)) return null;
+        
+        // En build, intentar cargar desde Resources
+        return Resources.Load<Sprite>($"Art/Icons/{iconName}");
     }
     #endif
 }

@@ -146,6 +146,13 @@ public class GameInitializer : MonoBehaviour
             // Crear UI para Score
             CreateScoreUI(sm);
         }
+
+        // Crear AudioManager
+        if (AudioManager.Instance == null)
+        {
+            GameObject audioManager = new GameObject("AudioManager");
+            audioManager.AddComponent<AudioManager>();
+        }
     }
 
     private void LoadObstaclePrefabs(ObstacleManager om)

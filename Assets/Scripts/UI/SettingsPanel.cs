@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -92,10 +93,40 @@ public class SettingsPanel : MonoBehaviour
         
         Image panelBg = panel.AddComponent<Image>();
         panelBg.color = new Color(0, 0, 0, 0.85f);
+        panelBg.raycastTarget = true;
         
-        // Botón para cerrar al hacer click fuera (opcional)
-        Button backgroundButton = panel.AddComponent<Button>();
-        backgroundButton.onClick.AddListener(Hide);
+        // EventTrigger para detectar clicks fuera del panel principal
+        EventTrigger trigger = panel.AddComponent<EventTrigger>();
+        EventTrigger.Entry entry = new EventTrigger.Entry();
+        entry.eventID = EventTriggerType.PointerClick;
+        entry.callback.AddListener((data) => {
+            // Verificar si el click fue fuera del mainContent
+            PointerEventData pointerData = (PointerEventData)data;
+            if (pointerData.pointerCurrentRaycast.gameObject != null)
+            {
+                GameObject clickedObject = pointerData.pointerCurrentRaycast.gameObject;
+                
+                // Verificar si el objeto clickeado es el panel o el panelBg (no mainContent ni sus hijos)
+                bool isMainContentOrChild = false;
+                Transform current = clickedObject.transform;
+                while (current != null)
+                {
+                    if (current.gameObject == mainContent)
+                    {
+                        isMainContentOrChild = true;
+                        break;
+                    }
+                    current = current.parent;
+                }
+                
+                // Solo cerrar si el click NO fue en mainContent ni sus hijos
+                if (!isMainContentOrChild)
+                {
+                    Hide();
+                }
+            }
+        });
+        trigger.triggers.Add(entry);
         
         // Panel principal de contenido (centrado)
         mainContent = new GameObject("MainContent");
@@ -108,6 +139,7 @@ public class SettingsPanel : MonoBehaviour
         
         Image mainBg = mainContent.AddComponent<Image>();
         mainBg.color = CosmicTheme.GlassPanel;
+        mainBg.raycastTarget = true; // Bloquear raycasts para que no pasen al fondo
         
         // Añadir efecto de borde luminiscente
         AddGlowEffect(mainContent, CosmicTheme.NeonCyan, 0.3f);

@@ -141,7 +141,7 @@ public class MainMenuController : MonoBehaviour
         settingsObj.transform.SetParent(topPanel.transform, false);
         settingsButton = settingsObj.AddComponent<Button>();
         Image settingsImg = settingsObj.AddComponent<Image>();
-        settingsImg.color = new Color(1, 1, 1, 0.3f); // Semi-transparente
+        settingsImg.color = Color.clear; // Fondo transparente
         
         RectTransform settingsRect = settingsObj.GetComponent<RectTransform>();
         settingsRect.anchorMin = new Vector2(0, 0.5f);
@@ -150,28 +150,40 @@ public class MainMenuController : MonoBehaviour
         settingsRect.anchoredPosition = new Vector2(50, 0);
         settingsRect.sizeDelta = new Vector2(60, 60);
         
-        // Crear objeto hijo para el texto
-        GameObject settingsTextObj = new GameObject("Text");
-        settingsTextObj.transform.SetParent(settingsObj.transform, false);
-        Text settingsText = settingsTextObj.AddComponent<Text>();
-        if (settingsText != null)
+        // Crear objeto hijo para el icono
+        GameObject settingsIconObj = new GameObject("Icon");
+        settingsIconObj.transform.SetParent(settingsObj.transform, false);
+        Image settingsIconImg = settingsIconObj.AddComponent<Image>();
+        
+        // Cargar el sprite del icono
+        Sprite optionsIcon = LoadOptionsIcon();
+        if (optionsIcon != null)
         {
-            settingsText.text = "⚙️";
-            Font defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (defaultFont != null)
-            {
-                settingsText.font = defaultFont;
-            }
-            settingsText.fontSize = 30;
-            settingsText.alignment = TextAnchor.MiddleCenter;
-            settingsText.color = CosmicTheme.SoftGold;
-            
-            RectTransform textRect = settingsTextObj.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.sizeDelta = Vector2.zero;
-            textRect.anchoredPosition = Vector2.zero;
+            settingsIconImg.sprite = optionsIcon;
         }
+        else
+        {
+            // Fallback: usar un sprite simple si no se encuentra el icono
+            Debug.LogWarning("No se pudo cargar OptionsIcon, usando fallback");
+        }
+        
+        settingsIconImg.color = CosmicTheme.NeonCyan; // Color neon cian para el icono
+        settingsIconImg.preserveAspect = true; // Mantener proporción del icono
+        
+        // Configurar para mejor calidad de renderizado
+        settingsIconImg.type = Image.Type.Simple; // Tipo Simple para mejor calidad
+        settingsIconImg.useSpriteMesh = false; // Desactivar mesh para mejor calidad en UI
+        
+        RectTransform iconRect = settingsIconObj.GetComponent<RectTransform>();
+        iconRect.anchorMin = new Vector2(0.5f, 0.5f);
+        iconRect.anchorMax = new Vector2(0.5f, 0.5f);
+        iconRect.pivot = new Vector2(0.5f, 0.5f);
+        iconRect.anchoredPosition = Vector2.zero;
+        // Icono más grande que el contenedor (120% del tamaño)
+        iconRect.sizeDelta = new Vector2(72, 72); // 60 * 1.2 = 72
+        
+        // Añadir animación de pulsado
+        AddButtonPressAnimation(settingsButton, iconRect);
         
         settingsButton.onClick.AddListener(ShowSettings);
         
@@ -457,6 +469,61 @@ public class MainMenuController : MonoBehaviour
         settingsPanel.Show();
     }
     
+    private void AddButtonPressAnimation(Button button, RectTransform iconRect)
+    {
+        // Crear EventTrigger para detectar cuando se presiona y suelta el botón
+        EventTrigger trigger = button.gameObject.GetComponent<EventTrigger>();
+        if (trigger == null)
+        {
+            trigger = button.gameObject.AddComponent<EventTrigger>();
+        }
+        
+        // Evento: PointerDown (cuando se presiona)
+        EventTrigger.Entry pointerDown = new EventTrigger.Entry();
+        pointerDown.eventID = EventTriggerType.PointerDown;
+        pointerDown.callback.AddListener((data) => {
+            StartCoroutine(AnimateButtonPress(iconRect, true));
+        });
+        trigger.triggers.Add(pointerDown);
+        
+        // Evento: PointerUp (cuando se suelta)
+        EventTrigger.Entry pointerUp = new EventTrigger.Entry();
+        pointerUp.eventID = EventTriggerType.PointerUp;
+        pointerUp.callback.AddListener((data) => {
+            StartCoroutine(AnimateButtonPress(iconRect, false));
+        });
+        trigger.triggers.Add(pointerUp);
+        
+        // Evento: PointerExit (si el mouse sale del botón mientras está presionado)
+        EventTrigger.Entry pointerExit = new EventTrigger.Entry();
+        pointerExit.eventID = EventTriggerType.PointerExit;
+        pointerExit.callback.AddListener((data) => {
+            StartCoroutine(AnimateButtonPress(iconRect, false));
+        });
+        trigger.triggers.Add(pointerExit);
+    }
+    
+    private IEnumerator AnimateButtonPress(RectTransform iconRect, bool isPressed)
+    {
+        Vector3 targetScale = isPressed ? Vector3.one * 0.85f : Vector3.one;
+        Vector3 currentScale = iconRect.localScale;
+        float duration = 0.1f;
+        float elapsed = 0f;
+        
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            // Ease out para suavidad
+            float easeT = 1f - Mathf.Pow(1f - t, 3f);
+            
+            iconRect.localScale = Vector3.Lerp(currentScale, targetScale, easeT);
+            yield return null;
+        }
+        
+        iconRect.localScale = targetScale;
+    }
+    
     private void UpdateCurrencyDisplay()
     {
         if (currencyText != null && currencyManager != null)
@@ -547,11 +614,49 @@ public class MainMenuController : MonoBehaviour
         }
         return null;
     }
+    private Sprite LoadOptionsIcon()
+    {
+        if (!Application.isPlaying) return null;
+        
+        try
+        {
+            // Buscar el sprite del icono de opciones
+            string[] guids = AssetDatabase.FindAssets("OptionsIcon t:Sprite");
+            if (guids.Length > 0)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite != null)
+                {
+                    return sprite;
+                }
+                
+                // Si no se encuentra como Sprite, intentar como Texture2D
+                Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                if (texture != null)
+                {
+                    // Crear sprite desde texture
+                    return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
+                }
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"No se pudo cargar el icono de opciones: {e.Message}");
+        }
+        return null;
+    }
     #else
     private Sprite LoadPlayerSprite()
     {
         // En build, intentar cargar desde Resources
         return Resources.Load<Sprite>("Art/Protagonist/AsteroideErrante");
+    }
+    
+    private Sprite LoadOptionsIcon()
+    {
+        // En build, intentar cargar desde Resources
+        return Resources.Load<Sprite>("Art/Icons/OptionsIcon");
     }
     #endif
 }

@@ -80,7 +80,14 @@ public class SpiralFragment : ObstacleBase, IObstacleDifficulty
 
     private Sprite CreateFragmentSprite()
     {
-        // Crear fragmento de constelación con forma de estrella para el efecto espiral
+        // Intentar cargar el sprite de estrella
+        Sprite starSprite = LoadObstacleSprite("StarObstacle");
+        if (starSprite != null)
+        {
+            return starSprite;
+        }
+        
+        // Fallback: crear fragmento de constelación si no se encuentra la imagen
         Color fragmentColor = Color.Lerp(CosmicTheme.CelestialBlue, CosmicTheme.EtherealLila, 0.5f);
         return ConstellationFragmentGenerator.CreateFragmentSprite(0.5f, fragmentColor, true);
     }

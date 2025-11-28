@@ -58,7 +58,14 @@ public class DoorRandom : ObstacleBase, IObstacleDifficulty
 
     private Sprite CreateDoorSprite()
     {
-        // Crear fragmento de constelación
+        // Intentar cargar el sprite de asteroide
+        Sprite asteroidSprite = LoadObstacleSprite("AsteroidObstacle");
+        if (asteroidSprite != null)
+        {
+            return asteroidSprite;
+        }
+        
+        // Fallback: crear fragmento de constelación si no se encuentra la imagen
         Color fragmentColor = Color.Lerp(CosmicTheme.ConstellationBlue, CosmicTheme.EtherealLila, 0.3f);
         return ConstellationFragmentGenerator.CreateFragmentSprite(0.5f, fragmentColor, true);
     }

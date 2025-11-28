@@ -75,7 +75,14 @@ public class OscillatingBarrier : ObstacleBase, IObstacleDifficulty
 
     private Sprite CreateBarrierSprite()
     {
-        // Crear fragmento de constelación
+        // Intentar cargar el sprite de cometa
+        Sprite cometSprite = LoadObstacleSprite("CometObstacle");
+        if (cometSprite != null)
+        {
+            return cometSprite;
+        }
+        
+        // Fallback: crear fragmento de constelación si no se encuentra la imagen
         Color fragmentColor = Color.Lerp(CosmicTheme.CelestialBlue, CosmicTheme.EtherealLila, 0.4f);
         return ConstellationFragmentGenerator.CreateFragmentSprite(0.5f, fragmentColor, false);
     }

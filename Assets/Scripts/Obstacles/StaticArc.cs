@@ -46,7 +46,14 @@ public class StaticArc : ObstacleBase, IObstacleDifficulty
 
     private Sprite CreateArcSprite()
     {
-        // Crear fragmento de constelación
+        // Intentar cargar el sprite de fragmento cósmico
+        Sprite fragmentSprite = LoadObstacleSprite("CosmicFragmentObstacle");
+        if (fragmentSprite != null)
+        {
+            return fragmentSprite;
+        }
+        
+        // Fallback: crear fragmento de constelación si no se encuentra la imagen
         Color fragmentColor = Color.Lerp(CosmicTheme.ConstellationBlue, CosmicTheme.CelestialBlue, 0.5f);
         return ConstellationFragmentGenerator.CreateFragmentSprite(0.5f, fragmentColor, false);
     }

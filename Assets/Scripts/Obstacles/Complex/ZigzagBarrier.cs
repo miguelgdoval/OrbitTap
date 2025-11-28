@@ -93,7 +93,14 @@ public class ZigzagBarrier : ObstacleBase, IObstacleDifficulty
 
     private Sprite CreateBarrierSprite()
     {
-        // Crear fragmento de constelación alargado para la barrera
+        // Intentar cargar el sprite de estrella de neutrinos
+        Sprite starSprite = LoadObstacleSprite("NeutrineStarObstacle");
+        if (starSprite != null)
+        {
+            return starSprite;
+        }
+        
+        // Fallback: crear fragmento de constelación si no se encuentra la imagen
         Color fragmentColor = Color.Lerp(CosmicTheme.ConstellationBlue, CosmicTheme.CelestialBlue, 0.6f);
         return ConstellationFragmentGenerator.CreateFragmentSprite(0.5f, fragmentColor, false);
     }

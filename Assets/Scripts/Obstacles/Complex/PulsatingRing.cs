@@ -78,6 +78,14 @@ public class PulsatingRing : ObstacleBase, IObstacleDifficulty
 
     private Sprite CreateRingSprite()
     {
+        // Intentar cargar el sprite de estrella de neutrinos
+        Sprite starSprite = LoadObstacleSprite("NeutrineStarObstacle");
+        if (starSprite != null)
+        {
+            return starSprite;
+        }
+        
+        // Fallback: crear anillo programáticamente si no se encuentra la imagen
         int textureSize = 128;
         Texture2D texture = new Texture2D(textureSize, textureSize);
         Color[] colors = new Color[textureSize * textureSize];

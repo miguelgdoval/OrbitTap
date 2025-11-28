@@ -1396,135 +1396,64 @@ public class MainMenuController : MonoBehaviour
         SceneManager.LoadScene("Game");
     }
     
-    #if UNITY_EDITOR
-    private Sprite LoadPlayerSprite()
+    /// <summary>
+    /// Función helper para cargar sprites que funciona tanto en editor como en builds
+    /// </summary>
+    private Sprite LoadSpriteResource(string resourcePath, string assetName)
     {
         if (!Application.isPlaying) return null;
         
-        try
-        {
-            // Buscar el sprite del asteroide errante
-            string[] guids = AssetDatabase.FindAssets("AsteroideErrante t:Sprite");
-            if (guids.Length > 0)
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                if (sprite != null)
-                {
-                    return sprite;
-                }
-                
-                // Si no se encuentra como Sprite, intentar como Texture2D
-                Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-                if (texture != null)
-                {
-                    // Crear sprite desde texture
-                    return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
-                }
-            }
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogWarning($"No se pudo cargar el sprite del asteroide: {e.Message}");
-        }
-        return null;
-    }
-    private Sprite LoadOptionsIcon()
-    {
-        if (!Application.isPlaying) return null;
+        // Primero intentar cargar desde Resources (funciona en editor y builds si están en carpeta Resources)
+        Sprite sprite = Resources.Load<Sprite>(resourcePath);
+        if (sprite != null) return sprite;
         
-        try
+        // Intentar cargar como Texture2D desde Resources
+        Texture2D texture = Resources.Load<Texture2D>(resourcePath);
+        if (texture != null)
         {
-            // Buscar el sprite del icono de opciones
-            string[] guids = AssetDatabase.FindAssets("OptionsIcon t:Sprite");
-            if (guids.Length > 0)
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                if (sprite != null)
-                {
-                    return sprite;
-                }
-                
-                // Si no se encuentra como Sprite, intentar como Texture2D
-                Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-                if (texture != null)
-                {
-                    // Crear sprite desde texture
-                    return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
-                }
-            }
+            return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
         }
-        catch (System.Exception e)
-        {
-            Debug.LogWarning($"No se pudo cargar el icono de opciones: {e.Message}");
-        }
-        return null;
-    }
-    
-    private Sprite LoadNavIcon(string buttonName)
-    {
-        if (!Application.isPlaying) return null;
         
+        #if UNITY_EDITOR
+        // En el editor, intentar usar AssetDatabase como fallback
         try
         {
-            // Determinar el nombre del icono según el botón
-            string iconName = "";
-            switch (buttonName)
-            {
-                case "SkinsButton": iconName = "SkinIcon"; break;
-                case "StoreButton": iconName = "StoreIcon"; break;
-                case "PlayButton": iconName = "PlayIcon"; break;
-                case "MissionsButton": iconName = "MissionsIcon"; break;
-                case "LeaderboardButton": iconName = "LeaderboardIcon"; break;
-                default: return null;
-            }
-            
-            if (string.IsNullOrEmpty(iconName)) return null;
-            
-            // Buscar el sprite del icono
-            string[] guids = AssetDatabase.FindAssets(iconName + " t:Sprite");
+            string[] guids = UnityEditor.AssetDatabase.FindAssets(assetName + " t:Sprite");
             if (guids.Length == 0)
             {
-                // Intentar como Texture2D
-                guids = AssetDatabase.FindAssets(iconName + " t:Texture2D");
+                guids = UnityEditor.AssetDatabase.FindAssets(assetName + " t:Texture2D");
             }
             
             if (guids.Length > 0)
             {
-                string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                if (sprite != null)
-                {
-                    return sprite;
-                }
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
+                sprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite != null) return sprite;
                 
-                // Si no se encuentra como Sprite, intentar como Texture2D
-                Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(path);
                 if (texture != null)
                 {
-                    // Crear sprite desde texture
                     return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
                 }
             }
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning($"No se pudo cargar el icono {buttonName}: {e.Message}");
+            Debug.LogWarning($"No se pudo cargar el sprite {assetName}: {e.Message}");
         }
+        #endif
+        
         return null;
     }
-    #else
+    
     private Sprite LoadPlayerSprite()
     {
-        // En build, intentar cargar desde Resources
-        return Resources.Load<Sprite>("Art/Protagonist/AsteroideErrante");
+        return LoadSpriteResource("Art/Protagonist/AsteroideErrante", "AsteroideErrante");
     }
     
     private Sprite LoadOptionsIcon()
     {
-        // En build, intentar cargar desde Resources
-        return Resources.Load<Sprite>("Art/Icons/OptionsIcon");
+        return LoadSpriteResource("Art/Icons/OptionsIcon", "OptionsIcon");
     }
     
     private Sprite LoadNavIcon(string buttonName)
@@ -1545,8 +1474,6 @@ public class MainMenuController : MonoBehaviour
         
         if (string.IsNullOrEmpty(iconName)) return null;
         
-        // En build, intentar cargar desde Resources
-        return Resources.Load<Sprite>($"Art/Icons/{iconName}");
+        return LoadSpriteResource($"Art/Icons/{iconName}", iconName);
     }
-    #endif
 }

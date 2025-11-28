@@ -162,9 +162,10 @@ public class ObstacleManager : MonoBehaviour
 
     private void LoadPrefabsIfNeeded()
     {
-        #if UNITY_EDITOR
         if (!Application.isPlaying) return;
         
+        #if UNITY_EDITOR
+        // En el editor, usar AssetDatabase
         if (doorFixedPrefab == null)
             doorFixedPrefab = LoadPrefabByName("DoorFixed");
         if (doorRandomPrefab == null)
@@ -181,6 +182,25 @@ public class ObstacleManager : MonoBehaviour
             spiralFragmentPrefab = LoadPrefabByName("SpiralFragment");
         if (zigzagBarrierPrefab == null)
             zigzagBarrierPrefab = LoadPrefabByName("ZigzagBarrier");
+        #else
+        // En builds, intentar cargar desde Resources (si están en una carpeta Resources)
+        // Si no están, se crearán dinámicamente cuando sea necesario
+        if (doorFixedPrefab == null)
+            doorFixedPrefab = Resources.Load<GameObject>("Prefabs/Obstacles/DoorFixed");
+        if (doorRandomPrefab == null)
+            doorRandomPrefab = Resources.Load<GameObject>("Prefabs/Obstacles/DoorRandom");
+        if (oscillatingBarrierPrefab == null)
+            oscillatingBarrierPrefab = Resources.Load<GameObject>("Prefabs/Obstacles/OscillatingBarrier");
+        if (rotatingArcPrefab == null)
+            rotatingArcPrefab = Resources.Load<GameObject>("Prefabs/Obstacles/RotatingArc");
+        if (staticArcPrefab == null)
+            staticArcPrefab = Resources.Load<GameObject>("Prefabs/Obstacles/StaticArc");
+        if (pulsatingRingPrefab == null)
+            pulsatingRingPrefab = Resources.Load<GameObject>("Prefabs/Obstacles/PulsatingRing");
+        if (spiralFragmentPrefab == null)
+            spiralFragmentPrefab = Resources.Load<GameObject>("Prefabs/Obstacles/SpiralFragment");
+        if (zigzagBarrierPrefab == null)
+            zigzagBarrierPrefab = Resources.Load<GameObject>("Prefabs/Obstacles/ZigzagBarrier");
         #endif
     }
 
@@ -420,6 +440,49 @@ public class ObstacleManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Crea obstáculos simples dinámicamente si los prefabs no están disponibles
+    /// </summary>
+    private void CreateSimpleObstacleDynamically()
+    {
+        // Seleccionar un tipo aleatorio de obstáculo simple
+        int obstacleType = Random.Range(0, 5);
+        
+        GameObject obstacleObj = new GameObject();
+        string obstacleName = "";
+        MonoBehaviour obstacleComponent = null;
+        
+        // Crear el componente correspondiente
+        switch (obstacleType)
+        {
+            case 0:
+                obstacleName = "DoorFixed";
+                obstacleComponent = obstacleObj.AddComponent<DoorFixed>();
+                break;
+            case 1:
+                obstacleName = "DoorRandom";
+                obstacleComponent = obstacleObj.AddComponent<DoorRandom>();
+                break;
+            case 2:
+                obstacleName = "StaticArc";
+                obstacleComponent = obstacleObj.AddComponent<StaticArc>();
+                break;
+            case 3:
+                obstacleName = "RotatingArc";
+                obstacleComponent = obstacleObj.AddComponent<RotatingArc>();
+                break;
+            case 4:
+                obstacleName = "OscillatingBarrier";
+                obstacleComponent = obstacleObj.AddComponent<OscillatingBarrier>();
+                break;
+        }
+        
+        obstacleObj.name = obstacleName;
+        
+        // Continuar con el spawn normal desde aquí
+        SetupDynamicObstacle(obstacleObj);
+    }
+    
+    /// <summary>
     /// TEMPORAL: Crea obstáculos complejos dinámicamente si los prefabs no están disponibles
     /// </summary>
     private void CreateComplexObstacleDynamically()
@@ -445,7 +508,14 @@ public class ObstacleManager : MonoBehaviour
         }
         
         // Continuar con el spawn normal desde aquí
-        // Necesitamos calcular la posición de spawn y dirección
+        SetupDynamicObstacle(obstacleObj);
+    }
+    
+    /// <summary>
+    /// Configura un obstáculo dinámico con posición, movimiento y efectos
+    /// </summary>
+    private void SetupDynamicObstacle(GameObject obstacleObj)
+    {
         if (mainCamera == null)
         {
             mainCamera = Camera.main;
@@ -588,10 +658,15 @@ public class ObstacleManager : MonoBehaviour
             Debug.LogWarning($"ObstacleManager: No valid obstacle prefabs assigned! (Current difficulty: {currentDifficulty}, Max: {maxDifficultyLevel})");
             Debug.LogWarning($"ObstacleManager: PulsatingRing={pulsatingRingPrefab != null}, SpiralFragment={spiralFragmentPrefab != null}, ZigzagBarrier={zigzagBarrierPrefab != null}");
             
-            // Si no hay prefabs disponibles, intentar crear obstáculos dinámicamente (solo para los complejos)
+            // Si no hay prefabs disponibles, crear obstáculos dinámicamente
             if (currentDifficulty >= ObstacleDifficultyLevel.Hard)
             {
                 CreateComplexObstacleDynamically();
+            }
+            else
+            {
+                // Crear obstáculos simples dinámicamente si no hay prefabs
+                CreateSimpleObstacleDynamically();
             }
             return;
         }

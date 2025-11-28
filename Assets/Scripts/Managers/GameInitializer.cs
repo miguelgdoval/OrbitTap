@@ -215,29 +215,45 @@ public class GameInitializer : MonoBehaviour
         }
         return null;
     }
+    #endif
     
+    /// <summary>
+    /// Función helper para cargar sprites que funciona tanto en editor como en builds
+    /// </summary>
     private Sprite LoadPlayerSprite()
     {
         if (!Application.isPlaying) return null;
         
+        // Primero intentar cargar desde Resources (funciona en editor y builds si están en carpeta Resources)
+        Sprite sprite = Resources.Load<Sprite>("Art/Protagonist/AsteroideErrante");
+        if (sprite != null) return sprite;
+        
+        // Intentar cargar como Texture2D desde Resources
+        Texture2D texture = Resources.Load<Texture2D>("Art/Protagonist/AsteroideErrante");
+        if (texture != null)
+        {
+            return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
+        }
+        
+        #if UNITY_EDITOR
+        // En el editor, intentar usar AssetDatabase como fallback
         try
         {
-            // Buscar el sprite del asteroide errante
             string[] guids = UnityEditor.AssetDatabase.FindAssets("AsteroideErrante t:Sprite");
+            if (guids.Length == 0)
+            {
+                guids = UnityEditor.AssetDatabase.FindAssets("AsteroideErrante t:Texture2D");
+            }
+            
             if (guids.Length > 0)
             {
                 string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
-                Sprite sprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                if (sprite != null)
-                {
-                    return sprite;
-                }
+                sprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite != null) return sprite;
                 
-                // Si no se encuentra como Sprite, intentar como Texture2D
-                Texture2D texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(path);
                 if (texture != null)
                 {
-                    // Crear sprite desde texture
                     return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
                 }
             }
@@ -246,15 +262,10 @@ public class GameInitializer : MonoBehaviour
         {
             Debug.LogWarning($"No se pudo cargar el sprite del asteroide: {e.Message}");
         }
+        #endif
+        
         return null;
     }
-    #else
-    private Sprite LoadPlayerSprite()
-    {
-        // En build, intentar cargar desde Resources
-        return Resources.Load<Sprite>("Art/Protagonist/AsteroideErrante");
-    }
-    #endif
 
     private void CreateScoreUI(ScoreManager sm)
     {

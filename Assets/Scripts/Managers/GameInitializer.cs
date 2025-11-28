@@ -13,7 +13,25 @@ public class GameInitializer : MonoBehaviour
     {
         if (!Application.isPlaying) return;
         
+        // Forzar orientación horizontal (landscape) en móviles
+        ConfigureScreenOrientation();
+        
         InitializeGame();
+    }
+    
+    private void ConfigureScreenOrientation()
+    {
+        // Configurar orientación solo para móviles
+        #if UNITY_ANDROID || UNITY_IOS
+        // Permitir solo rotaciones horizontales
+        Screen.autorotateToPortrait = false;
+        Screen.autorotateToPortraitUpsideDown = false;
+        Screen.autorotateToLandscapeLeft = true;
+        Screen.autorotateToLandscapeRight = true;
+        
+        // Forzar orientación horizontal
+        Screen.orientation = ScreenOrientation.LandscapeLeft;
+        #endif
     }
 
     private void InitializeGame()

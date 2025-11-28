@@ -45,6 +45,9 @@ public class MainMenuController : MonoBehaviour
     
     private void Start()
     {
+        // Forzar orientación horizontal (landscape) en móviles
+        ConfigureScreenOrientation();
+        
         // Configurar fondo cósmico
         if (GetComponent<CosmicBackground>() == null)
         {
@@ -64,6 +67,21 @@ public class MainMenuController : MonoBehaviour
         
         CreateUI();
         CreatePlayerDemo();
+    }
+    
+    private void ConfigureScreenOrientation()
+    {
+        // Configurar orientación solo para móviles
+        #if UNITY_ANDROID || UNITY_IOS
+        // Permitir solo rotaciones horizontales
+        Screen.autorotateToPortrait = false;
+        Screen.autorotateToPortraitUpsideDown = false;
+        Screen.autorotateToLandscapeLeft = true;
+        Screen.autorotateToLandscapeRight = true;
+        
+        // Forzar orientación horizontal
+        Screen.orientation = ScreenOrientation.LandscapeLeft;
+        #endif
     }
     
     private void CreateUI()

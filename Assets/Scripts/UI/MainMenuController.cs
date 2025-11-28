@@ -157,7 +157,7 @@ public class MainMenuController : MonoBehaviour
         topRect.anchorMax = new Vector2(1, 1);
         topRect.pivot = new Vector2(0.5f, 1f);
         topRect.anchoredPosition = new Vector2(0, -40); // Negativo para estar dentro de la pantalla
-        topRect.sizeDelta = new Vector2(0, 80);
+        topRect.sizeDelta = new Vector2(0, 160); // Duplicado de 80
         
         // Botón Settings (izquierda)
         GameObject settingsObj = new GameObject("SettingsButton");
@@ -170,8 +170,8 @@ public class MainMenuController : MonoBehaviour
         settingsRect.anchorMin = new Vector2(0, 0.5f);
         settingsRect.anchorMax = new Vector2(0, 0.5f);
         settingsRect.pivot = new Vector2(0.5f, 0.5f);
-        settingsRect.anchoredPosition = new Vector2(50, 0);
-        settingsRect.sizeDelta = new Vector2(60, 60);
+        settingsRect.anchoredPosition = new Vector2(100, 0); // Duplicado de 50
+        settingsRect.sizeDelta = new Vector2(120, 120); // Duplicado de 60
         
         // Crear objeto hijo para el icono
         GameObject settingsIconObj = new GameObject("Icon");
@@ -203,7 +203,7 @@ public class MainMenuController : MonoBehaviour
         iconRect.pivot = new Vector2(0.5f, 0.5f);
         iconRect.anchoredPosition = Vector2.zero;
         // Icono más grande que el contenedor (120% del tamaño)
-        iconRect.sizeDelta = new Vector2(72, 72); // 60 * 1.2 = 72
+        iconRect.sizeDelta = new Vector2(144, 144); // Duplicado de 72
         
         // Añadir animación de pulsado
         AddButtonPressAnimation(settingsButton, iconRect);
@@ -221,8 +221,8 @@ public class MainMenuController : MonoBehaviour
         currencyRect.anchorMin = new Vector2(1, 0.5f);
         currencyRect.anchorMax = new Vector2(1, 0.5f);
         currencyRect.pivot = new Vector2(1f, 0.5f);
-        currencyRect.anchoredPosition = new Vector2(-100, 0);
-        currencyRect.sizeDelta = new Vector2(150, 60);
+        currencyRect.anchoredPosition = new Vector2(-200, 0); // Duplicado de -100
+        currencyRect.sizeDelta = new Vector2(300, 120); // Duplicado de 150x60
         
         // Crear objeto hijo para el texto
         GameObject currencyTextObj = new GameObject("Text");
@@ -236,7 +236,7 @@ public class MainMenuController : MonoBehaviour
             {
                 currencyText.font = defaultFont;
             }
-            currencyText.fontSize = 24;
+            currencyText.fontSize = 48; // Duplicado de 24
             currencyText.alignment = TextAnchor.MiddleCenter;
             currencyText.color = CosmicTheme.SoftGold;
             
@@ -337,7 +337,7 @@ public class MainMenuController : MonoBehaviour
         playBtnRect.anchorMax = new Vector2(0.5f, 0.5f);
         playBtnRect.pivot = new Vector2(0.5f, 0.5f);
         playBtnRect.anchoredPosition = new Vector2(0, -50);
-        playBtnRect.sizeDelta = new Vector2(350, 100);
+        playBtnRect.sizeDelta = new Vector2(700, 200); // Duplicado de 350x100
         
         playButton = playBtnObj.AddComponent<Button>();
         
@@ -357,7 +357,7 @@ public class MainMenuController : MonoBehaviour
         // Glow suave en la placa
         Outline plateOutline = plateObj.AddComponent<Outline>();
         plateOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.4f);
-        plateOutline.effectDistance = new Vector2(3, 3);
+        plateOutline.effectDistance = new Vector2(6, 6); // Duplicado de 3
         
         // Icono de play (usando sprite)
         GameObject iconObj = new GameObject("Icon");
@@ -380,7 +380,7 @@ public class MainMenuController : MonoBehaviour
             Text iconText = iconObj.AddComponent<Text>();
             iconText.text = "▶";
             iconText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            iconText.fontSize = 50;
+            iconText.fontSize = 100; // Duplicado de 50
             iconText.alignment = TextAnchor.MiddleCenter;
             iconText.color = CosmicTheme.NeonCyan;
             iconText.raycastTarget = false;
@@ -391,12 +391,12 @@ public class MainMenuController : MonoBehaviour
         iconRect.anchorMax = new Vector2(0.5f, 0.6f);
         iconRect.pivot = new Vector2(0.5f, 0.5f);
         iconRect.anchoredPosition = Vector2.zero;
-        iconRect.sizeDelta = new Vector2(350, 60);
+        iconRect.sizeDelta = new Vector2(700, 120); // Duplicado de 350x60
         
         // Glow en el icono
         Outline iconOutline = iconObj.AddComponent<Outline>();
         iconOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.5f);
-        iconOutline.effectDistance = new Vector2(2, 2);
+        iconOutline.effectDistance = new Vector2(4, 4); // Duplicado de 2
         
         // Texto debajo del icono
         GameObject playTextObj = new GameObject("Text");
@@ -404,7 +404,7 @@ public class MainMenuController : MonoBehaviour
         playButtonText = playTextObj.AddComponent<Text>();
             playButtonText.text = "TAP TO PLAY";
         playButtonText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        playButtonText.fontSize = 20;
+        playButtonText.fontSize = 40; // Duplicado de 20
             playButtonText.fontStyle = FontStyle.Bold;
             playButtonText.alignment = TextAnchor.MiddleCenter;
         playButtonText.color = CosmicTheme.SpaceWhite;
@@ -415,7 +415,7 @@ public class MainMenuController : MonoBehaviour
         textRect.anchorMax = new Vector2(0.5f, 0.35f);
         textRect.pivot = new Vector2(0.5f, 0.5f);
             textRect.anchoredPosition = Vector2.zero;
-        textRect.sizeDelta = new Vector2(350, 30);
+        textRect.sizeDelta = new Vector2(700, 60); // Duplicado de 350x30
         
         // Añadir Image al botón para que pueda recibir clicks
         Image btnImage = playBtnObj.AddComponent<Image>();
@@ -496,11 +496,11 @@ public class MainMenuController : MonoBehaviour
         bottomNavPanel = new GameObject("BottomNavigationPanel");
         bottomNavPanel.transform.SetParent(canvas.transform, false);
         RectTransform navRect = bottomNavPanel.AddComponent<RectTransform>();
-        navRect.anchorMin = new Vector2(0.5f, 0f);
-        navRect.anchorMax = new Vector2(0.5f, 0f);
+        navRect.anchorMin = new Vector2(0f, 0f); // Anclar a la esquina inferior izquierda
+        navRect.anchorMax = new Vector2(1f, 0f); // Anclar a la esquina inferior derecha (full width)
         navRect.pivot = new Vector2(0.5f, 0f);
         navRect.anchoredPosition = new Vector2(0, 30);
-        navRect.sizeDelta = new Vector2(1500, 130); // Panel más ancho y alto
+        navRect.sizeDelta = new Vector2(0, 220); // Altura reducida para móvil (era 260)
         
         // Fondo con esquinas redondeadas (simulado con Image)
         Image navBg = bottomNavPanel.AddComponent<Image>();
@@ -530,28 +530,32 @@ public class MainMenuController : MonoBehaviour
         // No añadir Image al contenedor para que no bloquee
         
         // Crear botones en el orden: Skins, Store, Play (centro grande), Missions, Leaderboard
-        float buttonSpacing = 250f; // Más espaciado para panel más ancho
-        float startX = -500f; // Ajustado para panel más ancho
-        float buttonSize = 90f; // Botones más grandes (crecerán a 115px cuando estén activos)
+        // Distribución uniforme para pantallas móviles (5 botones)
+        float buttonSize = 260f; // Aumentado de 220f (botones aún más grandes)
         
-        // Botón Skins (todos empiezan con el mismo tamaño, el seleccionado crecerá)
-        skinsNavButton = CreateBottomNavButton("SkinsButton", "Skins", buttonsContainer.transform, startX, buttonSize, false);
+        // Espaciado aumentado
+        // Para 5 botones, distribuirlos uniformemente: -2x, -x, 0, x, 2x
+        float buttonSpacing = 280f; // Aumentado de 240f (más espacio entre botones)
+        float startOffset = -buttonSpacing * 2f; // -560 para el primer botón
+        
+        // Botón Skins (izquierda)
+        skinsNavButton = CreateBottomNavButton("SkinsButton", "Skins", buttonsContainer.transform, startOffset, buttonSize, false);
         skinsNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Skins));
         
         // Botón Store
-        storeNavButton = CreateBottomNavButton("StoreButton", "Store", buttonsContainer.transform, startX + buttonSpacing, buttonSize, false);
+        storeNavButton = CreateBottomNavButton("StoreButton", "Store", buttonsContainer.transform, startOffset + buttonSpacing, buttonSize, false);
         storeNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Shop));
         
-        // Botón Play (centro, mismo tamaño inicial)
+        // Botón Play (centro)
         playNavButton = CreateBottomNavButton("PlayButton", "Play", buttonsContainer.transform, 0, buttonSize, false);
         playNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Play));
         
         // Botón Missions
-        missionsNavButton = CreateBottomNavButton("MissionsButton", "Missions", buttonsContainer.transform, -startX - buttonSpacing, buttonSize, false);
+        missionsNavButton = CreateBottomNavButton("MissionsButton", "Missions", buttonsContainer.transform, -startOffset - buttonSpacing, buttonSize, false);
         missionsNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Missions));
         
-        // Botón Leaderboard
-        leaderboardNavButton = CreateBottomNavButton("LeaderboardButton", "Leaderboard", buttonsContainer.transform, -startX, buttonSize, false);
+        // Botón Leaderboard (derecha)
+        leaderboardNavButton = CreateBottomNavButton("LeaderboardButton", "Leaderboard", buttonsContainer.transform, -startOffset, buttonSize, false);
         leaderboardNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Leaderboard));
         
         // Añadir partículas sutiles detrás de la barra (al final para que no bloqueen)
@@ -600,7 +604,7 @@ public class MainMenuController : MonoBehaviour
         // Glow suave en la placa
         Outline plateOutline = plateObj.AddComponent<Outline>();
         plateOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.3f);
-        plateOutline.effectDistance = new Vector2(2, 2);
+        plateOutline.effectDistance = new Vector2(4, 4); // Duplicado de 2 para mejor visibilidad en móvil
         
         // Indicador de sección activa (línea debajo del botón)
         GameObject indicatorObj = new GameObject("Indicator");
@@ -614,7 +618,7 @@ public class MainMenuController : MonoBehaviour
         indicatorRect.anchorMax = new Vector2(0.5f, 0f);
         indicatorRect.pivot = new Vector2(0.5f, 0f);
         indicatorRect.anchoredPosition = new Vector2(0, -size * 0.6f);
-        indicatorRect.sizeDelta = new Vector2(size * 0.6f, 3);
+        indicatorRect.sizeDelta = new Vector2(size * 0.6f, 6); // Duplicado de 3
         
         // Inicialmente oculto, se mostrará cuando el botón esté activo
         indicatorObj.SetActive(false);
@@ -649,7 +653,7 @@ public class MainMenuController : MonoBehaviour
             }
             iconText.text = iconSymbol;
             iconText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            iconText.fontSize = 50; // Iconos más grandes
+            iconText.fontSize = 100; // Duplicado de 50 para móvil
             iconText.alignment = TextAnchor.MiddleCenter;
             iconText.color = CosmicTheme.NeonCyan;
             iconText.raycastTarget = false;
@@ -665,22 +669,22 @@ public class MainMenuController : MonoBehaviour
         // Glow mínimo en el icono
         Outline iconOutline = iconObj.AddComponent<Outline>();
         iconOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.4f);
-        iconOutline.effectDistance = new Vector2(1, 1);
+        iconOutline.effectDistance = new Vector2(2, 2); // Duplicado de 1 para mejor visibilidad en móvil
         
-        // Texto debajo del icono
+        // Texto debajo del icono (más abajo para no superponerse)
         GameObject labelObj = new GameObject("Label");
         labelObj.transform.SetParent(btnObj.transform, false);
         Text labelText = labelObj.AddComponent<Text>();
         labelText.text = label;
         labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        labelText.fontSize = 16; // Texto más grande
+        labelText.fontSize = 32; // Duplicado de 16 para móvil
         labelText.alignment = TextAnchor.MiddleCenter;
         labelText.color = CosmicTheme.SpaceWhite;
         labelText.raycastTarget = false; // No bloquear raycasts
         
         RectTransform labelRect = labelObj.GetComponent<RectTransform>();
-        labelRect.anchorMin = new Vector2(0.5f, 0.1f);
-        labelRect.anchorMax = new Vector2(0.5f, 0.3f);
+        labelRect.anchorMin = new Vector2(0.5f, 0f);
+        labelRect.anchorMax = new Vector2(0.5f, 0f); // Movido aún más abajo (era 0.2f)
         labelRect.pivot = new Vector2(0.5f, 0.5f);
         labelRect.anchoredPosition = Vector2.zero;
         labelRect.sizeDelta = new Vector2(size, size * 0.2f);

@@ -34,7 +34,8 @@ public class StaticArc : ObstacleBase, IObstacleDifficulty
         // Calcular el tamaño real del sprite en unidades del mundo para colisión pixel perfect
         float spriteWorldSize = sr.sprite.rect.width / sr.sprite.pixelsPerUnit;
         // El radio del collider debe ser la mitad del tamaño del sprite
-        float colliderRadius = spriteWorldSize / 2f;
+        // Reducir a 80% para hacer el collider más preciso y evitar colisiones falsas
+        float colliderRadius = (spriteWorldSize / 2f) * 0.8f;
         
         CircleCollider2D collider = arc.AddComponent<CircleCollider2D>();
         collider.radius = colliderRadius;

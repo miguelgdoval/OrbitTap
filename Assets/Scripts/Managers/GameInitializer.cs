@@ -87,9 +87,12 @@ public class GameInitializer : MonoBehaviour
             rb.gravityScale = 0f;
 
             // CircleCollider2D - debe ser trigger para detectar colisiones con obstáculos
-            // El collider se escalará automáticamente con el transform, pero ajustamos el radio base
+            // El collider se escalará automáticamente con el transform (scale 0.64f)
+            // Reducimos el radio base para hacer el collider más pequeño y preciso
             CircleCollider2D collider = player.AddComponent<CircleCollider2D>();
-            collider.radius = 0.5f; // Este se escalará automáticamente a 0.4f (0.5 * 0.8)
+            // Radio base más pequeño: 0.25f se escalará a ~0.16f (0.25 * 0.64)
+            // Esto hace el collider más preciso y evita colisiones falsas
+            collider.radius = 0.25f;
             collider.isTrigger = true;
 
             // PlayerOrbit

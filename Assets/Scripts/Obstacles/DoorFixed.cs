@@ -38,8 +38,8 @@ public class DoorFixed : ObstacleBase, IObstacleDifficulty
         // Calcular el tamaño real del sprite en unidades del mundo para colisión pixel perfect
         float spriteWorldSize = leftSR.sprite.rect.width / leftSR.sprite.pixelsPerUnit;
         BoxCollider2D leftCollider = leftDoor.AddComponent<BoxCollider2D>();
-        // Usar el tamaño del sprite para el collider (ajustar según la orientación)
-        leftCollider.size = new Vector2(spriteWorldSize, spriteWorldSize);
+        // Usar el tamaño del sprite para el collider, reducido a 80% para mayor precisión
+        leftCollider.size = new Vector2(spriteWorldSize, spriteWorldSize) * 0.8f;
         leftCollider.isTrigger = true;
         
         // Agregar detector de colisiones
@@ -59,8 +59,8 @@ public class DoorFixed : ObstacleBase, IObstacleDifficulty
         // Calcular el tamaño real del sprite en unidades del mundo para colisión pixel perfect
         float spriteWorldSizeRight = rightSR.sprite.rect.width / rightSR.sprite.pixelsPerUnit;
         BoxCollider2D rightCollider = rightDoor.AddComponent<BoxCollider2D>();
-        // Usar el tamaño del sprite para el collider
-        rightCollider.size = new Vector2(spriteWorldSizeRight, spriteWorldSizeRight);
+        // Usar el tamaño del sprite para el collider, reducido a 80% para mayor precisión
+        rightCollider.size = new Vector2(spriteWorldSizeRight, spriteWorldSizeRight) * 0.8f;
         rightCollider.isTrigger = true;
         
         // Agregar detector de colisiones

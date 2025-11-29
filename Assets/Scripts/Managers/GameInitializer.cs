@@ -110,6 +110,14 @@ public class GameInitializer : MonoBehaviour
             // PlanetSurface - Rotación de superficie del planeta
             PlanetSurface planetSurface = player.AddComponent<PlanetSurface>();
             planetSurface.rotationSpeed = 20f; // Grados por segundo
+            
+            // PlanetIdleAnimator - Animación idle del planeta (rotación, breathing, glow)
+            PlanetIdleAnimator idleAnimator = player.AddComponent<PlanetIdleAnimator>();
+            idleAnimator.rotationSpeed = 15f; // Rotación suave del planeta
+            idleAnimator.scaleAmplitude = 0.03f; // Breathing effect sutil
+            idleAnimator.scaleFrequency = 0.4f; // Más lento: ciclo completo cada ~2.5 segundos
+            idleAnimator.glowAmplitude = 0.15f; // Glow animado
+            idleAnimator.glowFrequency = 1.2f;
         }
 
         // Crear fondo cósmico

@@ -1013,6 +1013,14 @@ public class MainMenuController : MonoBehaviour
         PlanetSurface planetSurface = player.AddComponent<PlanetSurface>();
         planetSurface.rotationSpeed = 20f; // Misma velocidad que en el juego
         
+        // PlanetIdleAnimator - Animación idle del planeta (rotación, breathing, glow)
+        PlanetIdleAnimator idleAnimator = player.AddComponent<PlanetIdleAnimator>();
+        idleAnimator.rotationSpeed = 12f; // Rotación suave del planeta (más lenta en menú)
+        idleAnimator.scaleAmplitude = 0.03f; // Breathing effect sutil
+        idleAnimator.scaleFrequency = 0.4f; // Más lento: ciclo completo cada ~2.5 segundos
+        idleAnimator.glowAmplitude = 0.15f; // Glow animado
+        idleAnimator.glowFrequency = 1.2f;
+        
         playerDemo = player;
     }
     

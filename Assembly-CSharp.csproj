@@ -112,6 +112,7 @@
     <Compile Include="Assets/Scripts/Managers/InputController.cs" />
     <Compile Include="Assets/Scripts/Obstacles/Complex/SpiralFragment.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundLayer.cs" />
+    <Compile Include="Assets/Scripts/Player/PlanetDestructionController.cs" />
     <Compile Include="Assets/Scripts/Obstacles/StaticArc.cs" />
   </ItemGroup>
   <ItemGroup>

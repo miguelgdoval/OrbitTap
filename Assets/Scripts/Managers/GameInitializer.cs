@@ -121,6 +121,14 @@ public class GameInitializer : MonoBehaviour
             idleAnimator.scaleFrequency = 0.4f; // Más lento: ciclo completo cada ~2.5 segundos
             idleAnimator.glowAmplitude = 0.15f; // Glow animado
             idleAnimator.glowFrequency = 1.2f;
+            
+            // PlanetDestructionController - Sistema de destrucción del planeta
+            PlanetDestructionController destructionController = player.AddComponent<PlanetDestructionController>();
+            destructionController.fragmentCount = 8;
+            destructionController.fragmentSpeed = 5f;
+            destructionController.fragmentGravity = 2f;
+            destructionController.particleCount = 40;
+            destructionController.particleSpeed = 7f;
         }
 
         // Crear fondo cósmico

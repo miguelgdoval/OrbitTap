@@ -72,6 +72,23 @@ public class ObstacleBase : MonoBehaviour
         if (isPlayer)
         {
             Debug.Log("Colisión detectada con Player! GameObject: " + collision.gameObject.name);
+            
+            // CRÍTICO: OnTriggerEnter2D se ejecuta en el frame de la colisión
+            // Pero PlayerOrbit.Update() puede ejecutarse después en el mismo frame
+            // Por eso NO pasamos la posición aquí, dejamos que DestroyPlanet() capture la posición
+            // después de desactivar PlayerOrbit
+            GameObject playerObj = collision.gameObject;
+            
+            // Activar animación de destrucción del planeta
+            // NO pasar posición - DestroyPlanet() la capturará después de desactivar PlayerOrbit
+            PlanetDestructionController destructionController = playerObj.GetComponent<PlanetDestructionController>();
+            if (destructionController != null)
+            {
+                // Llamar sin parámetros para que capture la posición exacta después de desactivar PlayerOrbit
+                destructionController.DestroyPlanet();
+            }
+            
+            // Llamar a GameOver después de un pequeño delay para que la animación se inicie
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.GameOver();
@@ -94,6 +111,19 @@ public class ObstacleBase : MonoBehaviour
         if (isPlayer)
         {
             Debug.Log("Colisión normal detectada con Player!");
+            
+            // CRÍTICO: Usar la posición del planeta en el momento de la colisión
+            // La posición del GameObject es más precisa que el punto de contacto
+            Vector3 collisionPoint = collision.gameObject.transform.position;
+            
+            // Activar animación de destrucción del planeta con la posición exacta del planeta
+            PlanetDestructionController destructionController = collision.gameObject.GetComponent<PlanetDestructionController>();
+            if (destructionController != null)
+            {
+                destructionController.DestroyPlanet(collisionPoint);
+            }
+            
+            // Llamar a GameOver después de un pequeño delay para que la animación se inicie
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.GameOver();

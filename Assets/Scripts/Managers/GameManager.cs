@@ -98,6 +98,15 @@ public class GameManager : MonoBehaviour
             Debug.LogWarning("GameManager: ScoreManager no encontrado!");
         }
 
+        // Esperar un poco para que la animación de destrucción se complete antes de cargar la escena
+        StartCoroutine(LoadGameOverSceneDelayed());
+    }
+    
+    private System.Collections.IEnumerator LoadGameOverSceneDelayed()
+    {
+        // Esperar 1 segundo para que la animación de destrucción se complete
+        yield return new WaitForSeconds(1f);
+        
         // Load game over scene
         Debug.Log("GameManager: Cargando escena GameOver...");
         try

@@ -18,6 +18,21 @@ public class ObstacleCollisionDetector : MonoBehaviour
         {
             Debug.Log("Colisión detectada en hijo del obstáculo! GameObject: " + collision.gameObject.name);
             
+            // CRÍTICO: OnTriggerEnter2D se ejecuta en el frame de la colisión
+            // Pero PlayerOrbit.Update() puede ejecutarse después en el mismo frame
+            // Por eso NO pasamos la posición aquí, dejamos que DestroyPlanet() capture la posición
+            // después de desactivar PlayerOrbit
+            GameObject playerObj = collision.gameObject;
+            
+            // Activar animación de destrucción del planeta
+            // NO pasar posición - DestroyPlanet() la capturará después de desactivar PlayerOrbit
+            PlanetDestructionController destructionController = playerObj.GetComponent<PlanetDestructionController>();
+            if (destructionController != null)
+            {
+                // Llamar sin parámetros para que capture la posición exacta después de desactivar PlayerOrbit
+                destructionController.DestroyPlanet();
+            }
+            
             // Buscar ObstacleBase en el padre
             ObstacleBase obstacleBase = GetComponentInParent<ObstacleBase>();
             if (obstacleBase != null)
@@ -52,6 +67,16 @@ public class ObstacleCollisionDetector : MonoBehaviour
         if (isPlayer)
         {
             Debug.Log("Colisión normal detectada en hijo del obstáculo!");
+            
+            // CRÍTICO: Usar la posición del planeta en el momento de la colisión
+            Vector3 collisionPoint = collision.gameObject.transform.position;
+            
+            // Activar animación de destrucción del planeta con la posición exacta del planeta
+            PlanetDestructionController destructionController = collision.gameObject.GetComponent<PlanetDestructionController>();
+            if (destructionController != null)
+            {
+                destructionController.DestroyPlanet(collisionPoint);
+            }
             
             ObstacleBase obstacleBase = GetComponentInParent<ObstacleBase>();
             if (obstacleBase != null)

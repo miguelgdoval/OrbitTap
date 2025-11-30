@@ -78,6 +78,7 @@
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundManager.cs" />
     <Compile Include="Assets/Scripts/Player/PlayerOrbit.cs" />
     <Compile Include="Assets/Scripts/Obstacles/DoorFixed.cs" />
+    <Compile Include="Assets/Scripts/Player/PlanetDamageEffect.cs" />
     <Compile Include="Assets/Scripts/Managers/GameInitializer.cs" />
     <Compile Include="Assets/Scripts/Managers/ScoreManager.cs" />
     <Compile Include="Assets/Scripts/Visual/StarParticleTrail.cs" />
@@ -117,6 +118,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets/Shaders/FakePlanetLight.shader" />
+    <None Include="Assets/Shaders/FracturedDamageShader.shader" />
     <None Include="Assets/Shaders/FakePlanetLightURP.shader" />
   </ItemGroup>
   <ItemGroup>

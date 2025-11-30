@@ -166,56 +166,61 @@ public class PlanetDestructionController : MonoBehaviour
         // Fijar posición INMEDIATAMENTE al punto exacto
         transform.position = collisionPosition;
         
-        // Ahora iniciar la coroutine
-        StartCoroutine(DestructionSequence());
-    }
-    
-    /// <summary>
-    /// Secuencia completa de destrucción
-    /// </summary>
-    private IEnumerator DestructionSequence()
-    {
-        // 0. La posición ya se guardó y fijó en DestroyPlanet(), usar originalPosition
-        Vector3 collisionPosition = originalPosition;
-        
-        // 0.1. Guardar escala actual ANTES de detener animaciones (por si el breathing effect la modificó)
+        // CRÍTICO: Ejecutar operaciones inmediatas pero seguras
         originalScale = transform.localScale;
-        
-        // 1. DETENER TODAS LAS ANIMACIONES INMEDIATAMENTE
         StopAllAnimations();
         
-        // 1.1. FIJAR la posición exacta donde chocó (por si acaso)
-        transform.position = collisionPosition;
-        
-        // 2. Desactivar collider inmediatamente
+        // Desactivar collider inmediatamente
         if (planetCollider != null)
         {
             planetCollider.enabled = false;
         }
         
-        // 3. Ocultar el sprite original INMEDIATAMENTE (se romperá en fragmentos)
-        // Esto debe hacerse ANTES de crear los fragmentos para que parezca que el sprite se rompe
+        // Ocultar el sprite original INMEDIATAMENTE
         if (spriteRenderer != null)
         {
-            spriteRenderer.enabled = false; // Ocultar sprite original inmediatamente
+            spriteRenderer.enabled = false;
         }
         
-        // 4. Crear fragmentos INMEDIATAMENTE (estos reemplazan visualmente al sprite original)
-        CreateFragments();
+        // Iniciar la coroutine INMEDIATAMENTE (sin yield al inicio para que sea instantáneo)
+        StartCoroutine(DestructionSequence());
+    }
+    
+    /// <summary>
+    /// Secuencia completa de destrucción
+    /// Las operaciones críticas ya se ejecutaron en DestroyPlanet() para que sean inmediatas
+    /// </summary>
+    private IEnumerator DestructionSequence()
+    {
+        // La posición ya se guardó y fijó en DestroyPlanet()
+        Vector3 collisionPosition = originalPosition;
         
-        // 5. Crear partículas de explosión
-        CreateExplosionParticles();
+        // Asegurar que la posición esté fija
+        transform.position = collisionPosition;
         
-        // 4.1. Mantener posición fija durante toda la secuencia
+        // CRÍTICO: Crear fragmentos y partículas INMEDIATAMENTE (sin yield antes)
+        // Esto se hace aquí en lugar de en DestroyPlanet() para evitar crashes
+        // pero sin yield al inicio para que sea instantáneo
+        try
+        {
+            CreateFragments();
+            CreateExplosionParticles();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error al crear fragmentos/partículas: {e.Message}");
+        }
+        
+        // Mantener posición fija durante toda la secuencia
         StartCoroutine(KeepPositionFixed(collisionPosition));
         
-        // 5. Flash blanco (muy rápido, casi imperceptible) - solo en fragmentos
+        // Flash blanco (muy rápido, casi imperceptible) - solo en fragmentos
         StartCoroutine(FlashWhite());
         
-        // 6. Shake (muy corto) - usar posición fija como base
+        // Shake (muy corto) - usar posición fija como base
         StartCoroutine(ShakeAnimation(collisionPosition));
         
-        // 7. Esperar a que termine la animación antes de destruir
+        // Esperar a que termine la animación antes de destruir
         yield return new WaitForSeconds(destroyDelay);
         
         Destroy(gameObject);

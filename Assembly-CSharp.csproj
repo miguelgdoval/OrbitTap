@@ -96,6 +96,7 @@
     <Compile Include="Assets/Scripts/Player/SpriteGenerator.cs" />
     <Compile Include="Assets/Scripts/UI/SettingsPanel.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundTroubleshooter.cs" />
+    <Compile Include="Assets/Scripts/Player/PlanetInnerEnergyController.cs" />
     <Compile Include="Assets/Scripts/Managers/GameManager.cs" />
     <Compile Include="Assets/Scripts/Obstacles/RotatingArc.cs" />
     <Compile Include="Assets/Scripts/UI/MenuNavigation.cs" />
@@ -118,6 +119,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets/Shaders/FakePlanetLight.shader" />
+    <None Include="Assets/Shaders/PlanetInnerEnergyShader.shader" />
     <None Include="Assets/Shaders/FracturedDamageShader.shader" />
     <None Include="Assets/Shaders/FakePlanetLightURP.shader" />
   </ItemGroup>

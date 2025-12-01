@@ -182,25 +182,8 @@ public class PlanetDestructionController : MonoBehaviour
             spriteRenderer.enabled = false;
         }
         
-        // Iniciar la coroutine INMEDIATAMENTE (sin yield al inicio para que sea instantáneo)
-        StartCoroutine(DestructionSequence());
-    }
-    
-    /// <summary>
-    /// Secuencia completa de destrucción
-    /// Las operaciones críticas ya se ejecutaron en DestroyPlanet() para que sean inmediatas
-    /// </summary>
-    private IEnumerator DestructionSequence()
-    {
-        // La posición ya se guardó y fijó en DestroyPlanet()
-        Vector3 collisionPosition = originalPosition;
-        
-        // Asegurar que la posición esté fija
-        transform.position = collisionPosition;
-        
-        // CRÍTICO: Crear fragmentos y partículas INMEDIATAMENTE (sin yield antes)
-        // Esto se hace aquí en lugar de en DestroyPlanet() para evitar crashes
-        // pero sin yield al inicio para que sea instantáneo
+        // CRÍTICO: Crear fragmentos y partículas INMEDIATAMENTE aquí (no en la coroutine)
+        // Esto asegura que la explosión sea instantánea sin ningún delay
         try
         {
             CreateFragments();
@@ -219,6 +202,20 @@ public class PlanetDestructionController : MonoBehaviour
         
         // Shake (muy corto) - usar posición fija como base
         StartCoroutine(ShakeAnimation(collisionPosition));
+        
+        // Iniciar la coroutine solo para esperar y destruir (sin crear efectos aquí)
+        StartCoroutine(DestructionSequence());
+    }
+    
+    /// <summary>
+    /// Secuencia completa de destrucción
+    /// Las operaciones críticas ya se ejecutaron en DestroyPlanet() para que sean inmediatas
+    /// </summary>
+    private IEnumerator DestructionSequence()
+    {
+        // La posición ya se guardó y fijó en DestroyPlanet()
+        // Los fragmentos y partículas ya se crearon en DestroyPlanet() para ser instantáneos
+        // Esta coroutine solo espera y destruye el GameObject
         
         // Esperar a que termine la animación antes de destruir
         yield return new WaitForSeconds(destroyDelay);

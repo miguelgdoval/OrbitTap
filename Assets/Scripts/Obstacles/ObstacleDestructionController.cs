@@ -78,18 +78,58 @@ public class ObstacleDestructionController : MonoBehaviour
     /// <summary>
     /// Método público principal para iniciar la destrucción del obstáculo
     /// </summary>
-    public void DestroyObstacle()
+    /// <param name="collisionPosition">Posición exacta de la colisión (opcional, usa transform.position si es null)</param>
+    public void DestroyObstacle(Vector3? collisionPosition = null)
     {
         if (isDestroying) return; // Evitar llamadas dobles
         
         isDestroying = true;
         
         // CRÍTICO: Capturar la posición ACTUAL del obstáculo ANTES de hacer cualquier cosa
+        // Esto debe ser lo PRIMERO que hacemos para asegurar que tenemos la posición exacta
         Vector3 exactPosition = transform.position;
-        originalPosition = exactPosition;
+        
+        // CRÍTICO: Detener ObstacleMover INMEDIATAMENTE para evitar que mueva el obstáculo
+        // Esto debe hacerse DESPUÉS de capturar la posición, igual que el planeta
+        ObstacleMover mover = GetComponent<ObstacleMover>();
+        if (mover != null)
+        {
+            mover.enabled = false;
+        }
+        
+        // CRÍTICO: Detener Rigidbody2D si existe para evitar movimiento por física
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.isKinematic = true; // Hacerlo kinematic para que no se mueva
+        }
+        
+        // CRÍTICO: Si se pasó un punto de colisión, SIEMPRE usarlo (es la posición del padre/obstáculo completo)
+        // No verificar distancia porque puede ser un hijo con posición diferente
+        Vector3 finalPosition;
+        if (collisionPosition.HasValue)
+        {
+            // SIEMPRE usar la posición pasada - es la posición correcta del obstáculo
+            finalPosition = collisionPosition.Value;
+            Debug.Log($"ObstacleDestructionController: Usando posición pasada: {finalPosition} (exactPosition del hijo era: {exactPosition})");
+        }
+        else
+        {
+            // Si no se pasó punto, usar la posición actual del obstáculo
+            finalPosition = exactPosition;
+            Debug.Log($"ObstacleDestructionController: No se pasó posición, usando exactPosition: {finalPosition}");
+        }
+        
+        // Guardar la posición exacta
+        originalPosition = finalPosition;
+        
+        // Fijar posición INMEDIATAMENTE al punto exacto (igual que el planeta)
+        transform.position = finalPosition;
         
         // Fijar posición INMEDIATAMENTE al punto exacto
-        transform.position = exactPosition;
+        transform.position = finalPosition;
         
         // CRÍTICO: Ejecutar operaciones inmediatas pero seguras
         originalScale = transform.localScale;
@@ -98,13 +138,6 @@ public class ObstacleDestructionController : MonoBehaviour
         if (obstacleCollider != null)
         {
             obstacleCollider.enabled = false;
-        }
-        
-        // Desactivar otros componentes que puedan interferir
-        ObstacleMover mover = GetComponent<ObstacleMover>();
-        if (mover != null)
-        {
-            mover.enabled = false;
         }
         
         // Desactivar todos los componentes MonoBehaviour excepto este
@@ -123,23 +156,8 @@ public class ObstacleDestructionController : MonoBehaviour
             spriteRenderer.enabled = false;
         }
         
-        // Iniciar la coroutine INMEDIATAMENTE (sin yield al inicio para que sea instantáneo)
-        StartCoroutine(DestructionSequence());
-    }
-    
-    /// <summary>
-    /// Secuencia completa de destrucción
-    /// Las operaciones críticas ya se ejecutaron en DestroyObstacle() para que sean inmediatas
-    /// </summary>
-    private IEnumerator DestructionSequence()
-    {
-        // La posición ya se guardó y fijó en DestroyObstacle()
-        Vector3 collisionPosition = originalPosition;
-        
-        // Asegurar que la posición esté fija
-        transform.position = collisionPosition;
-        
-        // CRÍTICO: Crear fragmentos y partículas INMEDIATAMENTE (sin yield antes)
+        // CRÍTICO: Crear fragmentos y partículas INMEDIATAMENTE aquí (no en la coroutine)
+        // Esto asegura que la explosión sea instantánea sin ningún delay
         try
         {
             CreateFragments();
@@ -151,13 +169,27 @@ public class ObstacleDestructionController : MonoBehaviour
         }
         
         // Mantener posición fija durante toda la secuencia
-        StartCoroutine(KeepPositionFixed(collisionPosition));
+        StartCoroutine(KeepPositionFixed(finalPosition));
         
         // Flash blanco (muy rápido, casi imperceptible) - solo en fragmentos
         StartCoroutine(FlashWhite());
         
         // Shake (muy corto) - usar posición fija como base
-        StartCoroutine(ShakeAnimation(collisionPosition));
+        StartCoroutine(ShakeAnimation(finalPosition));
+        
+        // Iniciar la coroutine solo para esperar y destruir (sin crear efectos aquí)
+        StartCoroutine(DestructionSequence());
+    }
+    
+    /// <summary>
+    /// Secuencia completa de destrucción
+    /// Las operaciones críticas ya se ejecutaron en DestroyObstacle() para que sean inmediatas
+    /// </summary>
+    private IEnumerator DestructionSequence()
+    {
+        // La posición ya se guardó y fijó en DestroyObstacle()
+        // Los fragmentos y partículas ya se crearon en DestroyObstacle() para ser instantáneos
+        // Esta coroutine solo espera y destruye el GameObject
         
         // Esperar a que termine la animación antes de destruir
         yield return new WaitForSeconds(destroyDelay);
@@ -247,9 +279,15 @@ public class ObstacleDestructionController : MonoBehaviour
         Color fireColor2 = Color.Lerp(fireRed, averageColor, 0.2f);
         Color fireColor3 = Color.Lerp(fireYellow, averageColor, 0.4f);
         
+        // CRÍTICO: Usar la posición guardada (igual que el planeta)
+        Vector3 particlePosition = originalPosition;
+        
+        // DEBUG: Verificar posición de partículas
+        Debug.Log($"ObstacleDestructionController: Creando partículas en posición: {particlePosition}, originalPosition: {originalPosition}, transform.position: {transform.position}");
+        
         // Crear GameObject para las partículas en la posición exacta
         GameObject particleSystemObj = new GameObject("ObstacleExplosionParticles");
-        particleSystemObj.transform.position = originalPosition;
+        particleSystemObj.transform.position = particlePosition;
         
         // Agregar ParticleSystem
         ParticleSystem ps = particleSystemObj.AddComponent<ParticleSystem>();

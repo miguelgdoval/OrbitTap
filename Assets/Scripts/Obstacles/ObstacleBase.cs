@@ -70,9 +70,22 @@ public class ObstacleBase : MonoBehaviour
         
         return null;
     }
+    private bool hasTriggeredCollision = false; // Flag para evitar múltiples triggers
+    
     public virtual void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision == null) return;
+        HandleCollision(collision);
+    }
+    
+    public virtual void OnTriggerStay2D(Collider2D collision)
+    {
+        // También detectar en OnTriggerStay2D para capturar la colisión más temprano
+        HandleCollision(collision);
+    }
+    
+    private void HandleCollision(Collider2D collision)
+    {
+        if (collision == null || hasTriggeredCollision) return;
         
         // Verificar por tag o por nombre
         bool isPlayer = collision.CompareTag("Player") || 
@@ -81,9 +94,44 @@ public class ObstacleBase : MonoBehaviour
         
         if (isPlayer)
         {
+            hasTriggeredCollision = true; // Marcar para evitar múltiples triggers
+            
             Debug.Log("Colisión detectada con Player! GameObject: " + collision.gameObject.name);
             
-            // Destruir el obstáculo primero
+            // CRÍTICO: Detener PlayerOrbit INMEDIATAMENTE antes de cualquier otra cosa
+            GameObject playerObj = collision.gameObject;
+            PlayerOrbit playerOrbit = playerObj.GetComponent<PlayerOrbit>();
+            if (playerOrbit != null)
+            {
+                playerOrbit.enabled = false; // Detener movimiento INMEDIATAMENTE
+            }
+            
+            // CRÍTICO: Detener ObstacleMover INMEDIATAMENTE para evitar que mueva el obstáculo
+            // Esto debe hacerse ANTES de capturar la posición, igual que el planeta
+            ObstacleMover obstacleMover = GetComponent<ObstacleMover>();
+            if (obstacleMover != null)
+            {
+                obstacleMover.enabled = false;
+            }
+            
+            // CRÍTICO: Detener Rigidbody2D si existe
+            Rigidbody2D obstacleRb = GetComponent<Rigidbody2D>();
+            if (obstacleRb != null)
+            {
+                obstacleRb.velocity = Vector2.zero;
+                obstacleRb.angularVelocity = 0f;
+                obstacleRb.isKinematic = true;
+            }
+            
+            // CRÍTICO: Capturar la posición ACTUAL del obstáculo DESPUÉS de detener el movimiento
+            // La explosión debe ocurrir donde está el obstáculo, igual que el planeta usa su propia posición
+            Vector3 obstacleExactPosition = transform.position;
+            transform.position = obstacleExactPosition; // Forzar posición fija
+            
+            // DEBUG: Verificar posición
+            Debug.Log($"ObstacleBase: Posición del OBSTÁCULO capturada - {obstacleExactPosition}, transform.position: {transform.position}");
+            
+            // Destruir el obstáculo primero, pasando la posición del OBSTÁCULO (donde está)
             ObstacleDestructionController obstacleDestruction = GetComponent<ObstacleDestructionController>();
             if (obstacleDestruction == null)
             {
@@ -93,25 +141,19 @@ public class ObstacleBase : MonoBehaviour
             }
             if (obstacleDestruction != null)
             {
-                obstacleDestruction.DestroyObstacle();
+                obstacleDestruction.DestroyObstacle(obstacleExactPosition);
             }
             else
             {
                 Debug.LogError($"ObstacleBase: No se pudo obtener o crear ObstacleDestructionController para {gameObject.name} (OnTriggerEnter2D)");
             }
             
-            // CRÍTICO: OnTriggerEnter2D se ejecuta en el frame de la colisión
-            // Pero PlayerOrbit.Update() puede ejecutarse después en el mismo frame
-            // Por eso NO pasamos la posición aquí, dejamos que DestroyPlanet() capture la posición
-            // después de desactivar PlayerOrbit
-            GameObject playerObj = collision.gameObject;
-            
-            // Activar animación de destrucción del planeta
-            // NO pasar posición - DestroyPlanet() la capturará después de desactivar PlayerOrbit
+            // Activar animación de destrucción del planeta INMEDIATAMENTE
+            // PlayerOrbit ya está desactivado, así que podemos capturar la posición exacta
             PlanetDestructionController destructionController = playerObj.GetComponent<PlanetDestructionController>();
             if (destructionController != null)
             {
-                // Llamar sin parámetros para que capture la posición exacta después de desactivar PlayerOrbit
+                // Llamar sin parámetros - DestroyPlanet() capturará la posición exacta ahora
                 destructionController.DestroyPlanet();
             }
             
@@ -139,7 +181,30 @@ public class ObstacleBase : MonoBehaviour
         {
             Debug.Log("Colisión normal detectada con Player!");
             
-            // Destruir el obstáculo primero
+            // CRÍTICO: Capturar la posición del PLANETA (punto de colisión real)
+            // La explosión debe ocurrir donde está el planeta, que es el punto de contacto
+            Vector3 collisionPoint = collision.gameObject.transform.position;
+            
+            // CRÍTICO: Detener ObstacleMover INMEDIATAMENTE para evitar que mueva el obstáculo
+            ObstacleMover obstacleMover = GetComponent<ObstacleMover>();
+            if (obstacleMover != null)
+            {
+                obstacleMover.enabled = false;
+            }
+            
+            // CRÍTICO: Detener Rigidbody2D si existe
+            Rigidbody2D obstacleRb = GetComponent<Rigidbody2D>();
+            if (obstacleRb != null)
+            {
+                obstacleRb.velocity = Vector2.zero;
+                obstacleRb.angularVelocity = 0f;
+                obstacleRb.isKinematic = true;
+            }
+            
+            // DEBUG: Verificar posición
+            Debug.Log($"ObstacleBase: Usando posición del PLANETA como punto de colisión (OnCollisionEnter2D) - {collisionPoint}");
+            
+            // Destruir el obstáculo primero, pasando la posición del PLANETA (punto de contacto real)
             ObstacleDestructionController obstacleDestruction = GetComponent<ObstacleDestructionController>();
             if (obstacleDestruction == null)
             {
@@ -149,18 +214,15 @@ public class ObstacleBase : MonoBehaviour
             }
             if (obstacleDestruction != null)
             {
-                obstacleDestruction.DestroyObstacle();
+                obstacleDestruction.DestroyObstacle(collisionPoint);
             }
             else
             {
                 Debug.LogError($"ObstacleBase: No se pudo obtener o crear ObstacleDestructionController para {gameObject.name} (OnCollisionEnter2D)");
             }
             
-            // CRÍTICO: Usar la posición del planeta en el momento de la colisión
-            // La posición del GameObject es más precisa que el punto de contacto
-            Vector3 collisionPoint = collision.gameObject.transform.position;
-            
             // Activar animación de destrucción del planeta con la posición exacta del planeta
+            // collisionPoint ya está definido arriba
             PlanetDestructionController destructionController = collision.gameObject.GetComponent<PlanetDestructionController>();
             if (destructionController != null)
             {

@@ -18,6 +18,13 @@ public class ObstacleCollisionDetector : MonoBehaviour
         {
             Debug.Log("Colisión detectada en hijo del obstáculo! GameObject: " + collision.gameObject.name);
             
+            // Destruir el obstáculo primero (buscar en el padre)
+            ObstacleDestructionController obstacleDestruction = GetComponentInParent<ObstacleDestructionController>();
+            if (obstacleDestruction != null)
+            {
+                obstacleDestruction.DestroyObstacle();
+            }
+            
             // CRÍTICO: OnTriggerEnter2D se ejecuta en el frame de la colisión
             // Pero PlayerOrbit.Update() puede ejecutarse después en el mismo frame
             // Por eso NO pasamos la posición aquí, dejamos que DestroyPlanet() capture la posición
@@ -67,6 +74,13 @@ public class ObstacleCollisionDetector : MonoBehaviour
         if (isPlayer)
         {
             Debug.Log("Colisión normal detectada en hijo del obstáculo!");
+            
+            // Destruir el obstáculo primero (buscar en el padre)
+            ObstacleDestructionController obstacleDestruction = GetComponentInParent<ObstacleDestructionController>();
+            if (obstacleDestruction != null)
+            {
+                obstacleDestruction.DestroyObstacle();
+            }
             
             // CRÍTICO: Usar la posición del planeta en el momento de la colisión
             Vector3 collisionPoint = collision.gameObject.transform.position;

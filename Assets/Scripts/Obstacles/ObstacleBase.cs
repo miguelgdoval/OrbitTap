@@ -5,6 +5,16 @@ using UnityEditor;
 
 public class ObstacleBase : MonoBehaviour
 {
+    private void Awake()
+    {
+        // Asegurar que el obstáculo tenga ObstacleDestructionController
+        if (GetComponent<ObstacleDestructionController>() == null)
+        {
+            ObstacleDestructionController destructionController = gameObject.AddComponent<ObstacleDestructionController>();
+            Debug.Log($"ObstacleBase: Agregado ObstacleDestructionController a {gameObject.name}");
+        }
+    }
+    
     /// <summary>
     /// Carga un sprite de obstáculo desde Assets/Art/Obstacles/
     /// Normaliza el tamaño para que sea consistente con los sprites generados (~1.25 unidades del mundo)
@@ -73,6 +83,23 @@ public class ObstacleBase : MonoBehaviour
         {
             Debug.Log("Colisión detectada con Player! GameObject: " + collision.gameObject.name);
             
+            // Destruir el obstáculo primero
+            ObstacleDestructionController obstacleDestruction = GetComponent<ObstacleDestructionController>();
+            if (obstacleDestruction == null)
+            {
+                // Si no existe, agregarlo ahora
+                obstacleDestruction = gameObject.AddComponent<ObstacleDestructionController>();
+                Debug.Log($"ObstacleBase: ObstacleDestructionController agregado dinámicamente a {gameObject.name} (OnTriggerEnter2D)");
+            }
+            if (obstacleDestruction != null)
+            {
+                obstacleDestruction.DestroyObstacle();
+            }
+            else
+            {
+                Debug.LogError($"ObstacleBase: No se pudo obtener o crear ObstacleDestructionController para {gameObject.name} (OnTriggerEnter2D)");
+            }
+            
             // CRÍTICO: OnTriggerEnter2D se ejecuta en el frame de la colisión
             // Pero PlayerOrbit.Update() puede ejecutarse después en el mismo frame
             // Por eso NO pasamos la posición aquí, dejamos que DestroyPlanet() capture la posición
@@ -111,6 +138,23 @@ public class ObstacleBase : MonoBehaviour
         if (isPlayer)
         {
             Debug.Log("Colisión normal detectada con Player!");
+            
+            // Destruir el obstáculo primero
+            ObstacleDestructionController obstacleDestruction = GetComponent<ObstacleDestructionController>();
+            if (obstacleDestruction == null)
+            {
+                // Si no existe, agregarlo ahora
+                obstacleDestruction = gameObject.AddComponent<ObstacleDestructionController>();
+                Debug.Log($"ObstacleBase: ObstacleDestructionController agregado dinámicamente a {gameObject.name} (OnCollisionEnter2D)");
+            }
+            if (obstacleDestruction != null)
+            {
+                obstacleDestruction.DestroyObstacle();
+            }
+            else
+            {
+                Debug.LogError($"ObstacleBase: No se pudo obtener o crear ObstacleDestructionController para {gameObject.name} (OnCollisionEnter2D)");
+            }
             
             // CRÍTICO: Usar la posición del planeta en el momento de la colisión
             // La posición del GameObject es más precisa que el punto de contacto

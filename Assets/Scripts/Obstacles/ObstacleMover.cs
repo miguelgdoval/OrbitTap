@@ -27,6 +27,14 @@ public class ObstacleMover : MonoBehaviour
 
     private void Update()
     {
+        // Verificar si el obstáculo está siendo destruido
+        ObstacleDestructionController destructionController = GetComponent<ObstacleDestructionController>();
+        if (destructionController != null && destructionController.IsDestroying())
+        {
+            // El obstáculo está en proceso de destrucción, no mover
+            return;
+        }
+        
         // Verificar que la dirección sea válida
         if (direction == Vector2.zero)
         {
@@ -48,16 +56,25 @@ public class ObstacleMover : MonoBehaviour
 
         // Solo destruir si ya entró a la pantalla y ahora está fuera
         // O si han pasado más de 10 segundos (por si acaso)
+        // NOTA: Usar la variable destructionController ya declarada arriba
         if (hasEnteredScreen && IsOutOfScreen())
         {
-            Debug.Log($"ObstacleMover: Destroying {gameObject.name} - out of screen after entering");
-            Destroy(gameObject);
+            // Verificar si hay un ObstacleDestructionController en proceso de destrucción
+            if (destructionController == null || !destructionController.IsDestroying())
+            {
+                Debug.Log($"ObstacleMover: Destroying {gameObject.name} - out of screen after entering");
+                Destroy(gameObject);
+            }
         }
         else if (Time.time - spawnTime > 10f)
         {
-            // Destruir después de 10 segundos por seguridad
-            Debug.Log($"ObstacleMover: Destroying {gameObject.name} - timeout");
-            Destroy(gameObject);
+            // Verificar si hay un ObstacleDestructionController en proceso de destrucción
+            if (destructionController == null || !destructionController.IsDestroying())
+            {
+                // Destruir después de 10 segundos por seguridad
+                Debug.Log($"ObstacleMover: Destroying {gameObject.name} - timeout");
+                Destroy(gameObject);
+            }
         }
     }
 

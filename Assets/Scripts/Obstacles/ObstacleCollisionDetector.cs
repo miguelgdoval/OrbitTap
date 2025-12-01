@@ -16,13 +16,55 @@ public class ObstacleCollisionDetector : MonoBehaviour
         
         if (isPlayer)
         {
-            Debug.Log("Colisión detectada en hijo del obstáculo! GameObject: " + collision.gameObject.name);
+            Debug.Log("Colisión detectada en hijo del obstáculo! GameObject: " + gameObject.name);
             
-            // Destruir el obstáculo primero (buscar en el padre)
-            ObstacleDestructionController obstacleDestruction = GetComponentInParent<ObstacleDestructionController>();
-            if (obstacleDestruction != null)
+            // CRÍTICO: Destruir solo este segmento hijo, NO el padre completo
+            // Primero intentar destruir este GameObject específico
+            ObstacleDestructionController thisSegmentDestruction = GetComponent<ObstacleDestructionController>();
+            if (thisSegmentDestruction == null)
             {
-                obstacleDestruction.DestroyObstacle();
+                // Si no tiene su propio destructor, agregarlo
+                thisSegmentDestruction = gameObject.AddComponent<ObstacleDestructionController>();
+            }
+            
+            // Guardar referencia al padre antes de desconectarlo
+            Transform parent = transform.parent;
+            
+            // Copiar movimiento del padre si existe (para que el segmento continúe moviéndose)
+            if (parent != null)
+            {
+                ObstacleMover parentMover = parent.GetComponent<ObstacleMover>();
+                if (parentMover != null)
+                {
+                    // Agregar ObstacleMover a este segmento con la misma velocidad y dirección
+                    ObstacleMover segmentMover = gameObject.GetComponent<ObstacleMover>();
+                    if (segmentMover == null)
+                    {
+                        segmentMover = gameObject.AddComponent<ObstacleMover>();
+                    }
+                    segmentMover.SetDirection(parentMover.direction);
+                    segmentMover.SetSpeed(parentMover.speed);
+                }
+                
+                // Desconectar este segmento del padre antes de destruirlo
+                // Esto permite que los otros segmentos continúen
+                transform.SetParent(null);
+            }
+            
+            if (thisSegmentDestruction != null)
+            {
+                // Destruir solo este segmento
+                thisSegmentDestruction.DestroyObstacle();
+            }
+            else
+            {
+                // Fallback: destruir directamente este GameObject
+                Debug.LogWarning($"ObstacleCollisionDetector: No se pudo crear ObstacleDestructionController para {gameObject.name}, destruyendo directamente");
+                if (parent != null)
+                {
+                    transform.SetParent(null);
+                }
+                Destroy(gameObject);
             }
             
             // CRÍTICO: OnTriggerEnter2D se ejecuta en el frame de la colisión
@@ -40,26 +82,16 @@ public class ObstacleCollisionDetector : MonoBehaviour
                 destructionController.DestroyPlanet();
             }
             
-            // Buscar ObstacleBase en el padre
-            ObstacleBase obstacleBase = GetComponentInParent<ObstacleBase>();
-            if (obstacleBase != null)
+            // CRÍTICO: NO llamar a ObstacleBase del padre porque destruiría todo el obstáculo
+            // Solo llamar directamente a GameOver y DestroyPlanet (ya se hizo arriba)
+            // Esto permite que los otros segmentos continúen
+            if (GameManager.Instance != null)
             {
-                // Llamar al método de colisión del padre
-                obstacleBase.OnTriggerEnter2D(collision);
+                GameManager.Instance.GameOver();
             }
             else
             {
-                // Si no hay ObstacleBase, llamar directamente a GameManager
-                Debug.Log("ObstacleCollisionDetector: No se encontró ObstacleBase en el padre, llamando directamente a GameManager");
-                if (GameManager.Instance != null)
-                {
-                    Debug.Log("ObstacleCollisionDetector: Llamando directamente a GameManager.GameOver()");
-                    GameManager.Instance.GameOver();
-                }
-                else
-                {
-                    Debug.LogError("ObstacleCollisionDetector: GameManager.Instance es null!");
-                }
+                Debug.LogError("ObstacleCollisionDetector: GameManager.Instance es null!");
             }
         }
     }
@@ -73,13 +105,53 @@ public class ObstacleCollisionDetector : MonoBehaviour
         
         if (isPlayer)
         {
-            Debug.Log("Colisión normal detectada en hijo del obstáculo!");
+            Debug.Log("Colisión normal detectada en hijo del obstáculo! GameObject: " + gameObject.name);
             
-            // Destruir el obstáculo primero (buscar en el padre)
-            ObstacleDestructionController obstacleDestruction = GetComponentInParent<ObstacleDestructionController>();
-            if (obstacleDestruction != null)
+            // CRÍTICO: Destruir solo este segmento hijo, NO el padre completo
+            ObstacleDestructionController thisSegmentDestruction = GetComponent<ObstacleDestructionController>();
+            if (thisSegmentDestruction == null)
             {
-                obstacleDestruction.DestroyObstacle();
+                // Si no tiene su propio destructor, agregarlo
+                thisSegmentDestruction = gameObject.AddComponent<ObstacleDestructionController>();
+            }
+            
+            // Guardar referencia al padre antes de desconectarlo
+            Transform parent = transform.parent;
+            
+            // Copiar movimiento del padre si existe (para que el segmento continúe moviéndose)
+            if (parent != null)
+            {
+                ObstacleMover parentMover = parent.GetComponent<ObstacleMover>();
+                if (parentMover != null)
+                {
+                    // Agregar ObstacleMover a este segmento con la misma velocidad y dirección
+                    ObstacleMover segmentMover = gameObject.GetComponent<ObstacleMover>();
+                    if (segmentMover == null)
+                    {
+                        segmentMover = gameObject.AddComponent<ObstacleMover>();
+                    }
+                    segmentMover.SetDirection(parentMover.direction);
+                    segmentMover.SetSpeed(parentMover.speed);
+                }
+                
+                // Desconectar este segmento del padre antes de destruirlo
+                transform.SetParent(null);
+            }
+            
+            if (thisSegmentDestruction != null)
+            {
+                // Destruir solo este segmento
+                thisSegmentDestruction.DestroyObstacle();
+            }
+            else
+            {
+                // Fallback: destruir directamente este GameObject
+                Debug.LogWarning($"ObstacleCollisionDetector: No se pudo crear ObstacleDestructionController para {gameObject.name}, destruyendo directamente");
+                if (parent != null)
+                {
+                    transform.SetParent(null);
+                }
+                Destroy(gameObject);
             }
             
             // CRÍTICO: Usar la posición del planeta en el momento de la colisión
@@ -92,12 +164,10 @@ public class ObstacleCollisionDetector : MonoBehaviour
                 destructionController.DestroyPlanet(collisionPoint);
             }
             
-            ObstacleBase obstacleBase = GetComponentInParent<ObstacleBase>();
-            if (obstacleBase != null)
-            {
-                obstacleBase.OnCollisionEnter2D(collision);
-            }
-            else if (GameManager.Instance != null)
+            // CRÍTICO: NO llamar a ObstacleBase del padre porque destruiría todo el obstáculo
+            // Solo llamar directamente a GameOver (DestroyPlanet ya se llamó arriba)
+            // Esto permite que los otros segmentos continúen
+            if (GameManager.Instance != null)
             {
                 GameManager.Instance.GameOver();
             }

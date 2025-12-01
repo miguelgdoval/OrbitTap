@@ -7,9 +7,12 @@ using System.Collections.Generic;
 public class OrbitSafetySystem : MonoBehaviour
 {
     [Header("Safety Settings")]
-    public float minFreeArcAngle = 90f; // Ángulo mínimo libre en la órbita (en grados)
-    public float obstacleBlockAngle = 30f; // Ángulo que bloquea cada obstáculo (en grados)
-    public float checkRadius = 2.5f; // Radio para verificar obstáculos cerca de la órbita
+    [Tooltip("Ángulo mínimo libre garantizado en la órbita (aumentado para más justicia)")]
+    public float minFreeArcAngle = 120f; // Ángulo mínimo libre en la órbita (en grados) - AUMENTADO de 90° a 120°
+    [Tooltip("Ángulo que bloquea cada obstáculo (considera el tamaño del obstáculo)")]
+    public float obstacleBlockAngle = 40f; // Ángulo que bloquea cada obstáculo (en grados) - AUMENTADO de 30° a 40°
+    [Tooltip("Radio para verificar obstáculos cerca de la órbita")]
+    public float checkRadius = 3f; // Radio para verificar obstáculos cerca de la órbita - AUMENTADO de 2.5 a 3
 
     private Transform center;
     private float orbitRadius;
@@ -125,15 +128,19 @@ public class OrbitSafetySystem : MonoBehaviour
             return normalizedPreferred;
         }
 
-        // Buscar un ángulo seguro probando diferentes direcciones
+        // Buscar un ángulo seguro probando diferentes direcciones (más exhaustivo)
         float[] testAngles = new float[]
         {
-            normalizedPreferred + 45f,
-            normalizedPreferred - 45f,
+            normalizedPreferred + 30f,
+            normalizedPreferred - 30f,
+            normalizedPreferred + 60f,
+            normalizedPreferred - 60f,
             normalizedPreferred + 90f,
             normalizedPreferred - 90f,
-            normalizedPreferred + 135f,
-            normalizedPreferred - 135f,
+            normalizedPreferred + 120f,
+            normalizedPreferred - 120f,
+            normalizedPreferred + 150f,
+            normalizedPreferred - 150f,
             normalizedPreferred + 180f
         };
 
@@ -147,7 +154,26 @@ public class OrbitSafetySystem : MonoBehaviour
         }
 
         // Si no se encuentra un ángulo seguro, buscar el área con más espacio libre
-        return FindLargestFreeGap(blockedAngles);
+        float largestGapAngle = FindLargestFreeGap(blockedAngles);
+        
+        // Verificar que el ángulo encontrado realmente sea seguro
+        if (IsAngleSafe(largestGapAngle))
+        {
+            return largestGapAngle;
+        }
+        
+        // Último recurso: buscar en incrementos pequeños alrededor del ángulo del gap más grande
+        for (int i = -20; i <= 20; i += 5)
+        {
+            float testAngle = NormalizeAngle(largestGapAngle + i);
+            if (IsAngleSafe(testAngle))
+            {
+                return testAngle;
+            }
+        }
+        
+        // Si todo falla, devolver el ángulo preferido (mejor que nada)
+        return normalizedPreferred;
     }
 
     private List<float> GetBlockedAngles()
@@ -171,7 +197,25 @@ public class OrbitSafetySystem : MonoBehaviour
             if (Mathf.Abs(distance - orbitRadius) < checkRadius)
             {
                 float angle = Mathf.Atan2(toObstacle.y, toObstacle.x) * Mathf.Rad2Deg;
-                blockedAngles.Add(NormalizeAngle(angle));
+                
+                // Considerar el tamaño del obstáculo para calcular el ángulo bloqueado
+                float actualBlockAngle = obstacleBlockAngle;
+                SpriteRenderer sr = obstacle.GetComponent<SpriteRenderer>();
+                if (sr != null && sr.sprite != null)
+                {
+                    // Calcular el tamaño angular del obstáculo basado en su tamaño
+                    float obstacleSize = Mathf.Max(sr.bounds.size.x, sr.bounds.size.y);
+                    float angularSize = (obstacleSize / orbitRadius) * Mathf.Rad2Deg;
+                    actualBlockAngle = Mathf.Max(obstacleBlockAngle, angularSize * 1.2f); // 20% de margen
+                }
+                
+                // Agregar múltiples ángulos alrededor del obstáculo para mejor cobertura
+                int samples = Mathf.CeilToInt(actualBlockAngle / 10f); // Muestrear cada 10 grados
+                for (int i = 0; i < samples; i++)
+                {
+                    float offset = (i - samples / 2f) * (actualBlockAngle / samples);
+                    blockedAngles.Add(NormalizeAngle(angle + offset));
+                }
             }
         }
 
@@ -189,6 +233,8 @@ public class OrbitSafetySystem : MonoBehaviour
 
         // Verificar los espacios entre obstáculos
         float largestGap = 0f;
+        float secondLargestGap = 0f; // También verificar el segundo gap más grande
+        
         for (int i = 0; i < allBlocked.Count; i++)
         {
             float currentAngle = allBlocked[i];
@@ -199,12 +245,21 @@ public class OrbitSafetySystem : MonoBehaviour
 
             if (gap > largestGap)
             {
+                secondLargestGap = largestGap;
                 largestGap = gap;
+            }
+            else if (gap > secondLargestGap)
+            {
+                secondLargestGap = gap;
             }
         }
 
         // Verificar que el espacio libre más grande sea suficiente
-        return largestGap >= minFreeArcAngle;
+        // También verificar que haya al menos dos espacios razonables (más justo)
+        bool hasMainGap = largestGap >= minFreeArcAngle;
+        bool hasSecondaryGap = secondLargestGap >= minFreeArcAngle * 0.6f; // Al menos 60% del mínimo
+        
+        return hasMainGap && hasSecondaryGap;
     }
 
     private float FindLargestFreeGap(List<float> blockedAngles)

@@ -45,9 +45,12 @@ public class ObstacleManager : MonoBehaviour
     [Header("Movement Settings")]
     public float obstacleSpeed = 3f;
     public float spawnDistanceFromScreen = 12f; // Distancia fuera de la pantalla para spawnear
-    public float speedVariation = 1.5f; // Multiplicador máximo para variación de velocidad (1.0 a 1.5x)
-    public float sizeVariation = 3.0f; // Multiplicador máximo para variación de tamaño (1.0 a 3.0x)
-    public int maxObstaclesOnScreen = 5; // Máximo número de obstáculos en pantalla simultáneamente
+    [Tooltip("Variación de velocidad reducida para más justicia (1.0x a 1.2x en lugar de 1.5x)")]
+    public float speedVariation = 1.2f; // Multiplicador máximo para variación de velocidad (1.0 a 1.2x) - REDUCIDO de 1.5x
+    [Tooltip("Variación de tamaño reducida para más justicia (1.0x a 2.0x en lugar de 3.0x)")]
+    public float sizeVariation = 2.0f; // Multiplicador máximo para variación de tamaño (1.0 a 2.0x) - REDUCIDO de 3.0x
+    [Tooltip("Máximo número de obstáculos en pantalla (reducido para más justicia)")]
+    public int maxObstaclesOnScreen = 3; // Máximo número de obstáculos en pantalla simultáneamente - REDUCIDO de 5 a 3
 
     private Camera mainCamera;
     private float timeSinceLastSpawn = 0f;
@@ -60,6 +63,18 @@ public class ObstacleManager : MonoBehaviour
     private ScoreManager scoreManager; // Referencia al ScoreManager para obtener el score actual
     private BackgroundManager backgroundManager; // Referencia al BackgroundManager para cambiar fondos
     private ObstacleDifficultyLevel lastDifficultyLevel = ObstacleDifficultyLevel.Easy; // Trackear cambios de dificultad
+    
+    [Header("Breathing Room System")]
+    [Tooltip("Tiempo de pausa después de un choque cercano (en segundos)")]
+    public float breathingRoomDuration = 1.5f; // Tiempo de pausa después de un choque cercano
+    [Tooltip("Distancia mínima para considerar un 'choque cercano'")]
+    public float nearMissDistance = 0.8f; // Distancia mínima para considerar un choque cercano
+    [Tooltip("Multiplicador de intervalo de spawn cuando hay peligro")]
+    public float dangerSpawnMultiplier = 1.5f; // Multiplicador cuando el jugador está en peligro
+    
+    private float breathingRoomTimer = 0f; // Timer para el sistema de breathing room
+    private float lastNearMissTime = -10f; // Tiempo del último near miss
+    private PlayerOrbit playerOrbitRef; // Referencia al jugador para detectar near misses
 
     private void Start()
     {
@@ -96,6 +111,7 @@ public class ObstacleManager : MonoBehaviour
 
         // Obtener el radio del jugador para usar la misma órbita
         playerOrbit = FindObjectOfType<PlayerOrbit>();
+        playerOrbitRef = playerOrbit; // Guardar referencia para near miss detection
         if (playerOrbit != null)
         {
             spawnRadius = playerOrbit.radius;
@@ -233,6 +249,15 @@ public class ObstacleManager : MonoBehaviour
         gameTime += Time.deltaTime;
         timeSinceLastSpawn += Time.deltaTime;
         timeSinceDifficultyUpdate += Time.deltaTime;
+        
+        // Sistema de Breathing Room: actualizar timer
+        if (breathingRoomTimer > 0f)
+        {
+            breathingRoomTimer -= Time.deltaTime;
+        }
+        
+        // Detectar near misses (choques cercanos)
+        CheckForNearMisses();
 
         // Actualizar dificultad progresivamente
         if (timeSinceDifficultyUpdate >= difficultyUpdateInterval)
@@ -252,26 +277,116 @@ public class ObstacleManager : MonoBehaviour
             timeSinceDifficultyUpdate = 0f;
         }
 
+        // CRÍTICO: No spawnean si estamos en breathing room
+        if (breathingRoomTimer > 0f)
+        {
+            return; // Pausar spawns durante breathing room
+        }
+
         if (timeSinceLastSpawn >= nextSpawnTime)
         {
             // Verificar cuántos obstáculos hay en pantalla antes de spawnear
             int obstaclesOnScreen = CountObstaclesOnScreen();
             
-            if (obstaclesOnScreen < maxObstaclesOnScreen)
+            // Calcular multiplicador de spawn basado en peligro
+            float spawnMultiplier = 1f;
+            if (IsPlayerInDanger())
             {
-                Debug.Log($"ObstacleManager: Attempting to spawn obstacle (time: {timeSinceLastSpawn}, threshold: {nextSpawnTime}, obstacles on screen: {obstaclesOnScreen}/{maxObstaclesOnScreen})");
+                spawnMultiplier = dangerSpawnMultiplier;
+            }
+            
+            float adjustedSpawnTime = nextSpawnTime * spawnMultiplier;
+            
+            if (timeSinceLastSpawn >= adjustedSpawnTime && obstaclesOnScreen < maxObstaclesOnScreen)
+            {
+                Debug.Log($"ObstacleManager: Attempting to spawn obstacle (time: {timeSinceLastSpawn}, threshold: {adjustedSpawnTime}, obstacles on screen: {obstaclesOnScreen}/{maxObstaclesOnScreen})");
                 SpawnObstacle();
                 timeSinceLastSpawn = 0f;
                 nextSpawnTime = Random.Range(currentMinSpawnInterval, currentMaxSpawnInterval);
                 Debug.Log($"ObstacleManager: Next spawn in {nextSpawnTime} seconds (min: {currentMinSpawnInterval:F2}, max: {currentMaxSpawnInterval:F2})");
             }
-            else
+            else if (obstaclesOnScreen >= maxObstaclesOnScreen)
             {
                 // Esperar un poco más antes de intentar spawnear de nuevo
-                timeSinceLastSpawn = nextSpawnTime - 0.5f; // Reducir el tiempo para intentar de nuevo pronto
+                timeSinceLastSpawn = adjustedSpawnTime - 0.5f; // Reducir el tiempo para intentar de nuevo pronto
                 Debug.Log($"ObstacleManager: Max obstacles reached ({obstaclesOnScreen}/{maxObstaclesOnScreen}), waiting...");
             }
         }
+    }
+    
+    /// <summary>
+    /// Detecta si el jugador pasa muy cerca de un obstáculo (near miss)
+    /// </summary>
+    private void CheckForNearMisses()
+    {
+        if (playerOrbitRef == null || center == null) return;
+        
+        GameObject player = playerOrbitRef.gameObject;
+        if (player == null) return;
+        
+        Vector3 playerPos = player.transform.position;
+        float orbitRadius = playerOrbitRef.radius;
+        
+        // Buscar todos los obstáculos activos
+        ObstacleDestructionController[] allObstacles = FindObjectsOfType<ObstacleDestructionController>();
+        
+        foreach (ObstacleDestructionController obstacle in allObstacles)
+        {
+            if (obstacle == null || obstacle.IsDestroying()) continue;
+            
+            Vector3 obstaclePos = obstacle.transform.position;
+            float distance = Vector3.Distance(playerPos, obstaclePos);
+            
+            // Si el jugador está muy cerca de un obstáculo
+            if (distance < nearMissDistance)
+            {
+                // Verificar que el obstáculo esté cerca de la órbita
+                float obstacleDistanceFromCenter = Vector3.Distance(obstaclePos, center.position);
+                if (Mathf.Abs(obstacleDistanceFromCenter - orbitRadius) < 1f)
+                {
+                    // Near miss detectado!
+                    float timeSinceLastMiss = Time.time - lastNearMissTime;
+                    if (timeSinceLastMiss > 0.5f) // Evitar spam de near misses
+                    {
+                        lastNearMissTime = Time.time;
+                        breathingRoomTimer = breathingRoomDuration;
+                        Debug.Log($"ObstacleManager: Near miss detected! Breathing room activated for {breathingRoomDuration}s");
+                    }
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Verifica si el jugador está en peligro (muchos obstáculos cerca)
+    /// </summary>
+    private bool IsPlayerInDanger()
+    {
+        if (playerOrbitRef == null || center == null) return false;
+        
+        GameObject player = playerOrbitRef.gameObject;
+        if (player == null) return false;
+        
+        Vector3 playerPos = player.transform.position;
+        float dangerRadius = nearMissDistance * 2f; // Radio de peligro
+        
+        // Contar obstáculos cerca del jugador
+        ObstacleDestructionController[] allObstacles = FindObjectsOfType<ObstacleDestructionController>();
+        int nearbyObstacles = 0;
+        
+        foreach (ObstacleDestructionController obstacle in allObstacles)
+        {
+            if (obstacle == null || obstacle.IsDestroying()) continue;
+            
+            float distance = Vector3.Distance(playerPos, obstacle.transform.position);
+            if (distance < dangerRadius)
+            {
+                nearbyObstacles++;
+            }
+        }
+        
+        // Si hay 2 o más obstáculos cerca, el jugador está en peligro
+        return nearbyObstacles >= 2;
     }
 
     private void UpdateDifficulty()

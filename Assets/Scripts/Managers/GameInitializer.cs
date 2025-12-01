@@ -139,15 +139,25 @@ public class GameInitializer : MonoBehaviour
             cosmicBg.AddComponent<CosmicBackground>();
         }
 
-        // Crear anillo sagrado de órbita
+        // Crear anillo sagrado de órbita - DESACTIVADO (no se muestra la órbita)
+        // Buscar y desactivar cualquier anillo existente
         GameObject orbitRing = GameObject.Find("SacredOrbitRing");
-        if (orbitRing == null)
+        if (orbitRing != null)
         {
-            orbitRing = new GameObject("SacredOrbitRing");
-            orbitRing.transform.SetParent(center.transform);
-            orbitRing.transform.localPosition = Vector3.zero;
-            SacredOrbitRing ring = orbitRing.AddComponent<SacredOrbitRing>();
-            ring.radius = 2f; // Mismo radio que la órbita del jugador
+            // Desactivar el componente o el GameObject completo
+            SacredOrbitRing ring = orbitRing.GetComponent<SacredOrbitRing>();
+            if (ring != null)
+            {
+                ring.enabled = false;
+            }
+            // También desactivar el LineRenderer si existe
+            LineRenderer lr = orbitRing.GetComponent<LineRenderer>();
+            if (lr != null)
+            {
+                lr.enabled = false;
+            }
+            // O simplemente desactivar el GameObject completo
+            orbitRing.SetActive(false);
         }
 
         // Crear InputController

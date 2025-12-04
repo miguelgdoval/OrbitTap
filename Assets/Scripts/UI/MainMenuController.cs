@@ -22,7 +22,7 @@ public class MainMenuController : MonoBehaviour
     private SettingsPanel settingsPanel;
     
     [Header("Play Section")]
-    private Text titleText;
+    private GameObject titleContainer;
     private GameObject playerDemo;
     private Button playButton;
     private Text playButtonText;
@@ -267,65 +267,31 @@ public class MainMenuController : MonoBehaviour
         playRect.anchorMax = Vector2.one;
         playRect.sizeDelta = Vector2.zero;
         
-        // Título con estética AstroNeon
-        GameObject titleObj = new GameObject("TitleText");
-        titleObj.transform.SetParent(playSection.transform, false);
-        titleText = titleObj.AddComponent<Text>();
+        // Título con estética AstroNeon mejorada - en dos líneas
+        titleContainer = new GameObject("TitleContainer");
+        titleContainer.transform.SetParent(playSection.transform, false);
         
-        // Tracking amplio (espaciado entre letras) - simulado con espacios
-        titleText.text = "S T A R B O U N D   O R B I T";
-        titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        titleText.fontSize = 72; // Más grande para impacto visual
-        titleText.fontStyle = FontStyle.Bold;
+        RectTransform titleContainerRect = titleContainer.AddComponent<RectTransform>();
+        titleContainerRect.anchorMin = new Vector2(0.5f, 1f); // Anclar arriba
+        titleContainerRect.anchorMax = new Vector2(0.5f, 1f);
+        titleContainerRect.pivot = new Vector2(0.5f, 1f);
+        titleContainerRect.anchoredPosition = new Vector2(0, -80); // Bastante arriba
+        titleContainerRect.sizeDelta = new Vector2(1400, 250); // Más alto para dos líneas
         
-        // Color principal: degradado cian-violeta (usamos cian brillante como base)
-        titleText.color = new Color(0.2f, 0.9f, 1f, 1f); // Cian brillante
-        
-        titleText.alignment = TextAnchor.MiddleCenter;
-        titleText.horizontalOverflow = HorizontalWrapMode.Overflow;
-        
-        RectTransform titleRect = titleObj.GetComponent<RectTransform>();
-        titleRect.anchorMin = new Vector2(0.5f, 0.5f);
-        titleRect.anchorMax = new Vector2(0.5f, 0.5f);
-        titleRect.pivot = new Vector2(0.5f, 0.5f);
-        titleRect.anchoredPosition = new Vector2(0, 200); // Más arriba para dejar espacio
-        titleRect.sizeDelta = new Vector2(1000, 100); // Más ancho para el tracking amplio
-        
-        // Stroke externo fino cian brillante
-        Outline titleOutline = titleObj.AddComponent<Outline>();
-        titleOutline.effectColor = new Color(0f, 0.9f, 1f, 0.8f); // Cian brillante
-        titleOutline.effectDistance = new Vector2(2, 2);
-        
-        // Glow suave alrededor de las letras (usando Shadow para efecto de glow)
-        Shadow titleGlow = titleObj.AddComponent<Shadow>();
-        titleGlow.effectColor = new Color(0.2f, 0.7f, 1f, 0.4f); // Cian suave para glow
-        titleGlow.effectDistance = new Vector2(0, 0);
-        
-        // Fondo translúcido opcional (glow muy leve detrás)
-        GameObject titleBg = new GameObject("TitleBackground");
-        titleBg.transform.SetParent(titleObj.transform, false);
-        titleBg.transform.SetAsFirstSibling(); // Detrás del texto
-        Image bgImg = titleBg.AddComponent<Image>();
-        bgImg.color = new Color(0.1f, 0.3f, 0.5f, 0.15f); // Glow azul muy suave
-        bgImg.raycastTarget = false;
-        
-        RectTransform bgRect = titleBg.GetComponent<RectTransform>();
-        bgRect.anchorMin = Vector2.zero;
-        bgRect.anchorMax = Vector2.one;
-        bgRect.sizeDelta = new Vector2(50, 30); // Más grande que el texto para el glow
-        bgRect.anchoredPosition = Vector2.zero;
+        // Crear título con letras individuales y imágenes para las O en dos líneas
+        CreateTitleWithImagesTwoLines(titleContainer.transform);
         
         // Animación de entrada inicial
-        titleObj.transform.localScale = Vector3.one * 0.92f;
-        CanvasGroup titleCanvasGroup = titleObj.AddComponent<CanvasGroup>();
+        titleContainer.transform.localScale = Vector3.one * 0.92f;
+        CanvasGroup titleCanvasGroup = titleContainer.AddComponent<CanvasGroup>();
         titleCanvasGroup.alpha = 0f;
-        StartCoroutine(AnimateTitleEntry(titleObj.transform, titleCanvasGroup));
+        StartCoroutine(AnimateTitleEntry(titleContainer.transform, titleCanvasGroup));
         
         // Animación idle (pulsación lenta)
-        StartCoroutine(PulseTitle());
+        StartCoroutine(PulseTitleContainer(titleContainer.transform));
         
         // Partículas ascendiendo detrás del título
-        StartCoroutine(CreateTitleParticles(titleObj.transform));
+        StartCoroutine(CreateTitleParticles(titleContainer.transform));
         
         // Botón Play (debajo del centro) - Estilo Space Neon Minimal
         GameObject playBtnObj = new GameObject("PlayButton");
@@ -1267,40 +1233,201 @@ public class MainMenuController : MonoBehaviour
         canvasGroup.alpha = endAlpha;
     }
     
-    private IEnumerator PulseTitle()
+    /// <summary>
+    /// Crea el título con letras individuales y usa imágenes para las O en dos líneas
+    /// </summary>
+    private void CreateTitleWithImagesTwoLines(Transform parent)
+    {
+        // Cargar sprite de LetterO
+        Sprite letterOSprite = LoadLetterOSprite();
+        
+        // Primera línea: "S T A R B O U N D"
+        string[] line1Parts = { "S", "T", "A", "R", "B", "O", "U", "N", "D" };
+        // Segunda línea: "O R B I T"
+        string[] line2Parts = { "O", "R", "B", "I", "T" };
+        
+        float letterSpacing = 15f; // Espaciado entre letras (reducido)
+        float lineHeight = 100f; // Espaciado vertical entre líneas
+        
+        // Crear primera línea
+        CreateTitleLine(line1Parts, parent, letterOSprite, letterSpacing, lineHeight * 0.5f);
+        
+        // Crear segunda línea
+        CreateTitleLine(line2Parts, parent, letterOSprite, letterSpacing, -lineHeight * 0.5f);
+    }
+    
+    /// <summary>
+    /// Crea una línea del título con letras individuales
+    /// </summary>
+    private void CreateTitleLine(string[] letters, Transform parent, Sprite letterOSprite, float letterSpacing, float yOffset)
+    {
+        // Calcular el ancho total considerando el tamaño real de cada letra
+        float totalWidth = 0f;
+        float[] letterWidths = new float[letters.Length];
+        
+        for (int i = 0; i < letters.Length; i++)
+        {
+            if (letters[i] == "O" && letterOSprite != null)
+            {
+                letterWidths[i] = 135f; // Ancho de la imagen O (actualizado)
+            }
+            else
+            {
+                letterWidths[i] = 80f; // Ancho de las letras de texto
+            }
+            totalWidth += letterWidths[i];
+        }
+        
+        // Calcular espaciado total (letras + espacios entre ellas)
+        float totalSpacing = letterSpacing * (letters.Length - 1);
+        float totalLineWidth = totalWidth + totalSpacing;
+        float startX = -totalLineWidth * 0.5f;
+        
+        // Posicionar cada letra considerando su ancho real
+        float currentX = startX;
+        
+        for (int i = 0; i < letters.Length; i++)
+        {
+            GameObject letterObj = new GameObject($"Letter_{letters[i]}_{i}");
+            letterObj.transform.SetParent(parent, false);
+            
+            RectTransform letterRect = letterObj.AddComponent<RectTransform>();
+            letterRect.anchorMin = new Vector2(0.5f, 0.5f);
+            letterRect.anchorMax = new Vector2(0.5f, 0.5f);
+            letterRect.pivot = new Vector2(0.5f, 0.5f);
+            
+            // Posicionar centrando cada letra en su posición
+            letterRect.anchoredPosition = new Vector2(currentX + letterWidths[i] * 0.5f, yOffset);
+            currentX += letterWidths[i] + letterSpacing; // Avanzar: ancho de letra + espaciado
+            
+            if (letters[i] == "O" && letterOSprite != null)
+            {
+                // Usar imagen para las O - tamaño más grande para coincidir con las letras
+                letterRect.sizeDelta = new Vector2(135, 155); // Un poco más grande que antes
+                
+                Image letterImg = letterObj.AddComponent<Image>();
+                letterImg.sprite = letterOSprite;
+                letterImg.color = CosmicTheme.NeonCyan;
+                letterImg.preserveAspect = true;
+                letterImg.raycastTarget = false;
+                letterImg.type = Image.Type.Simple; // Tipo Simple para evitar duplicaciones
+                letterImg.useSpriteMesh = false; // Desactivar mesh para evitar problemas de renderizado
+                
+                // Glow suave en la imagen (sin Outline que puede causar duplicaciones)
+                Shadow imgGlow = letterObj.AddComponent<Shadow>();
+                imgGlow.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.5f);
+                imgGlow.effectDistance = new Vector2(0, 0);
+            }
+            else
+            {
+                // Tamaño normal para las letras de texto
+                letterRect.sizeDelta = new Vector2(80, 100);
+                
+                // Usar texto para las demás letras
+                Text letterText = letterObj.AddComponent<Text>();
+                letterText.text = letters[i];
+                letterText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                letterText.fontSize = 80;
+                letterText.fontStyle = FontStyle.Bold;
+                letterText.color = CosmicTheme.NeonCyan;
+                letterText.alignment = TextAnchor.MiddleCenter;
+                letterText.raycastTarget = false;
+                
+                // Stroke externo fino cian brillante
+                Outline textOutline = letterObj.AddComponent<Outline>();
+                textOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.8f);
+                textOutline.effectDistance = new Vector2(2, 2);
+                
+                // Glow suave
+                Shadow textGlow = letterObj.AddComponent<Shadow>();
+                textGlow.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.5f);
+                textGlow.effectDistance = new Vector2(0, 0);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Carga el sprite de LetterO desde Resources
+    /// </summary>
+    private Sprite LoadLetterOSprite()
+    {
+        if (!Application.isPlaying) return null;
+        
+        // Cargar desde Resources/Art/Icons/LetterO
+        Sprite sprite = Resources.Load<Sprite>("Art/Icons/LetterO");
+        if (sprite != null) return sprite;
+        
+        // Intentar cargar como Texture2D
+        Texture2D texture = Resources.Load<Texture2D>("Art/Icons/LetterO");
+        if (texture != null)
+        {
+            return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
+        }
+        
+        #if UNITY_EDITOR
+        // En el editor, intentar usar AssetDatabase como fallback
+        try
+        {
+            string[] guids = UnityEditor.AssetDatabase.FindAssets("LetterO t:Sprite");
+            if (guids.Length == 0)
+            {
+                guids = UnityEditor.AssetDatabase.FindAssets("LetterO t:Texture2D");
+            }
+            
+            if (guids.Length > 0)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
+                sprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite != null) return sprite;
+                
+                texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                if (texture != null)
+                {
+                    return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
+                }
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"No se pudo cargar LetterO: {e.Message}");
+        }
+        #endif
+        
+        return null;
+    }
+    
+    private IEnumerator PulseTitleContainer(Transform titleContainer)
     {
         // Esperar a que termine la animación de entrada
         yield return new WaitForSeconds(0.4f);
         
-        while (true)
+        while (titleContainer != null)
         {
             float time = 0f;
             float duration = 4f; // Pulsación cada 4 segundos
             float minScale = 1.00f;
             float maxScale = 1.015f; // Pulsación muy sutil
             
-            while (time < duration)
+            while (time < duration && titleContainer != null)
             {
                 time += Time.deltaTime;
                 // Usar seno para movimiento suave de ida y vuelta
                 float t = Mathf.Sin(time / duration * Mathf.PI * 2f) * 0.5f + 0.5f;
                 float scale = Mathf.Lerp(minScale, maxScale, t);
                 
-                if (titleText != null)
+                if (titleContainer != null)
                 {
-                    titleText.transform.localScale = Vector3.one * scale;
-                    
-                    // Parallax leve (0.5-1px de desplazamiento)
-                    RectTransform titleRect = titleText.GetComponent<RectTransform>();
-                    if (titleRect != null)
-                    {
-                        float parallaxOffset = Mathf.Sin(time * 0.5f) * 0.8f;
-                        titleRect.anchoredPosition = new Vector2(parallaxOffset, 200);
-                    }
+                    titleContainer.localScale = Vector3.one * scale;
                 }
                 yield return null;
             }
         }
+    }
+    
+    private IEnumerator PulseTitle()
+    {
+        // Método legacy - mantener por compatibilidad pero ya no se usa
+        yield break;
     }
     
     private IEnumerator CreateTitleParticles(Transform titleParent)
@@ -1313,7 +1440,7 @@ public class MainMenuController : MonoBehaviour
             // Crear partícula cada 1-2 segundos
             yield return new WaitForSeconds(Random.Range(1f, 2f));
             
-            if (titleText == null || titleParent == null) break;
+            if (titleParent == null) break;
             
             // Crear partícula pequeña ascendiendo
             GameObject particle = new GameObject("TitleParticle");
@@ -1326,7 +1453,7 @@ public class MainMenuController : MonoBehaviour
             particleImg.raycastTarget = false;
             
             RectTransform particleRect = particle.GetComponent<RectTransform>();
-            RectTransform titleRect = titleText.GetComponent<RectTransform>();
+            RectTransform titleRect = titleParent.GetComponent<RectTransform>();
             
             // Posición inicial: debajo del título, aleatoria en X
             float startX = Random.Range(-titleRect.sizeDelta.x * 0.4f, titleRect.sizeDelta.x * 0.4f);

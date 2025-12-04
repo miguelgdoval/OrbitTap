@@ -210,19 +210,29 @@ public class MainMenuController : MonoBehaviour
         
         settingsButton.onClick.AddListener(ShowSettings);
         
-        // Monedas (derecha)
+        // Monedas (esquina superior derecha) - Estilo del juego
         GameObject currencyObj = new GameObject("CurrencyDisplay");
-        currencyObj.transform.SetParent(topPanel.transform, false);
-        currencyButton = currencyObj.AddComponent<Button>();
-        Image currencyImg = currencyObj.AddComponent<Image>();
-        currencyImg.color = new Color(0, 0, 0, 0.3f);
+        currencyObj.transform.SetParent(canvas.transform, false); // Directamente en el canvas, no en topPanel
         
-        RectTransform currencyRect = currencyObj.GetComponent<RectTransform>();
-        currencyRect.anchorMin = new Vector2(1, 0.5f);
-        currencyRect.anchorMax = new Vector2(1, 0.5f);
-        currencyRect.pivot = new Vector2(1f, 0.5f);
-        currencyRect.anchoredPosition = new Vector2(-200, 0); // Duplicado de -100
-        currencyRect.sizeDelta = new Vector2(300, 120); // Duplicado de 150x60
+        // Añadir RectTransform explícitamente antes de usarlo
+        RectTransform currencyRect = currencyObj.AddComponent<RectTransform>();
+        currencyRect.anchorMin = new Vector2(1f, 1f); // Esquina superior derecha
+        currencyRect.anchorMax = new Vector2(1f, 1f);
+        currencyRect.pivot = new Vector2(1f, 1f);
+        currencyRect.anchoredPosition = new Vector2(-40, -40); // Margen desde la esquina
+        currencyRect.sizeDelta = new Vector2(300, 100);
+        
+        currencyButton = currencyObj.AddComponent<Button>();
+        
+        // Fondo oscuro semitransparente (estilo del juego)
+        Image currencyImg = currencyObj.AddComponent<Image>();
+        currencyImg.color = new Color(CosmicTheme.SpaceBlack.r, CosmicTheme.SpaceBlack.g, CosmicTheme.SpaceBlack.b, 0.7f);
+        currencyImg.raycastTarget = false;
+        
+        // Glow suave en el panel
+        Outline currencyOutline = currencyObj.AddComponent<Outline>();
+        currencyOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.4f);
+        currencyOutline.effectDistance = new Vector2(3, 3);
         
         // Crear objeto hijo para el texto
         GameObject currencyTextObj = new GameObject("Text");
@@ -236,15 +246,21 @@ public class MainMenuController : MonoBehaviour
             {
                 currencyText.font = defaultFont;
             }
-            currencyText.fontSize = 48; // Duplicado de 24
+            currencyText.fontSize = 48;
+            currencyText.fontStyle = FontStyle.Normal;
             currencyText.alignment = TextAnchor.MiddleCenter;
-            currencyText.color = CosmicTheme.SoftGold;
+            currencyText.color = CosmicTheme.NeonCyan; // Color neon cian como el resto del juego
             
             RectTransform textRect = currencyTextObj.GetComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;
             textRect.anchorMax = Vector2.one;
             textRect.sizeDelta = Vector2.zero;
             textRect.anchoredPosition = Vector2.zero;
+            
+            // Glow en el texto
+            Outline textOutline = currencyTextObj.AddComponent<Outline>();
+            textOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.8f);
+            textOutline.effectDistance = new Vector2(2, 2);
         }
         
         currencyButton.onClick.AddListener(() => NavigateTo(MenuSection.Shop));

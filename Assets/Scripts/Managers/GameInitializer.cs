@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 /// <summary>
 /// Este script inicializa todos los elementos del juego en tiempo de ejecución
@@ -305,7 +306,12 @@ public class GameInitializer : MonoBehaviour
             canvas = new GameObject("Canvas");
             Canvas canvasComponent = canvas.AddComponent<Canvas>();
             canvasComponent.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.AddComponent<CanvasScaler>();
+            
+            CanvasScaler scaler = canvas.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
+            
             canvas.AddComponent<GraphicRaycaster>();
             canvas.layer = 5; // UI layer
 
@@ -315,26 +321,101 @@ public class GameInitializer : MonoBehaviour
             canvasRect.sizeDelta = Vector2.zero;
         }
 
+        // Crear contenedor del marcador de puntuación
+        GameObject scoreContainer = GameObject.Find("ScoreContainer");
+        if (scoreContainer == null)
+        {
+            scoreContainer = new GameObject("ScoreContainer");
+            scoreContainer.transform.SetParent(canvas.transform, false);
+            
+            RectTransform containerRect = scoreContainer.AddComponent<RectTransform>();
+            containerRect.anchorMin = new Vector2(0.5f, 1f); // Centro superior
+            containerRect.anchorMax = new Vector2(0.5f, 1f);
+            containerRect.pivot = new Vector2(0.5f, 1f);
+            containerRect.anchoredPosition = new Vector2(0, -40);
+            containerRect.sizeDelta = new Vector2(300, 100);
+            
+            // Fondo oscuro semitransparente (placa flotante)
+            Image bgImage = scoreContainer.AddComponent<Image>();
+            bgImage.color = new Color(CosmicTheme.SpaceBlack.r, CosmicTheme.SpaceBlack.g, CosmicTheme.SpaceBlack.b, 0.3f);
+            bgImage.raycastTarget = false;
+            
+            // Glow suave en la placa
+            Outline bgOutline = scoreContainer.AddComponent<Outline>();
+            bgOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.4f);
+            bgOutline.effectDistance = new Vector2(3, 3);
+        }
+
         // Crear ScoreText
         GameObject scoreTextObj = GameObject.Find("ScoreText");
         if (scoreTextObj == null)
         {
             scoreTextObj = new GameObject("ScoreText");
-            scoreTextObj.transform.SetParent(canvas.transform, false);
+            scoreTextObj.transform.SetParent(scoreContainer.transform, false);
+            
             Text scoreText = scoreTextObj.AddComponent<Text>();
             scoreText.text = "0";
             scoreText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            scoreText.fontSize = 40;
-            scoreText.color = CosmicTheme.SoftGold; // Dorado suave para la puntuación
-            scoreText.alignment = TextAnchor.UpperCenter;
+            scoreText.fontSize = 64; // Más grande para mejor visibilidad
+            scoreText.fontStyle = FontStyle.Bold;
+            scoreText.color = CosmicTheme.NeonCyan; // Color neon cian brillante
+            scoreText.alignment = TextAnchor.MiddleCenter;
 
             RectTransform scoreRect = scoreTextObj.GetComponent<RectTransform>();
-            scoreRect.anchorMin = new Vector2(0.5f, 1f);
-            scoreRect.anchorMax = new Vector2(0.5f, 1f);
-            scoreRect.anchoredPosition = new Vector2(0, -50);
-            scoreRect.sizeDelta = new Vector2(200, 50);
-
+            scoreRect.anchorMin = Vector2.zero;
+            scoreRect.anchorMax = Vector2.one;
+            scoreRect.sizeDelta = Vector2.zero;
+            scoreRect.anchoredPosition = Vector2.zero;
+            
+            // Stroke externo fino cian brillante
+            Outline scoreOutline = scoreTextObj.AddComponent<Outline>();
+            scoreOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.8f);
+            scoreOutline.effectDistance = new Vector2(2, 2);
+            
+            // Glow suave alrededor del texto
+            Shadow scoreGlow = scoreTextObj.AddComponent<Shadow>();
+            scoreGlow.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.5f);
+            scoreGlow.effectDistance = new Vector2(0, 0);
+            
             sm.scoreText = scoreText;
+            
+            // Añadir animación de pulso sutil
+            StartCoroutine(PulseScoreText(scoreText));
+        }
+        else
+        {
+            // Si ya existe, obtener la referencia
+            sm.scoreText = scoreTextObj.GetComponent<Text>();
+        }
+    }
+    
+    /// <summary>
+    /// Animación de pulso sutil para el marcador de puntuación
+    /// </summary>
+    private System.Collections.IEnumerator PulseScoreText(Text scoreText)
+    {
+        if (scoreText == null) yield break;
+        
+        while (scoreText != null)
+        {
+            float time = 0f;
+            float duration = 2f; // Ciclo completo cada 2 segundos
+            float minScale = 1.0f;
+            float maxScale = 1.05f; // Pulsación muy sutil
+            
+            while (time < duration && scoreText != null)
+            {
+                time += Time.deltaTime;
+                float t = Mathf.Sin(time / duration * Mathf.PI * 2f) * 0.5f + 0.5f;
+                float scale = Mathf.Lerp(minScale, maxScale, t);
+                
+                if (scoreText != null)
+                {
+                    scoreText.transform.localScale = Vector3.one * scale;
+                }
+                
+                yield return null;
+            }
         }
     }
 }

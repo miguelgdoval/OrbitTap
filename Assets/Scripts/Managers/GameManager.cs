@@ -86,10 +86,12 @@ public class GameManager : MonoBehaviour
         Debug.Log("GameManager: GameOver() llamado");
         isGameOver = true;
         
-        // Save score
+        // Detener la puntuación y guardar
         ScoreManager scoreManager = FindObjectOfType<ScoreManager>();
         if (scoreManager != null)
         {
+            Debug.Log("GameManager: Deteniendo puntuación...");
+            scoreManager.StopScoring();
             Debug.Log("GameManager: Guardando puntuación...");
             scoreManager.SaveHighScore();
         }

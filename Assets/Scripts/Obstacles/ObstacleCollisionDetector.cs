@@ -41,43 +41,29 @@ public class ObstacleCollisionDetector : MonoBehaviour
                 playerOrbit.enabled = false; // Detener movimiento INMEDIATAMENTE
             }
             
-            // CRÍTICO: Detener ObstacleMover del PADRE si existe ANTES de capturar posición
+            // CRÍTICO: NO detener el movimiento del padre - solo desconectar este segmento
+            // Esto permite que los otros segmentos continúen moviéndose
             Transform parent = transform.parent;
             Vector3 collisionPoint; // Declarar variable
             
+            // Copiar movimiento del padre ANTES de desconectarlo (si existe)
+            ObstacleMover parentMover = null;
             if (parent != null)
             {
-                ObstacleMover parentMover = parent.GetComponent<ObstacleMover>();
-                if (parentMover != null)
-                {
-                    parentMover.enabled = false;
-                }
+                parentMover = parent.GetComponent<ObstacleMover>();
                 
-                // CRÍTICO: Detener Rigidbody2D del PADRE si existe
-                Rigidbody2D parentRb = parent.GetComponent<Rigidbody2D>();
-                if (parentRb != null)
-                {
-                    parentRb.velocity = Vector2.zero;
-                    parentRb.angularVelocity = 0f;
-                    parentRb.isKinematic = true;
-                }
-                
-                // CRÍTICO: Capturar la posición del PADRE (el obstáculo completo) DESPUÉS de detener movimiento
-                // La explosión debe ocurrir donde está el obstáculo, igual que el planeta usa su propia posición
+                // CRÍTICO: Capturar la posición del PADRE antes de desconectar
+                // La explosión debe ocurrir donde está el obstáculo
                 Vector3 obstacleExactPosition = parent.position;
-                parent.position = obstacleExactPosition; // Forzar posición fija
+                collisionPoint = obstacleExactPosition;
                 
                 // DEBUG: Verificar posición
-                Debug.Log($"ObstacleCollisionDetector: Posición del PADRE (obstáculo) capturada - {obstacleExactPosition}, parent.position: {parent.position}");
-                
-                // Usar la posición del padre para la explosión
-                collisionPoint = obstacleExactPosition;
+                Debug.Log($"ObstacleCollisionDetector: Posición del PADRE (obstáculo) capturada - {obstacleExactPosition}");
             }
             else
             {
                 // Si no hay padre, usar la posición de este GameObject
                 Vector3 obstacleExactPosition = transform.position;
-                transform.position = obstacleExactPosition; // Forzar posición fija
                 collisionPoint = obstacleExactPosition;
                 Debug.Log($"ObstacleCollisionDetector: Posición del obstáculo (sin padre) capturada - {obstacleExactPosition}");
             }
@@ -92,23 +78,23 @@ public class ObstacleCollisionDetector : MonoBehaviour
             }
             
             // Copiar movimiento del padre si existe (para que el segmento continúe moviéndose)
+            // IMPORTANTE: Hacer esto ANTES de desconectar del padre
+            if (parentMover != null)
+            {
+                // Agregar ObstacleMover a este segmento con la misma velocidad y dirección
+                ObstacleMover segmentMover = gameObject.GetComponent<ObstacleMover>();
+                if (segmentMover == null)
+                {
+                    segmentMover = gameObject.AddComponent<ObstacleMover>();
+                }
+                segmentMover.SetDirection(parentMover.direction);
+                segmentMover.SetSpeed(parentMover.speed);
+            }
+            
+            // CRÍTICO: Desconectar este segmento del padre DESPUÉS de copiar el movimiento
+            // Esto permite que el padre y los otros segmentos continúen moviéndose normalmente
             if (parent != null)
             {
-                ObstacleMover parentMover = parent.GetComponent<ObstacleMover>();
-                if (parentMover != null)
-                {
-                    // Agregar ObstacleMover a este segmento con la misma velocidad y dirección
-                    ObstacleMover segmentMover = gameObject.GetComponent<ObstacleMover>();
-                    if (segmentMover == null)
-                    {
-                        segmentMover = gameObject.AddComponent<ObstacleMover>();
-                    }
-                    segmentMover.SetDirection(parentMover.direction);
-                    segmentMover.SetSpeed(parentMover.speed);
-                }
-                
-                // Desconectar este segmento del padre antes de destruirlo
-                // Esto permite que los otros segmentos continúen
                 transform.SetParent(null);
             }
             
@@ -172,43 +158,29 @@ public class ObstacleCollisionDetector : MonoBehaviour
                 playerOrbit.enabled = false; // Detener movimiento INMEDIATAMENTE
             }
             
-            // CRÍTICO: Detener ObstacleMover del PADRE si existe ANTES de capturar posición
+            // CRÍTICO: NO detener el movimiento del padre - solo desconectar este segmento
+            // Esto permite que los otros segmentos continúen moviéndose
             Transform parent = transform.parent;
             Vector3 collisionPoint; // Declarar variable
             
+            // Copiar movimiento del padre ANTES de desconectarlo (si existe)
+            ObstacleMover parentMover = null;
             if (parent != null)
             {
-                ObstacleMover parentMover = parent.GetComponent<ObstacleMover>();
-                if (parentMover != null)
-                {
-                    parentMover.enabled = false;
-                }
+                parentMover = parent.GetComponent<ObstacleMover>();
                 
-                // CRÍTICO: Detener Rigidbody2D del PADRE si existe
-                Rigidbody2D parentRb = parent.GetComponent<Rigidbody2D>();
-                if (parentRb != null)
-                {
-                    parentRb.velocity = Vector2.zero;
-                    parentRb.angularVelocity = 0f;
-                    parentRb.isKinematic = true;
-                }
-                
-                // CRÍTICO: Capturar la posición del PADRE (el obstáculo completo) DESPUÉS de detener movimiento
-                // La explosión debe ocurrir donde está el obstáculo, igual que el planeta usa su propia posición
+                // CRÍTICO: Capturar la posición del PADRE antes de desconectar
+                // La explosión debe ocurrir donde está el obstáculo
                 Vector3 obstacleExactPosition = parent.position;
-                parent.position = obstacleExactPosition; // Forzar posición fija
+                collisionPoint = obstacleExactPosition;
                 
                 // DEBUG: Verificar posición
-                Debug.Log($"ObstacleCollisionDetector: Posición del PADRE (obstáculo) capturada (OnCollisionEnter2D) - {obstacleExactPosition}, parent.position: {parent.position}");
-                
-                // Usar la posición del padre para la explosión
-                collisionPoint = obstacleExactPosition;
+                Debug.Log($"ObstacleCollisionDetector: Posición del PADRE (obstáculo) capturada (OnCollisionEnter2D) - {obstacleExactPosition}");
             }
             else
             {
                 // Si no hay padre, usar la posición de este GameObject
                 Vector3 obstacleExactPosition = transform.position;
-                transform.position = obstacleExactPosition; // Forzar posición fija
                 collisionPoint = obstacleExactPosition;
                 Debug.Log($"ObstacleCollisionDetector: Posición del obstáculo (sin padre) capturada (OnCollisionEnter2D) - {obstacleExactPosition}");
             }
@@ -222,22 +194,23 @@ public class ObstacleCollisionDetector : MonoBehaviour
             }
             
             // Copiar movimiento del padre si existe (para que el segmento continúe moviéndose)
+            // IMPORTANTE: Hacer esto ANTES de desconectar del padre
+            if (parentMover != null)
+            {
+                // Agregar ObstacleMover a este segmento con la misma velocidad y dirección
+                ObstacleMover segmentMover = gameObject.GetComponent<ObstacleMover>();
+                if (segmentMover == null)
+                {
+                    segmentMover = gameObject.AddComponent<ObstacleMover>();
+                }
+                segmentMover.SetDirection(parentMover.direction);
+                segmentMover.SetSpeed(parentMover.speed);
+            }
+            
+            // CRÍTICO: Desconectar este segmento del padre DESPUÉS de copiar el movimiento
+            // Esto permite que el padre y los otros segmentos continúen moviéndose normalmente
             if (parent != null)
             {
-                ObstacleMover parentMover = parent.GetComponent<ObstacleMover>();
-                if (parentMover != null)
-                {
-                    // Agregar ObstacleMover a este segmento con la misma velocidad y dirección
-                    ObstacleMover segmentMover = gameObject.GetComponent<ObstacleMover>();
-                    if (segmentMover == null)
-                    {
-                        segmentMover = gameObject.AddComponent<ObstacleMover>();
-                    }
-                    segmentMover.SetDirection(parentMover.direction);
-                    segmentMover.SetSpeed(parentMover.speed);
-                }
-                
-                // Desconectar este segmento del padre antes de destruirlo
                 transform.SetParent(null);
             }
             

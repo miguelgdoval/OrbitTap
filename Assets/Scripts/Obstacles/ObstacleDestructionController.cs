@@ -20,9 +20,9 @@ public class ObstacleDestructionController : MonoBehaviour
     public float fragmentSpeed = 5f;
     
     [Header("Particle Settings")]
-    [Tooltip("Número de partículas en la explosión (15-25 recomendado)")]
-    [Range(15, 25)]
-    public int particleCount = 20;
+    [Tooltip("Número de partículas en la explosión (más partículas = más fragmentos naranjas de fuego)")]
+    [Range(15, 100)]
+    public int particleCount = 50;
     
     [Tooltip("Velocidad de las partículas")]
     [Range(3f, 10f)]

@@ -24,9 +24,9 @@ public class PlanetDestructionController : MonoBehaviour
     public float fragmentGravity = 0f; // Sin gravedad por defecto para que vuelen en todas direcciones
     
     [Header("Particle Settings")]
-    [Tooltip("Número de partículas en la explosión (30-50 recomendado)")]
-    [Range(20, 80)]
-    public int particleCount = 40;
+    [Tooltip("Número de partículas en la explosión (más partículas = más fragmentos naranjas de fuego)")]
+    [Range(20, 150)]
+    public int particleCount = 80;
     
     [Tooltip("Velocidad de las partículas")]
     [Range(3f, 12f)]

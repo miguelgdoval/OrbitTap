@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
+using System.Text;
 
 /// <summary>
 /// Este script inicializa todos los elementos del juego en tiempo de ejecución
@@ -248,25 +250,22 @@ public class GameInitializer : MonoBehaviour
     #endif
     
     /// <summary>
-    /// Función helper para cargar sprites que funciona tanto en editor como en builds
+    /// Obtiene el tamaño de referencia del Asteroide Errante (el tamaño correcto)
     /// </summary>
-    private Sprite LoadPlayerSprite()
+    private float GetReferencePlanetSize()
     {
-        if (!Application.isPlaying) return null;
-        
-        // Primero intentar cargar desde Resources (funciona en editor y builds si están en carpeta Resources)
-        Sprite sprite = Resources.Load<Sprite>("Art/Protagonist/AsteroideErrante");
-        if (sprite != null) return sprite;
-        
-        // Intentar cargar como Texture2D desde Resources
-        Texture2D texture = Resources.Load<Texture2D>("Art/Protagonist/AsteroideErrante");
-        if (texture != null)
+        // Cargar el sprite del Asteroide Errante como referencia
+        Sprite referenceSprite = Resources.Load<Sprite>("Art/Protagonist/AsteroideErrante");
+        if (referenceSprite != null)
         {
-            return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
+            // Usar bounds.size que da el tamaño real en unidades del mundo (considera el rect visible del sprite)
+            float worldSize = Mathf.Max(referenceSprite.bounds.size.x, referenceSprite.bounds.size.y);
+            Debug.Log($"[GameInitializer] Tamaño de referencia calculado: {worldSize} (Asteroide Errante bounds: {referenceSprite.bounds.size}, rect: {referenceSprite.rect.width}x{referenceSprite.rect.height}, PPU: {referenceSprite.pixelsPerUnit})");
+            return worldSize;
         }
         
         #if UNITY_EDITOR
-        // En el editor, intentar usar AssetDatabase como fallback
+        // Fallback en editor
         try
         {
             string[] guids = UnityEditor.AssetDatabase.FindAssets("AsteroideErrante t:Sprite");
@@ -278,19 +277,182 @@ public class GameInitializer : MonoBehaviour
             if (guids.Length > 0)
             {
                 string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
+                referenceSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (referenceSprite != null)
+                {
+                    float worldSize = Mathf.Max(referenceSprite.rect.width, referenceSprite.rect.height) / referenceSprite.pixelsPerUnit;
+                    return worldSize;
+                }
+            }
+        }
+        catch { }
+        #endif
+        
+        // Valor por defecto si no se encuentra (aproximado)
+        return 1.0f;
+    }
+    
+    /// <summary>
+    /// Normaliza un sprite para que tenga el mismo tamaño visual que el Asteroide Errante
+    /// </summary>
+    private Sprite NormalizePlanetSize(Sprite originalSprite, float targetWorldSize)
+    {
+        if (originalSprite == null || originalSprite.texture == null) return originalSprite;
+        
+        // Calcular el tamaño actual del sprite en unidades del mundo usando bounds (tamaño visual real)
+        float currentWorldSize = Mathf.Max(originalSprite.bounds.size.x, originalSprite.bounds.size.y);
+        
+        Debug.Log($"[GameInitializer] Normalizando sprite '{originalSprite.name}': Tamaño actual (bounds): {currentWorldSize}, Objetivo: {targetWorldSize}, PPU actual: {originalSprite.pixelsPerUnit}, Rect: {originalSprite.rect.width}x{originalSprite.rect.height}, Bounds: {originalSprite.bounds.size}");
+        
+        // Si ya tiene el tamaño correcto (con un margen de error pequeño), no hacer nada
+        if (Mathf.Abs(currentWorldSize - targetWorldSize) < 0.01f)
+        {
+            Debug.Log($"[GameInitializer] Sprite '{originalSprite.name}' ya tiene el tamaño correcto, no se normaliza");
+            return originalSprite;
+        }
+        
+        // Calcular el nuevo pixelsPerUnit para que el sprite tenga el tamaño objetivo
+        // Usamos el tamaño del rect en píxeles dividido por el tamaño objetivo en unidades del mundo
+        float newPixelsPerUnit = Mathf.Max(originalSprite.rect.width, originalSprite.rect.height) / targetWorldSize;
+        
+        Debug.Log($"[GameInitializer] Normalizando sprite '{originalSprite.name}': Nuevo PPU: {newPixelsPerUnit} (anterior: {originalSprite.pixelsPerUnit})");
+        
+        // Crear un nuevo sprite con el pixelsPerUnit ajustado
+        return Sprite.Create(
+            originalSprite.texture,
+            originalSprite.rect,
+            originalSprite.pivot,
+            newPixelsPerUnit
+        );
+    }
+    
+    /// <summary>
+    /// Función helper para cargar sprites que funciona tanto en editor como en builds
+    /// Normaliza el tamaño de todos los planetas para que coincidan con el Asteroide Errante
+    /// </summary>
+    private Sprite LoadPlayerSprite()
+    {
+        if (!Application.isPlaying) return null;
+        
+        // Obtener el tamaño de referencia del Asteroide Errante
+        float referenceSize = GetReferencePlanetSize();
+        
+        // Cargar planeta seleccionado guardado
+        string selectedPlanet = PlayerPrefs.GetString("SelectedPlanet", "AsteroideErrante");
+        
+        // Mapeo de nombres de código a nombres reales de archivos (para caracteres especiales)
+        Dictionary<string, string> planetNameMapping = new Dictionary<string, string>
+        {
+            { "PlanetaOceanico", "PlanetaOceánico" }  // Mapear código sin acento a archivo con acento
+        };
+        
+        // Si hay un mapeo, intentar primero con el nombre mapeado
+        string actualFileName = planetNameMapping.ContainsKey(selectedPlanet) ? planetNameMapping[selectedPlanet] : selectedPlanet;
+        
+        // Primero intentar cargar desde Resources (funciona en editor y builds si están en carpeta Resources)
+        Sprite sprite = Resources.Load<Sprite>($"Art/Protagonist/{actualFileName}");
+        if (sprite != null)
+        {
+            return NormalizePlanetSize(sprite, referenceSize);
+        }
+        
+        // Si falla, intentar con el nombre original
+        if (actualFileName != selectedPlanet)
+        {
+            sprite = Resources.Load<Sprite>($"Art/Protagonist/{selectedPlanet}");
+            if (sprite != null)
+            {
+                return NormalizePlanetSize(sprite, referenceSize);
+            }
+        }
+        
+        // Intentar cargar como Texture2D desde Resources
+        Texture2D texture = Resources.Load<Texture2D>($"Art/Protagonist/{actualFileName}");
+        if (texture != null)
+        {
+            // Calcular pixelsPerUnit para que tenga el tamaño de referencia
+            float pixelsPerUnit = Mathf.Max(texture.width, texture.height) / referenceSize;
+            return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
+        }
+        
+        if (actualFileName != selectedPlanet)
+        {
+            texture = Resources.Load<Texture2D>($"Art/Protagonist/{selectedPlanet}");
+            if (texture != null)
+            {
+                float pixelsPerUnit = Mathf.Max(texture.width, texture.height) / referenceSize;
+                return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
+            }
+        }
+        
+        // Si falla, intentar cargar todos los sprites y buscar por nombre normalizado
+        Object[] allSprites = Resources.LoadAll("Art/Protagonist", typeof(Sprite));
+        System.Func<string, string> normalizeName = (name) => {
+            if (string.IsNullOrEmpty(name)) return "";
+            string lower = name.ToLowerInvariant();
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            foreach (char c in lower)
+            {
+                int charCode = (int)c;
+                // Ignorar caracteres combinados (diacríticos) - códigos 768-879
+                if (charCode >= 768 && charCode <= 879) continue;
+                char normalizedChar = c;
+                if (charCode >= 224 && charCode <= 230) normalizedChar = 'a';
+                else if (charCode >= 232 && charCode <= 235) normalizedChar = 'e';
+                else if (charCode >= 236 && charCode <= 239) normalizedChar = 'i';
+                else if (charCode >= 242 && charCode <= 246) normalizedChar = 'o';
+                else if (charCode >= 249 && charCode <= 252) normalizedChar = 'u';
+                else if (charCode == 241) normalizedChar = 'n';
+                else if (charCode == 231) normalizedChar = 'c';
+                sb.Append(normalizedChar);
+            }
+            return sb.ToString();
+        };
+        
+        string normalizedSelectedPlanet = normalizeName(selectedPlanet);
+        foreach (Object obj in allSprites)
+        {
+            if (obj is Sprite foundSprite)
+            {
+                string spriteName = foundSprite.name;
+                string normalizedSpriteName = normalizeName(spriteName);
+                if (normalizedSpriteName == normalizedSelectedPlanet)
+                {
+                    return NormalizePlanetSize(foundSprite, referenceSize);
+                }
+            }
+        }
+        
+        #if UNITY_EDITOR
+        // En el editor, intentar usar AssetDatabase como fallback
+        try
+        {
+            string[] guids = UnityEditor.AssetDatabase.FindAssets($"{actualFileName} t:Sprite");
+            if (guids.Length == 0)
+            {
+                guids = UnityEditor.AssetDatabase.FindAssets($"{actualFileName} t:Texture2D");
+            }
+            
+            if (guids.Length > 0)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
                 sprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                if (sprite != null) return sprite;
+                if (sprite != null)
+                {
+                    return NormalizePlanetSize(sprite, referenceSize);
+                }
                 
                 texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(path);
                 if (texture != null)
                 {
-                    return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
+                    float pixelsPerUnit = Mathf.Max(texture.width, texture.height) / referenceSize;
+                    return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
                 }
             }
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning($"No se pudo cargar el sprite del asteroide: {e.Message}");
+            Debug.LogWarning($"No se pudo cargar el sprite del planeta: {e.Message}");
         }
         #endif
         

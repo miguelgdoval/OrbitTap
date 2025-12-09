@@ -3,6 +3,8 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections;
+using System.Collections.Generic;
+using System.Text;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -1601,9 +1603,149 @@ public class MainMenuController : MonoBehaviour
         return null;
     }
     
+    /// <summary>
+    /// Obtiene el tamaño de referencia del Asteroide Errante (el tamaño correcto)
+    /// </summary>
+    private float GetReferencePlanetSize()
+    {
+        // Cargar el sprite del Asteroide Errante como referencia
+        Sprite referenceSprite = Resources.Load<Sprite>("Art/Protagonist/AsteroideErrante");
+        if (referenceSprite != null)
+        {
+            // Calcular el tamaño en unidades del mundo (usando el mayor de width o height)
+            float worldSize = Mathf.Max(referenceSprite.rect.width, referenceSprite.rect.height) / referenceSprite.pixelsPerUnit;
+            return worldSize;
+        }
+        
+        #if UNITY_EDITOR
+        // Fallback en editor
+        try
+        {
+            string[] guids = UnityEditor.AssetDatabase.FindAssets("AsteroideErrante t:Sprite");
+            if (guids.Length == 0)
+            {
+                guids = UnityEditor.AssetDatabase.FindAssets("AsteroideErrante t:Texture2D");
+            }
+            
+            if (guids.Length > 0)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
+                referenceSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (referenceSprite != null)
+                {
+                    float worldSize = Mathf.Max(referenceSprite.bounds.size.x, referenceSprite.bounds.size.y);
+                    return worldSize;
+                }
+            }
+        }
+        catch { }
+        #endif
+        
+        // Valor por defecto si no se encuentra (aproximado)
+        return 1.0f;
+    }
+    
+    /// <summary>
+    /// Normaliza un sprite para que tenga el mismo tamaño visual que el Asteroide Errante
+    /// </summary>
+    private Sprite NormalizePlanetSize(Sprite originalSprite, float targetWorldSize)
+    {
+        if (originalSprite == null || originalSprite.texture == null) return originalSprite;
+        
+        // Calcular el tamaño actual del sprite en unidades del mundo usando bounds (tamaño visual real)
+        float currentWorldSize = Mathf.Max(originalSprite.bounds.size.x, originalSprite.bounds.size.y);
+        
+        // Si ya tiene el tamaño correcto (con un margen de error pequeño), no hacer nada
+        if (Mathf.Abs(currentWorldSize - targetWorldSize) < 0.01f)
+        {
+            return originalSprite;
+        }
+        
+        // Calcular el nuevo pixelsPerUnit para que el sprite tenga el tamaño objetivo
+        // Usamos el tamaño del rect en píxeles dividido por el tamaño objetivo en unidades del mundo
+        float newPixelsPerUnit = Mathf.Max(originalSprite.rect.width, originalSprite.rect.height) / targetWorldSize;
+        
+        // Crear un nuevo sprite con el pixelsPerUnit ajustado
+        return Sprite.Create(
+            originalSprite.texture,
+            originalSprite.rect,
+            originalSprite.pivot,
+            newPixelsPerUnit
+        );
+    }
+    
     private Sprite LoadPlayerSprite()
     {
-        return LoadSpriteResource("Art/Protagonist/AsteroideErrante", "AsteroideErrante");
+        // Obtener el tamaño de referencia del Asteroide Errante
+        float referenceSize = GetReferencePlanetSize();
+        
+        // Cargar planeta seleccionado guardado
+        string selectedPlanet = PlayerPrefs.GetString("SelectedPlanet", "AsteroideErrante");
+        
+        // Mapeo de nombres de código a nombres reales de archivos (para caracteres especiales)
+        Dictionary<string, string> planetNameMapping = new Dictionary<string, string>
+        {
+            { "PlanetaOceanico", "PlanetaOceánico" }  // Mapear código sin acento a archivo con acento
+        };
+        
+        // Si hay un mapeo, intentar primero con el nombre mapeado
+        string actualFileName = planetNameMapping.ContainsKey(selectedPlanet) ? planetNameMapping[selectedPlanet] : selectedPlanet;
+        
+        Sprite sprite = LoadSpriteResource($"Art/Protagonist/{actualFileName}", actualFileName);
+        if (sprite != null)
+        {
+            return NormalizePlanetSize(sprite, referenceSize);
+        }
+        
+        // Si falla, intentar con el nombre original
+        if (actualFileName != selectedPlanet)
+        {
+            sprite = LoadSpriteResource($"Art/Protagonist/{selectedPlanet}", selectedPlanet);
+            if (sprite != null)
+            {
+                return NormalizePlanetSize(sprite, referenceSize);
+            }
+        }
+        
+        // Si aún falla, intentar cargar todos los sprites y buscar por nombre normalizado
+        Object[] allSprites = Resources.LoadAll("Art/Protagonist", typeof(Sprite));
+        System.Func<string, string> normalizeName = (name) => {
+            if (string.IsNullOrEmpty(name)) return "";
+            string lower = name.ToLowerInvariant();
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            foreach (char c in lower)
+            {
+                int charCode = (int)c;
+                // Ignorar caracteres combinados (diacríticos) - códigos 768-879
+                if (charCode >= 768 && charCode <= 879) continue;
+                char normalizedChar = c;
+                if (charCode >= 224 && charCode <= 230) normalizedChar = 'a';
+                else if (charCode >= 232 && charCode <= 235) normalizedChar = 'e';
+                else if (charCode >= 236 && charCode <= 239) normalizedChar = 'i';
+                else if (charCode >= 242 && charCode <= 246) normalizedChar = 'o';
+                else if (charCode >= 249 && charCode <= 252) normalizedChar = 'u';
+                else if (charCode == 241) normalizedChar = 'n';
+                else if (charCode == 231) normalizedChar = 'c';
+                sb.Append(normalizedChar);
+            }
+            return sb.ToString();
+        };
+        
+        string normalizedSelectedPlanet = normalizeName(selectedPlanet);
+        foreach (Object obj in allSprites)
+        {
+            if (obj is Sprite foundSprite)
+            {
+                string spriteName = foundSprite.name;
+                string normalizedSpriteName = normalizeName(spriteName);
+                if (normalizedSpriteName == normalizedSelectedPlanet)
+                {
+                    return NormalizePlanetSize(foundSprite, referenceSize);
+                }
+            }
+        }
+        
+        return null;
     }
     
     private Sprite LoadOptionsIcon()

@@ -1,6 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System.Linq;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 /// <summary>
 /// Sección de skins del menú principal
@@ -13,41 +17,330 @@ public class SkinsSection : BaseMenuSection
     private GameObject contentPanel;
     private ScrollRect scrollRect;
     private Text currencyText;
+    private MainMenuController menuController;
     
-    [Header("Skin Data")]
-    private List<SkinData> availableSkins = new List<SkinData>();
-    private SkinData currentEquippedSkin;
+    [Header("Planet Data")]
+    private List<PlanetData> availablePlanets = new List<PlanetData>();
+    private PlanetData currentEquippedPlanet;
+    private const string SELECTED_PLANET_KEY = "SelectedPlanet";
+    
+    private bool isInitialized = false;
     
     private void Start()
     {
-        InitializeSkins();
-        CreateUI();
+        // Solo inicializar si el GameObject está activo
+        if (gameObject.activeInHierarchy && !isInitialized)
+        {
+            InitializeIfNeeded();
+        }
     }
     
-    private void InitializeSkins()
+    private void OnEnable()
     {
-        // Crear skins por defecto
-        availableSkins.Add(new SkinData("Default", SkinRarity.Common, 0, true, CosmicTheme.EtherealLila));
-        availableSkins.Add(new SkinData("Celestial", SkinRarity.Rare, 100, false, CosmicTheme.CelestialBlue));
-        availableSkins.Add(new SkinData("Constellation", SkinRarity.Epic, 500, false, CosmicTheme.ConstellationBlue));
-        availableSkins.Add(new SkinData("Golden", SkinRarity.Legendary, 1500, false, CosmicTheme.SoftGold));
-        availableSkins.Add(new SkinData("Premium", SkinRarity.Premium, 0, false, Color.cyan, true)); // Requiere compra
+        Debug.Log($"[SkinsSection] OnEnable llamado. isInitialized: {isInitialized}, activeInHierarchy: {gameObject.activeInHierarchy}");
+        
+        // Inicializar cuando se active el GameObject
+        if (!isInitialized)
+        {
+            InitializeIfNeeded();
+        }
+        else if (contentPanel == null)
+        {
+            // Si ya estaba inicializado pero la UI fue destruida, recrearla
+            Debug.Log("[SkinsSection] UI destruida, recreando...");
+            InitializePlanets();
+            CreateUI();
+        }
+        
+        // Asegurar que los elementos sean visibles
+        if (scrollRect != null && scrollRect.content != null)
+        {
+            // Forzar actualización del layout
+            Canvas.ForceUpdateCanvases();
+            Debug.Log($"[SkinsSection] ScrollRect verificado después de OnEnable. Content hijos: {scrollRect.content.childCount}");
+        }
+    }
+    
+    private void InitializeIfNeeded()
+    {
+        if (isInitialized) return;
+        
+        menuController = FindObjectOfType<MainMenuController>();
+        InitializePlanets();
+        CreateUI();
+        isInitialized = true;
+        
+        Debug.Log($"[SkinsSection] Inicialización completada. UI creada: {contentPanel != null}");
+    }
+    
+    private void InitializePlanets()
+    {
+        // Limpiar lista anterior
+        availablePlanets.Clear();
+        
+        // Lista de planetas disponibles
+        // Nota: "PlanetaOceánico" tiene acento en el archivo, pero usamos "PlanetaOceanico" sin acento para el código
+        string[] planetNames = {
+            "AsteroideErrante",
+            "CristalCosmico",
+            "PlanetaDeGas",
+            "PlanetaDeLava",
+            "PlanetaHelado",
+            "PlanetaOceanico"  // Sin acento en el código, pero el archivo tiene "PlanetaOceánico"
+        };
+        
+        // Mapeo de nombres de código a nombres reales de archivos (para caracteres especiales)
+        Dictionary<string, string> planetNameMapping = new Dictionary<string, string>
+        {
+            { "PlanetaOceanico", "PlanetaOceánico" }  // Mapear código sin acento a archivo con acento
+        };
+        
+        // Cargar planeta seleccionado guardado
+        string savedPlanet = PlayerPrefs.GetString(SELECTED_PLANET_KEY, "AsteroideErrante");
+        
+        Debug.Log($"[SkinsSection] Inicializando planetas. Planeta guardado: {savedPlanet}");
+        
+        // Primero intentar cargar desde la lista de nombres
+        foreach (string planetName in planetNames)
+        {
+            // Si hay un mapeo para este nombre, intentar primero con el nombre mapeado
+            string actualFileName = planetNameMapping.ContainsKey(planetName) ? planetNameMapping[planetName] : planetName;
+            
+            Sprite planetSprite = LoadPlanetSprite(actualFileName);
+            if (planetSprite == null && actualFileName != planetName)
+            {
+                // Si falla con el nombre mapeado, intentar con el nombre original
+                planetSprite = LoadPlanetSprite(planetName);
+            }
+            
+            if (planetSprite != null)
+            {
+                bool isEquipped = planetName == savedPlanet;
+                PlanetData planet = new PlanetData(planetName, planetSprite, isEquipped);
+                availablePlanets.Add(planet);
+                Debug.Log($"[SkinsSection] Planeta cargado: {planetName} (archivo: {actualFileName})");
+                
+                if (isEquipped)
+                {
+                    currentEquippedPlanet = planet;
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[SkinsSection] No se pudo cargar el sprite del planeta: {planetName} (intentó: {actualFileName})");
+            }
+        }
+        
+        // Si falta algún planeta (especialmente PlanetaOceánico con carácter especial), intentar cargar desde la carpeta
+        if (availablePlanets.Count < planetNames.Length)
+        {
+            Debug.Log($"[SkinsSection] Faltan {planetNames.Length - availablePlanets.Count} planetas. Intentando cargar desde la carpeta...");
+            LoadMissingPlanetsFromFolder(planetNames, savedPlanet);
+        }
+        
+        Debug.Log($"[SkinsSection] Total de planetas cargados: {availablePlanets.Count}");
+        
+        // Si no hay planeta equipado, equipar el primero
+        if (currentEquippedPlanet == null && availablePlanets.Count > 0)
+        {
+            currentEquippedPlanet = availablePlanets[0];
+            currentEquippedPlanet.isEquipped = true;
+            PlayerPrefs.SetString(SELECTED_PLANET_KEY, currentEquippedPlanet.name);
+            PlayerPrefs.Save();
+            Debug.Log($"[SkinsSection] Planeta por defecto equipado: {currentEquippedPlanet.name}");
+        }
+        
+        if (availablePlanets.Count == 0)
+        {
+            Debug.LogError("[SkinsSection] ¡No se cargó ningún planeta! Verifica que los sprites estén en Resources/Art/Protagonist/ y estén configurados como Sprites en Unity.");
+        }
+    }
+    
+    private void LoadMissingPlanetsFromFolder(string[] expectedPlanetNames, string savedPlanet)
+    {
+        try
+        {
+            // Intentar cargar todos los sprites de la carpeta Resources/Art/Protagonist
+            Object[] allSprites = Resources.LoadAll("Art/Protagonist", typeof(Sprite));
+            Debug.Log($"[SkinsSection] Encontrados {allSprites.Length} sprites en Resources/Art/Protagonist");
+            
+            // Crear un HashSet con los nombres de planetas ya cargados para evitar duplicados
+            System.Collections.Generic.HashSet<string> loadedNames = new System.Collections.Generic.HashSet<string>();
+            foreach (PlanetData planet in availablePlanets)
+            {
+                loadedNames.Add(planet.name);
+            }
+            
+            // Función helper para normalizar nombres usando códigos Unicode
+            System.Func<string, string> normalizeNameSimple = (name) => {
+                if (string.IsNullOrEmpty(name)) return "";
+                string lower = name.ToLowerInvariant();
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                foreach (char c in lower)
+                {
+                    int charCode = (int)c;
+                    
+                    // Ignorar caracteres combinados (diacríticos) - códigos 768-879
+                    if (charCode >= 768 && charCode <= 879)
+                    {
+                        continue; // Ignorar el carácter combinado
+                    }
+                    
+                    char normalizedChar = c;
+                    if (charCode >= 224 && charCode <= 230) normalizedChar = 'a';
+                    else if (charCode >= 232 && charCode <= 235) normalizedChar = 'e';
+                    else if (charCode >= 236 && charCode <= 239) normalizedChar = 'i';
+                    else if (charCode >= 242 && charCode <= 246) normalizedChar = 'o';
+                    else if (charCode >= 249 && charCode <= 252) normalizedChar = 'u';
+                    else if (charCode == 241) normalizedChar = 'n';
+                    else if (charCode == 231) normalizedChar = 'c';
+                    sb.Append(normalizedChar);
+                }
+                return sb.ToString();
+            };
+            
+            // Crear un HashSet con los nombres normalizados ya cargados
+            System.Collections.Generic.HashSet<string> loadedNormalizedNames = new System.Collections.Generic.HashSet<string>();
+            foreach (PlanetData planet in availablePlanets)
+            {
+                loadedNormalizedNames.Add(normalizeNameSimple(planet.name));
+            }
+            
+            foreach (Object obj in allSprites)
+            {
+                if (obj is Sprite sprite)
+                {
+                    string spriteName = sprite.name;
+                    string normalizedSpriteName = normalizeNameSimple(spriteName);
+                    
+                    // Solo agregar si no está ya cargado (comparando nombres normalizados)
+                    if (!loadedNormalizedNames.Contains(normalizedSpriteName))
+                    {
+                        // Verificar si el nombre coincide con alguno esperado (comparación flexible)
+                        bool isExpected = false;
+                        string matchingExpectedName = null;
+                        
+                        foreach (string expectedName in expectedPlanetNames)
+                        {
+                            string normalizedExpectedName = normalizeNameSimple(expectedName);
+                            
+                            // Comparación que ignora diferencias de mayúsculas/minúsculas y caracteres especiales
+                            if (normalizedSpriteName == normalizedExpectedName)
+                            {
+                                isExpected = true;
+                                matchingExpectedName = expectedName;
+                                Debug.Log($"[SkinsSection] Match encontrado: '{spriteName}' (normalizado: '{normalizedSpriteName}') == '{expectedName}' (normalizado: '{normalizedExpectedName}')");
+                                break;
+                            }
+                        }
+                        
+                        if (isExpected)
+                        {
+                            // Usar el nombre esperado para consistencia (no el nombre real del sprite)
+                            string planetName = matchingExpectedName;
+                            bool isEquipped = normalizeNameSimple(planetName) == normalizeNameSimple(savedPlanet);
+                            
+                            PlanetData planet = new PlanetData(planetName, sprite, isEquipped);
+                            availablePlanets.Add(planet);
+                            loadedNormalizedNames.Add(normalizedSpriteName);
+                            Debug.Log($"[SkinsSection] ✓ Planeta cargado desde carpeta: {spriteName} -> {planetName}");
+                            
+                            if (isEquipped)
+                            {
+                                currentEquippedPlanet = planet;
+                            }
+                        }
+                        else
+                        {
+                            Debug.Log($"[SkinsSection] Sprite '{spriteName}' (normalizado: '{normalizedSpriteName}') no coincide con ningún nombre esperado");
+                        }
+                    }
+                }
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[SkinsSection] Error al cargar planetas desde carpeta: {e.Message}");
+        }
     }
     
     private void CreateUI()
     {
+        // Verificar que el transform tenga Canvas
+        Canvas parentCanvas = GetComponentInParent<Canvas>();
+        if (parentCanvas == null)
+        {
+            Debug.LogError("[SkinsSection] No se encontró Canvas en el padre! Los elementos UI no se mostrarán.");
+        }
+        else
+        {
+            Debug.Log($"[SkinsSection] Canvas encontrado: {parentCanvas.name}");
+        }
+        
+        // Título con estilo del menú
+        GameObject titleObj = new GameObject("PlanetsTitle");
+        titleObj.transform.SetParent(transform, false);
+        Text titleText = titleObj.AddComponent<Text>();
+        titleText.text = "PLANETAS";
+        titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        titleText.fontSize = 56;
+        titleText.fontStyle = FontStyle.Bold;
+        titleText.color = CosmicTheme.NeonCyan;
+        titleText.alignment = TextAnchor.UpperCenter;
+        
+        // Glow en el título
+        Outline titleOutline = titleObj.AddComponent<Outline>();
+        titleOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.8f);
+        titleOutline.effectDistance = new Vector2(2, 2);
+        
+        RectTransform titleRect = titleObj.GetComponent<RectTransform>();
+        titleRect.anchorMin = new Vector2(0.5f, 1f);
+        titleRect.anchorMax = new Vector2(0.5f, 1f);
+        titleRect.pivot = new Vector2(0.5f, 1f);
+        titleRect.anchoredPosition = new Vector2(0, -60);
+        titleRect.sizeDelta = new Vector2(600, 80);
+        
+        Debug.Log($"[SkinsSection] Creando UI. Planetas disponibles: {availablePlanets.Count}");
+        
+        // Si no hay planetas, mostrar mensaje
+        if (availablePlanets.Count == 0)
+        {
+            GameObject noPlanetsObj = new GameObject("NoPlanetsMessage");
+            noPlanetsObj.transform.SetParent(transform, false);
+            Text noPlanetsText = noPlanetsObj.AddComponent<Text>();
+            noPlanetsText.text = "No se encontraron planetas.\nVerifica que los sprites estén en Resources/Art/Protagonist/";
+            noPlanetsText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            noPlanetsText.fontSize = 32;
+            noPlanetsText.color = CosmicTheme.NeonCyan;
+            noPlanetsText.alignment = TextAnchor.MiddleCenter;
+            
+            RectTransform noPlanetsRect = noPlanetsObj.GetComponent<RectTransform>();
+            noPlanetsRect.anchorMin = new Vector2(0.5f, 0.5f);
+            noPlanetsRect.anchorMax = new Vector2(0.5f, 0.5f);
+            noPlanetsRect.pivot = new Vector2(0.5f, 0.5f);
+            noPlanetsRect.anchoredPosition = Vector2.zero;
+            noPlanetsRect.sizeDelta = new Vector2(800, 200);
+            return;
+        }
+        
         // Panel de contenido con scroll horizontal
-        GameObject scrollObj = new GameObject("SkinsScrollView");
+        GameObject scrollObj = new GameObject("PlanetsScrollView");
         scrollObj.transform.SetParent(transform, false);
-        RectTransform scrollRect = scrollObj.AddComponent<RectTransform>();
-        scrollRect.anchorMin = Vector2.zero;
-        scrollRect.anchorMax = Vector2.one;
-        scrollRect.sizeDelta = Vector2.zero;
-        scrollRect.anchoredPosition = new Vector2(0, -40); // Ajustar para el título
+        RectTransform scrollRectTransform = scrollObj.AddComponent<RectTransform>();
+        scrollRectTransform.anchorMin = new Vector2(0, 0);
+        scrollRectTransform.anchorMax = new Vector2(1, 1);
+        scrollRectTransform.sizeDelta = new Vector2(0, -180); // Espacio para título y navegación
+        scrollRectTransform.anchoredPosition = new Vector2(0, 90);
         
         this.scrollRect = scrollObj.AddComponent<ScrollRect>();
         this.scrollRect.horizontal = true;
         this.scrollRect.vertical = false;
+        this.scrollRect.movementType = ScrollRect.MovementType.Elastic;
+        this.scrollRect.elasticity = 0.1f;
+        this.scrollRect.horizontalScrollbar = null; // Sin scrollbar por ahora
+        this.scrollRect.verticalScrollbar = null;
+        this.scrollRect.horizontalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+        this.scrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
         
         // Viewport
         GameObject viewport = new GameObject("Viewport");
@@ -56,132 +349,199 @@ public class SkinsSection : BaseMenuSection
         viewportRect.anchorMin = Vector2.zero;
         viewportRect.anchorMax = Vector2.one;
         viewportRect.sizeDelta = Vector2.zero;
+        viewportRect.anchoredPosition = Vector2.zero;
+        
+        // Mask para el viewport (necesita una imagen con color para funcionar)
         Mask mask = viewport.AddComponent<Mask>();
         Image viewportImg = viewport.AddComponent<Image>();
-        viewportImg.color = new Color(0, 0, 0, 0.1f);
+        viewportImg.color = new Color(0, 0, 0, 0.01f); // Casi transparente pero no completamente claro para que el Mask funcione
+        mask.showMaskGraphic = false; // No mostrar el fondo del mask
         this.scrollRect.viewport = viewportRect;
         
         // Content
         contentPanel = new GameObject("Content");
         contentPanel.transform.SetParent(viewport.transform, false);
         RectTransform contentRect = contentPanel.AddComponent<RectTransform>();
+        
+        // Para scroll horizontal: anclar a la izquierda, centrar verticalmente
         contentRect.anchorMin = new Vector2(0, 0.5f);
         contentRect.anchorMax = new Vector2(0, 0.5f);
         contentRect.pivot = new Vector2(0, 0.5f);
-        contentRect.sizeDelta = new Vector2(availableSkins.Count * 250, 400);
-        contentRect.anchoredPosition = new Vector2(20, 0);
+        
+        float cardWidth = 320f;
+        float cardSpacing = 40f;
+        float totalWidth = availablePlanets.Count * (cardWidth + cardSpacing) + cardSpacing;
+        contentRect.sizeDelta = new Vector2(totalWidth, 500);
+        // Posicionar el content para que el primer elemento sea visible desde el inicio
+        contentRect.anchoredPosition = new Vector2(0, 0);
+        
         this.scrollRect.content = contentRect;
         
-        // Crear botones de skin
-        for (int i = 0; i < availableSkins.Count; i++)
+        Debug.Log($"[SkinsSection] ScrollRect configurado. Viewport: {viewportRect.sizeDelta}, Content: {contentRect.sizeDelta}, Content pos: {contentRect.anchoredPosition}");
+        
+        // Crear botones de planeta
+        Debug.Log($"[SkinsSection] Creando {availablePlanets.Count} botones de planeta. contentPanel: {contentPanel != null}");
+        if (contentPanel == null)
         {
-            CreateSkinButton(availableSkins[i], i);
+            Debug.LogError("[SkinsSection] contentPanel es null antes de crear botones!");
+            return;
         }
         
-        // Título
-        GameObject titleObj = new GameObject("SkinsTitle");
-        titleObj.transform.SetParent(transform, false);
-        Text titleText = titleObj.AddComponent<Text>();
-        titleText.text = "SKINS";
-        titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        titleText.fontSize = 40;
-        titleText.fontStyle = FontStyle.Bold;
-        titleText.color = CosmicTheme.SoftGold;
-        titleText.alignment = TextAnchor.UpperCenter;
+        for (int i = 0; i < availablePlanets.Count; i++)
+        {
+            CreatePlanetButton(availablePlanets[i], i, cardWidth, cardSpacing);
+        }
         
-        RectTransform titleRect = titleObj.GetComponent<RectTransform>();
-        titleRect.anchorMin = new Vector2(0.5f, 1f);
-        titleRect.anchorMax = new Vector2(0.5f, 1f);
-        titleRect.anchoredPosition = new Vector2(0, -20);
-        titleRect.sizeDelta = new Vector2(200, 50);
+        Debug.Log($"[SkinsSection] Botones creados. Hijos de contentPanel: {contentPanel.transform.childCount}");
+        
+        // Forzar actualización del layout
+        Canvas.ForceUpdateCanvases();
+        
+        // Verificar que el ScrollRect esté configurado
+        if (this.scrollRect != null && this.scrollRect.content != null && this.scrollRect.viewport != null)
+        {
+            Debug.Log($"[SkinsSection] ScrollRect OK. Content size: {this.scrollRect.content.sizeDelta}, Viewport size: {this.scrollRect.viewport.sizeDelta}");
+        }
+        else
+        {
+            Debug.LogError($"[SkinsSection] ScrollRect mal configurado! content: {this.scrollRect?.content != null}, viewport: {this.scrollRect?.viewport != null}");
+        }
     }
     
-    private void CreateSkinButton(SkinData skin, int index)
+    private void CreatePlanetButton(PlanetData planet, int index, float cardWidth, float cardSpacing)
     {
-        GameObject skinObj = new GameObject($"Skin_{skin.name}");
-        skinObj.transform.SetParent(contentPanel.transform, false);
-        RectTransform skinRect = skinObj.AddComponent<RectTransform>();
-        skinRect.anchorMin = new Vector2(0, 0.5f);
-        skinRect.anchorMax = new Vector2(0, 0.5f);
-        skinRect.pivot = new Vector2(0, 0.5f);
-        skinRect.anchoredPosition = new Vector2(index * 250 + 20, 0);
-        skinRect.sizeDelta = new Vector2(220, 380);
+        if (contentPanel == null)
+        {
+            Debug.LogError("[SkinsSection] contentPanel es null al crear botón de planeta!");
+            return;
+        }
         
-        // Fondo
-        Image bgImg = skinObj.AddComponent<Image>();
-        Color bgColor = GetRarityColor(skin.rarity);
-        bgColor.a = 0.3f;
+        // Calcular posición: empezar desde el borde izquierdo del content
+        float xPos = cardSpacing + index * (cardWidth + cardSpacing);
+        
+        GameObject planetObj = new GameObject($"Planet_{planet.name}");
+        planetObj.transform.SetParent(contentPanel.transform, false);
+        RectTransform planetRect = planetObj.AddComponent<RectTransform>();
+        planetRect.anchorMin = new Vector2(0, 0.5f);
+        planetRect.anchorMax = new Vector2(0, 0.5f);
+        planetRect.pivot = new Vector2(0.5f, 0.5f);
+        planetRect.anchoredPosition = new Vector2(xPos + cardWidth * 0.5f, 0);
+        planetRect.sizeDelta = new Vector2(cardWidth, 480);
+        
+        Debug.Log($"[SkinsSection] Botón creado: {planet.name} en posición X: {planetRect.anchoredPosition.x}");
+        
+        // Fondo del card (placa con estilo del menú)
+        GameObject bgObj = new GameObject("Background");
+        bgObj.transform.SetParent(planetObj.transform, false);
+        Image bgImg = bgObj.AddComponent<Image>();
+        Color bgColor = new Color(CosmicTheme.SpaceBlack.r, CosmicTheme.SpaceBlack.g, CosmicTheme.SpaceBlack.b, 0.6f);
         bgImg.color = bgColor;
+        bgImg.raycastTarget = false;
         
-        // Preview del skin (círculo con el color)
+        RectTransform bgRect = bgObj.GetComponent<RectTransform>();
+        bgRect.anchorMin = Vector2.zero;
+        bgRect.anchorMax = Vector2.one;
+        bgRect.sizeDelta = Vector2.zero;
+        bgRect.anchoredPosition = Vector2.zero;
+        
+        // Glow en el fondo si está equipado
+        if (planet.isEquipped)
+        {
+            Outline bgOutline = bgObj.AddComponent<Outline>();
+            bgOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.6f);
+            bgOutline.effectDistance = new Vector2(4, 4);
+        }
+        else
+        {
+            Outline bgOutline = bgObj.AddComponent<Outline>();
+            bgOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.2f);
+            bgOutline.effectDistance = new Vector2(2, 2);
+        }
+        
+        // Preview del planeta (sprite real)
         GameObject previewObj = new GameObject("Preview");
-        previewObj.transform.SetParent(skinObj.transform, false);
+        previewObj.transform.SetParent(planetObj.transform, false);
         Image previewImg = previewObj.AddComponent<Image>();
-        previewImg.sprite = SpriteGenerator.CreateCircleSprite(0.5f, skin.color);
-        previewImg.color = skin.color;
+        previewImg.sprite = planet.sprite;
+        previewImg.color = Color.white;
+        previewImg.preserveAspect = true;
+        previewImg.raycastTarget = false;
         
         RectTransform previewRect = previewObj.GetComponent<RectTransform>();
         previewRect.anchorMin = new Vector2(0.5f, 0.5f);
         previewRect.anchorMax = new Vector2(0.5f, 0.5f);
-        previewRect.anchoredPosition = new Vector2(0, 50);
-        previewRect.sizeDelta = new Vector2(120, 120);
+        previewRect.pivot = new Vector2(0.5f, 0.5f);
+        previewRect.anchoredPosition = new Vector2(0, 40);
+        previewRect.sizeDelta = new Vector2(260, 260);
         
-        // Nombre
+        // Glow suave en el preview
+        Outline previewOutline = previewObj.AddComponent<Outline>();
+        previewOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.4f);
+        previewOutline.effectDistance = new Vector2(3, 3);
+        
+        // Nombre del planeta
         GameObject nameObj = new GameObject("Name");
-        nameObj.transform.SetParent(skinObj.transform, false);
+        nameObj.transform.SetParent(planetObj.transform, false);
         Text nameText = nameObj.AddComponent<Text>();
-        nameText.text = skin.name;
+        nameText.text = GetPlanetDisplayName(planet.name);
         nameText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        nameText.fontSize = 24;
+        nameText.fontSize = 32;
         nameText.fontStyle = FontStyle.Bold;
-        nameText.color = GetRarityColor(skin.rarity);
+        nameText.color = planet.isEquipped ? CosmicTheme.NeonCyan : CosmicTheme.SpaceWhite;
         nameText.alignment = TextAnchor.MiddleCenter;
+        nameText.raycastTarget = false;
+        
+        // Glow en el nombre
+        Outline nameOutline = nameObj.AddComponent<Outline>();
+        nameOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.6f);
+        nameOutline.effectDistance = new Vector2(1, 1);
         
         RectTransform nameRect = nameObj.GetComponent<RectTransform>();
         nameRect.anchorMin = new Vector2(0.5f, 0.5f);
         nameRect.anchorMax = new Vector2(0.5f, 0.5f);
-        nameRect.anchoredPosition = new Vector2(0, -20);
-        nameRect.sizeDelta = new Vector2(200, 30);
+        nameRect.pivot = new Vector2(0.5f, 0.5f);
+        nameRect.anchoredPosition = new Vector2(0, -140);
+        nameRect.sizeDelta = new Vector2(cardWidth - 40, 50);
         
         // Botón de acción
         GameObject btnObj = new GameObject("ActionButton");
-        btnObj.transform.SetParent(skinObj.transform, false);
+        btnObj.transform.SetParent(planetObj.transform, false);
         Button btn = btnObj.AddComponent<Button>();
+        
+        // Fondo del botón
         Image btnImg = btnObj.AddComponent<Image>();
-        btnImg.color = GetRarityColor(skin.rarity);
+        btnImg.color = planet.isEquipped 
+            ? new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.3f)
+            : new Color(CosmicTheme.SpaceBlack.r, CosmicTheme.SpaceBlack.g, CosmicTheme.SpaceBlack.b, 0.5f);
+        
+        // Glow en el botón
+        Outline btnOutline = btnObj.AddComponent<Outline>();
+        btnOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.5f);
+        btnOutline.effectDistance = new Vector2(2, 2);
         
         RectTransform btnRect = btnObj.GetComponent<RectTransform>();
         btnRect.anchorMin = new Vector2(0.5f, 0.5f);
         btnRect.anchorMax = new Vector2(0.5f, 0.5f);
         btnRect.pivot = new Vector2(0.5f, 0.5f);
-        btnRect.anchoredPosition = new Vector2(0, -120);
-        btnRect.sizeDelta = new Vector2(180, 50);
+        btnRect.anchoredPosition = new Vector2(0, -220);
+        btnRect.sizeDelta = new Vector2(cardWidth - 60, 70);
         
-        // Crear objeto hijo para el texto
+        // Texto del botón
         GameObject btnTextObj = new GameObject("Text");
         btnTextObj.transform.SetParent(btnObj.transform, false);
         Text btnText = btnTextObj.AddComponent<Text>();
-        if (skin.isUnlocked)
-        {
-            btnText.text = skin.isEquipped ? "EQUIPPED" : "EQUIP";
-        }
-        else if (skin.isPremium)
-        {
-            btnText.text = "BUY";
-        }
-        else
-        {
-            btnText.text = $"{skin.cost} ⭐";
-        }
-        Font defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (defaultFont != null)
-        {
-            btnText.font = defaultFont;
-        }
-        btnText.fontSize = 20;
+        btnText.text = planet.isEquipped ? "EQUIPADO" : "EQUIPAR";
+        btnText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        btnText.fontSize = 28;
         btnText.fontStyle = FontStyle.Bold;
-        btnText.color = Color.white;
+        btnText.color = CosmicTheme.NeonCyan;
         btnText.alignment = TextAnchor.MiddleCenter;
+        btnText.raycastTarget = false;
+        
+        // Glow en el texto del botón
+        Outline btnTextOutline = btnTextObj.AddComponent<Outline>();
+        btnTextOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.8f);
+        btnTextOutline.effectDistance = new Vector2(1, 1);
         
         RectTransform btnTextRect = btnTextObj.GetComponent<RectTransform>();
         btnTextRect.anchorMin = Vector2.zero;
@@ -189,50 +549,75 @@ public class SkinsSection : BaseMenuSection
         btnTextRect.sizeDelta = Vector2.zero;
         btnTextRect.anchoredPosition = Vector2.zero;
         
-        int skinIndex = index; // Capturar para el closure
-        btn.onClick.AddListener(() => OnSkinButtonClicked(skinIndex));
+        // Efectos de interacción
+        AddPlanetButtonEffects(btn, previewObj, bgObj);
+        
+        int planetIndex = index; // Capturar para el closure
+        btn.onClick.AddListener(() => OnPlanetButtonClicked(planetIndex));
     }
     
-    private void OnSkinButtonClicked(int index)
+    private void AddPlanetButtonEffects(Button button, GameObject preview, GameObject background)
     {
-        SkinData skin = availableSkins[index];
+        UnityEngine.EventSystems.EventTrigger trigger = button.gameObject.GetComponent<UnityEngine.EventSystems.EventTrigger>();
+        if (trigger == null)
+        {
+            trigger = button.gameObject.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+        }
         
-        if (skin.isUnlocked)
-        {
-            // Equipar
-            if (currentEquippedSkin != null)
+        // Hover: aumentar glow
+        UnityEngine.EventSystems.EventTrigger.Entry pointerEnter = new UnityEngine.EventSystems.EventTrigger.Entry();
+        pointerEnter.eventID = UnityEngine.EventSystems.EventTriggerType.PointerEnter;
+        pointerEnter.callback.AddListener((data) => {
+            Outline previewOutline = preview.GetComponent<Outline>();
+            if (previewOutline != null)
             {
-                currentEquippedSkin.isEquipped = false;
+                previewOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.7f);
+                previewOutline.effectDistance = new Vector2(4, 4);
             }
-            skin.isEquipped = true;
-            currentEquippedSkin = skin;
-            Debug.Log($"Equipped skin: {skin.name}");
-        }
-        else if (skin.isPremium)
-        {
-            // Ir a la tienda
-            // TODO: Navegar a shop section
-            Debug.Log("Premium skin - redirect to shop");
-        }
-        else
-        {
-            // Comprar con monedas
-            if (CurrencyManager.Instance != null && CurrencyManager.Instance.SpendCurrency(skin.cost))
+        });
+        trigger.triggers.Add(pointerEnter);
+        
+        UnityEngine.EventSystems.EventTrigger.Entry pointerExit = new UnityEngine.EventSystems.EventTrigger.Entry();
+        pointerExit.eventID = UnityEngine.EventSystems.EventTriggerType.PointerExit;
+        pointerExit.callback.AddListener((data) => {
+            Outline previewOutline = preview.GetComponent<Outline>();
+            if (previewOutline != null)
             {
-                skin.isUnlocked = true;
-                Debug.Log($"Unlocked skin: {skin.name}");
+                previewOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.4f);
+                previewOutline.effectDistance = new Vector2(3, 3);
             }
-            else
-            {
-                Debug.Log("Not enough currency");
-            }
+        });
+        trigger.triggers.Add(pointerExit);
+    }
+    
+    private void OnPlanetButtonClicked(int index)
+    {
+        PlanetData planet = availablePlanets[index];
+        
+        // Desequipar el planeta actual
+        if (currentEquippedPlanet != null)
+        {
+            currentEquippedPlanet.isEquipped = false;
         }
+        
+        // Equipar el nuevo planeta
+        planet.isEquipped = true;
+        currentEquippedPlanet = planet;
+        
+        // Guardar selección
+        PlayerPrefs.SetString(SELECTED_PLANET_KEY, planet.name);
+        PlayerPrefs.Save();
+        
+        Debug.Log($"Planeta equipado: {planet.name}");
+        
+        // Actualizar player demo en el menú
+        UpdatePlayerDemo();
         
         // Refrescar UI
-        RefreshSkinButtons();
+        RefreshPlanetButtons();
     }
     
-    private void RefreshSkinButtons()
+    private void RefreshPlanetButtons()
     {
         // Recrear los botones para actualizar el estado
         foreach (Transform child in contentPanel.transform)
@@ -240,29 +625,343 @@ public class SkinsSection : BaseMenuSection
             Destroy(child.gameObject);
         }
         
-        for (int i = 0; i < availableSkins.Count; i++)
+        float cardWidth = 320f;
+        float cardSpacing = 40f;
+        
+        for (int i = 0; i < availablePlanets.Count; i++)
         {
-            CreateSkinButton(availableSkins[i], i);
+            CreatePlanetButton(availablePlanets[i], i, cardWidth, cardSpacing);
         }
     }
     
-    private Color GetRarityColor(SkinRarity rarity)
+    private void UpdatePlayerDemo()
     {
-        switch (rarity)
+        if (menuController != null && currentEquippedPlanet != null)
         {
-            case SkinRarity.Common:
-                return Color.gray;
-            case SkinRarity.Rare:
-                return Color.blue;
-            case SkinRarity.Epic:
-                return new Color(0.5f, 0f, 0.5f); // Púrpura
-            case SkinRarity.Legendary:
-                return CosmicTheme.SoftGold;
-            case SkinRarity.Premium:
-                return Color.cyan;
-            default:
-                return Color.white;
+            // Actualizar el sprite del player demo usando reflexión o método público
+            GameObject playerDemo = GameObject.Find("PlayerDemo");
+            if (playerDemo != null)
+            {
+                SpriteRenderer sr = playerDemo.GetComponent<SpriteRenderer>();
+                if (sr != null)
+                {
+                    sr.sprite = currentEquippedPlanet.sprite;
+                }
+            }
         }
+    }
+    
+    private string GetPlanetDisplayName(string planetName)
+    {
+        // Convertir nombres técnicos a nombres de visualización
+        switch (planetName)
+        {
+            case "AsteroideErrante": return "Asteroide Errante";
+            case "CristalCosmico": return "Cristal Cósmico";
+            case "PlanetaDeGas": return "Planeta de Gas";
+            case "PlanetaDeLava": return "Planeta de Lava";
+            case "PlanetaHelado": return "Planeta Helado";
+            case "PlanetaOceanico": return "Planeta Oceanico";
+            default: return planetName;
+        }
+    }
+    
+    /// <summary>
+    /// Obtiene el tamaño de referencia del Asteroide Errante (el tamaño correcto)
+    /// </summary>
+    private float GetReferencePlanetSize()
+    {
+        // Cargar el sprite del Asteroide Errante como referencia
+        Sprite referenceSprite = Resources.Load<Sprite>("Art/Protagonist/AsteroideErrante");
+        if (referenceSprite != null)
+        {
+            // Usar bounds.size que da el tamaño real en unidades del mundo (considera el rect visible del sprite)
+            float worldSize = Mathf.Max(referenceSprite.bounds.size.x, referenceSprite.bounds.size.y);
+            Debug.Log($"[SkinsSection] Tamaño de referencia calculado: {worldSize} (Asteroide Errante bounds: {referenceSprite.bounds.size}, rect: {referenceSprite.rect.width}x{referenceSprite.rect.height}, PPU: {referenceSprite.pixelsPerUnit})");
+            return worldSize;
+        }
+        
+        #if UNITY_EDITOR
+        // Fallback en editor
+        try
+        {
+            string[] guids = UnityEditor.AssetDatabase.FindAssets("AsteroideErrante t:Sprite");
+            if (guids.Length == 0)
+            {
+                guids = UnityEditor.AssetDatabase.FindAssets("AsteroideErrante t:Texture2D");
+            }
+            
+            if (guids.Length > 0)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
+                referenceSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (referenceSprite != null)
+                {
+                    float worldSize = Mathf.Max(referenceSprite.bounds.size.x, referenceSprite.bounds.size.y);
+                    Debug.Log($"[SkinsSection] Tamaño de referencia calculado (Editor): {worldSize} (Asteroide Errante bounds: {referenceSprite.bounds.size}, rect: {referenceSprite.rect.width}x{referenceSprite.rect.height}, PPU: {referenceSprite.pixelsPerUnit})");
+                    return worldSize;
+                }
+            }
+        }
+        catch { }
+        #endif
+        
+        // Valor por defecto si no se encuentra (aproximado)
+        Debug.LogWarning("[SkinsSection] No se pudo cargar Asteroide Errante como referencia, usando valor por defecto: 1.0");
+        return 1.0f;
+    }
+    
+    /// <summary>
+    /// Normaliza un sprite para que tenga el mismo tamaño visual que el Asteroide Errante
+    /// </summary>
+    private Sprite NormalizePlanetSize(Sprite originalSprite, float targetWorldSize)
+    {
+        if (originalSprite == null || originalSprite.texture == null) return originalSprite;
+        
+        // Calcular el tamaño actual del sprite en unidades del mundo usando bounds (tamaño visual real)
+        float currentWorldSize = Mathf.Max(originalSprite.bounds.size.x, originalSprite.bounds.size.y);
+        
+        Debug.Log($"[SkinsSection] Normalizando sprite '{originalSprite.name}': Tamaño actual (bounds): {currentWorldSize}, Objetivo: {targetWorldSize}, PPU actual: {originalSprite.pixelsPerUnit}, Rect: {originalSprite.rect.width}x{originalSprite.rect.height}, Bounds: {originalSprite.bounds.size}");
+        
+        // Si ya tiene el tamaño correcto (con un margen de error pequeño), no hacer nada
+        if (Mathf.Abs(currentWorldSize - targetWorldSize) < 0.01f)
+        {
+            Debug.Log($"[SkinsSection] Sprite '{originalSprite.name}' ya tiene el tamaño correcto, no se normaliza");
+            return originalSprite;
+        }
+        
+        // Calcular el nuevo pixelsPerUnit para que el sprite tenga el tamaño objetivo
+        // Usamos el tamaño del rect en píxeles dividido por el tamaño objetivo en unidades del mundo
+        float newPixelsPerUnit = Mathf.Max(originalSprite.rect.width, originalSprite.rect.height) / targetWorldSize;
+        
+        Debug.Log($"[SkinsSection] Normalizando sprite '{originalSprite.name}': Nuevo PPU: {newPixelsPerUnit} (anterior: {originalSprite.pixelsPerUnit})");
+        
+        // Crear un nuevo sprite con el pixelsPerUnit ajustado
+        return Sprite.Create(
+            originalSprite.texture,
+            originalSprite.rect,
+            originalSprite.pivot,
+            newPixelsPerUnit
+        );
+    }
+    
+    private Sprite LoadPlanetSprite(string planetName)
+    {
+        if (!Application.isPlaying) return null;
+        
+        // Obtener el tamaño de referencia del Asteroide Errante
+        float referenceSize = GetReferencePlanetSize();
+        
+        // Intentar cargar desde Resources (sin extensión)
+        string resourcePath = $"Art/Protagonist/{planetName}";
+        Sprite sprite = Resources.Load<Sprite>(resourcePath);
+        if (sprite != null)
+        {
+            Debug.Log($"[SkinsSection] Sprite cargado desde Resources: {resourcePath}");
+            return NormalizePlanetSize(sprite, referenceSize);
+        }
+        
+        // Intentar cargar como Texture2D
+        Texture2D texture = Resources.Load<Texture2D>(resourcePath);
+        if (texture != null)
+        {
+            Debug.Log($"[SkinsSection] Texture2D cargado desde Resources, creando sprite: {resourcePath}");
+            // Calcular pixelsPerUnit para que tenga el tamaño de referencia
+            float pixelsPerUnit = Mathf.Max(texture.width, texture.height) / referenceSize;
+            return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
+        }
+        
+        // Si falla, intentar cargar todos los sprites y buscar por nombre normalizado
+        // (útil para caracteres especiales como "í" en "PlanetaOceánico")
+        Object[] allSprites = Resources.LoadAll("Art/Protagonist", typeof(Sprite));
+        Debug.Log($"[SkinsSection] Cargados {allSprites.Length} sprites desde Resources/Art/Protagonist para búsqueda normalizada");
+        
+        System.Func<string, string> normalizeName = (name) => {
+            if (string.IsNullOrEmpty(name)) return "";
+            
+            // Convertir a minúsculas primero
+            string lower = name.ToLowerInvariant();
+            
+            // Iterar sobre cada carácter y reemplazar acentos
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            foreach (char c in lower)
+            {
+                int charCode = (int)c;
+                
+                // Ignorar caracteres combinados (diacríticos) - códigos 768-879
+                if (charCode >= 768 && charCode <= 879)
+                {
+                    // Es un carácter combinado (acento), lo ignoramos
+                    continue;
+                }
+                
+                char normalizedChar = c;
+                
+                // Mapear caracteres acentuados precompuestos a sus equivalentes sin acento
+                if (charCode >= 224 && charCode <= 230) // à, á, â, ã, ä, å, æ
+                    normalizedChar = 'a';
+                else if (charCode >= 232 && charCode <= 235) // è, é, ê, ë
+                    normalizedChar = 'e';
+                else if (charCode >= 236 && charCode <= 239) // ì, í, î, ï
+                    normalizedChar = 'i';
+                else if (charCode >= 242 && charCode <= 246) // ò, ó, ô, õ, ö
+                    normalizedChar = 'o';
+                else if (charCode >= 249 && charCode <= 252) // ù, ú, û, ü
+                    normalizedChar = 'u';
+                else if (charCode == 241) // ñ
+                    normalizedChar = 'n';
+                else if (charCode == 231) // ç
+                    normalizedChar = 'c';
+                
+                sb.Append(normalizedChar);
+            }
+            
+            return sb.ToString();
+        };
+        
+        string normalizedPlanetName = normalizeName(planetName);
+        Debug.Log($"[SkinsSection] Buscando planeta normalizado: '{normalizedPlanetName}' (original: '{planetName}')");
+        
+        foreach (Object obj in allSprites)
+        {
+            if (obj is Sprite foundSprite)
+            {
+                string spriteName = foundSprite.name;
+                string normalizedSpriteName = normalizeName(spriteName);
+                
+                // Debug detallado para el sprite problemático
+                if (spriteName.Contains("Oce") || spriteName.Contains("oce") || spriteName.Contains("í") || spriteName.Contains("Í"))
+                {
+                    Debug.Log($"[SkinsSection] DEBUG Oceánico - Original: '{spriteName}', Normalizado: '{normalizedSpriteName}', Buscado: '{normalizedPlanetName}'");
+                    Debug.Log($"[SkinsSection] DEBUG - Caracteres en original: {string.Join("|", spriteName.Select(c => $"'{c}'({(int)c})"))}");
+                    Debug.Log($"[SkinsSection] DEBUG - Caracteres en normalizado: {string.Join("|", normalizedSpriteName.Select(c => $"'{c}'({(int)c})"))}");
+                    Debug.Log($"[SkinsSection] DEBUG - Caracteres en buscado: {string.Join("|", normalizedPlanetName.Select(c => $"'{c}'({(int)c})"))}");
+                    Debug.Log($"[SkinsSection] DEBUG - Son iguales: {normalizedSpriteName == normalizedPlanetName}, Length: {normalizedSpriteName.Length} vs {normalizedPlanetName.Length}");
+                }
+                
+                Debug.Log($"[SkinsSection] Comparando: '{normalizedSpriteName}' (original: '{spriteName}') con '{normalizedPlanetName}'");
+                
+                if (normalizedSpriteName == normalizedPlanetName)
+                {
+                    Debug.Log($"[SkinsSection] ✓ Sprite encontrado por nombre normalizado: {spriteName} (buscado: {planetName})");
+                    return NormalizePlanetSize(foundSprite, referenceSize);
+                }
+            }
+        }
+        
+        Debug.LogWarning($"[SkinsSection] No se encontró sprite normalizado para: {planetName}");
+        
+        #if UNITY_EDITOR
+        // En el editor, intentar usar AssetDatabase como fallback
+        try
+        {
+            // Función helper para normalizar nombres (misma lógica que la anterior)
+            System.Func<string, string> normalizeNameEditor = (name) => {
+                if (string.IsNullOrEmpty(name)) return "";
+                
+                string lower = name.ToLowerInvariant();
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                foreach (char c in lower)
+                {
+                    char normalizedChar = c;
+                    switch ((int)c)
+                    {
+                        case 237: case 236: case 238: case 239: normalizedChar = 'i'; break;
+                        case 225: case 224: case 226: case 227: case 228: normalizedChar = 'a'; break;
+                        case 233: case 232: case 234: case 235: normalizedChar = 'e'; break;
+                        case 243: case 242: case 244: case 245: case 246: normalizedChar = 'o'; break;
+                        case 250: case 249: case 251: case 252: normalizedChar = 'u'; break;
+                        case 241: normalizedChar = 'n'; break;
+                    }
+                    sb.Append(normalizedChar);
+                }
+                return sb.ToString();
+            };
+            
+            // Buscar por nombre exacto
+            string[] guids = UnityEditor.AssetDatabase.FindAssets($"{planetName} t:Sprite");
+            if (guids.Length == 0)
+            {
+                guids = UnityEditor.AssetDatabase.FindAssets($"{planetName} t:Texture2D");
+            }
+            
+            // Si no se encuentra, buscar todos los sprites en la carpeta y comparar por nombre normalizado
+            if (guids.Length == 0)
+            {
+                string[] allGuids = UnityEditor.AssetDatabase.FindAssets("t:Sprite", new[] { "Assets/Resources/Art/Protagonist" });
+                string normalizedPlanetNameEditor = normalizeNameEditor(planetName);
+                
+                foreach (string guid in allGuids)
+                {
+                    string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                    Sprite foundSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                    if (foundSprite != null)
+                    {
+                        string spriteName = foundSprite.name;
+                        string normalizedSpriteName = normalizeNameEditor(spriteName);
+                        if (normalizedSpriteName == normalizedPlanetNameEditor)
+                        {
+                            Debug.Log($"[SkinsSection] Sprite encontrado en AssetDatabase por nombre normalizado: {spriteName} (path: {path})");
+                            float referenceSizeEditor = GetReferencePlanetSize();
+                            return NormalizePlanetSize(foundSprite, referenceSizeEditor);
+                        }
+                    }
+                }
+            }
+            
+            if (guids.Length > 0)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
+                Debug.Log($"[SkinsSection] Encontrado en AssetDatabase: {path}");
+                
+                sprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite != null)
+                {
+                    Debug.Log($"[SkinsSection] Sprite cargado desde AssetDatabase: {path}");
+                    float referenceSizeEditor = GetReferencePlanetSize();
+                    return NormalizePlanetSize(sprite, referenceSizeEditor);
+                }
+                
+                texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                if (texture != null)
+                {
+                    Debug.Log($"[SkinsSection] Texture2D cargado desde AssetDatabase, creando sprite: {path}");
+                    float referenceSizeEditor = GetReferencePlanetSize();
+                    float pixelsPerUnit = Mathf.Max(texture.width, texture.height) / referenceSizeEditor;
+                    return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[SkinsSection] No se encontró {planetName} en AssetDatabase");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[SkinsSection] Error al cargar el sprite del planeta {planetName}: {e.Message}");
+        }
+        #endif
+        
+        Debug.LogWarning($"[SkinsSection] No se pudo cargar el sprite del planeta: {planetName} desde {resourcePath}");
+        return null;
+    }
+}
+
+/// <summary>
+/// Datos de un planeta
+/// </summary>
+[System.Serializable]
+public class PlanetData
+{
+    public string name;
+    public Sprite sprite;
+    public bool isEquipped;
+    
+    public PlanetData(string name, Sprite sprite, bool isEquipped = false)
+    {
+        this.name = name;
+        this.sprite = sprite;
+        this.isEquipped = isEquipped;
     }
 }
 

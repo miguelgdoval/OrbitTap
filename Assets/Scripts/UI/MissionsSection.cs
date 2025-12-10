@@ -166,7 +166,7 @@ public class MissionsSection : MonoBehaviour
         scrollRect.vertical = true;
         scrollRect.movementType = ScrollRect.MovementType.Elastic;
         
-        // Viewport
+        // Viewport - Ocupa todo el espacio, la scrollbar estará posicionada después del contenido
         GameObject viewport = new GameObject("Viewport");
         viewport.transform.SetParent(scrollObj.transform, false);
         RectTransform viewportRect = viewport.AddComponent<RectTransform>();
@@ -181,6 +181,57 @@ public class MissionsSection : MonoBehaviour
         mask.showMaskGraphic = false;
         
         scrollRect.viewport = viewportRect;
+        
+        // Scrollbar vertical - Justo a la derecha del contenido de las misiones
+        // El contenido tiene 600px de ancho y está centrado, así que termina en 300px desde el centro
+        float contentWidth = 600f;
+        float scrollbarWidth = 15f;
+        float spacing = 10f; // Espacio entre el contenido y la scrollbar
+        
+        GameObject scrollbarObj = new GameObject("Scrollbar");
+        scrollbarObj.transform.SetParent(scrollObj.transform, false);
+        RectTransform scrollbarRect = scrollbarObj.AddComponent<RectTransform>();
+        scrollbarRect.anchorMin = new Vector2(0.5f, 0.02f); // Un poco más grande verticalmente
+        scrollbarRect.anchorMax = new Vector2(0.5f, 0.98f);
+        scrollbarRect.pivot = new Vector2(0, 0.5f); // Pivot a la izquierda para posicionar desde el borde derecho del contenido
+        // Posición: mitad del ancho del contenido + espacio + mitad del ancho de la scrollbar
+        scrollbarRect.anchoredPosition = new Vector2(contentWidth / 2f + spacing + scrollbarWidth / 2f, 0);
+        scrollbarRect.sizeDelta = new Vector2(scrollbarWidth, 0);
+        
+        Scrollbar scrollbar = scrollbarObj.AddComponent<Scrollbar>();
+        scrollbar.direction = Scrollbar.Direction.BottomToTop;
+        
+        // Background de la scrollbar
+        GameObject scrollbarBg = new GameObject("Background");
+        scrollbarBg.transform.SetParent(scrollbarObj.transform, false);
+        Image bgImage = scrollbarBg.AddComponent<Image>();
+        bgImage.color = new Color(0.2f, 0.2f, 0.3f, 0.6f);
+        
+        RectTransform bgRect = scrollbarBg.GetComponent<RectTransform>();
+        bgRect.anchorMin = Vector2.zero;
+        bgRect.anchorMax = Vector2.one;
+        bgRect.sizeDelta = Vector2.zero;
+        bgRect.anchoredPosition = Vector2.zero;
+        
+        scrollbar.targetGraphic = bgImage;
+        
+        // Handle de la scrollbar
+        GameObject scrollbarHandle = new GameObject("Handle");
+        scrollbarHandle.transform.SetParent(scrollbarBg.transform, false);
+        Image handleImage = scrollbarHandle.AddComponent<Image>();
+        handleImage.color = CosmicTheme.NeonCyan;
+        
+        RectTransform handleRect = scrollbarHandle.GetComponent<RectTransform>();
+        handleRect.anchorMin = Vector2.zero;
+        handleRect.anchorMax = new Vector2(1, 1);
+        handleRect.sizeDelta = Vector2.zero;
+        handleRect.anchoredPosition = Vector2.zero;
+        
+        scrollbar.handleRect = handleRect;
+        
+        // Asignar scrollbar al ScrollRect
+        scrollRect.verticalScrollbar = scrollbar;
+        scrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
         
         // Content Panel (centrado y más estrecho)
         GameObject content = new GameObject("Content");

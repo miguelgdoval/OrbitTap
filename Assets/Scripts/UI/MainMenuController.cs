@@ -14,6 +14,7 @@ using UnityEditor;
 /// </summary>
 public class MainMenuController : MonoBehaviour
 {
+    public static MainMenuController Instance { get; private set; }
     [Header("UI References")]
     private GameObject canvas;
     private GameObject playSection;
@@ -41,9 +42,22 @@ public class MainMenuController : MonoBehaviour
     private Button playNavButton;
     private Button missionsNavButton;
     private Button leaderboardNavButton;
+    private GameObject missionsBadge; // Badge para misiones completadas
     
     private MenuSection currentSection = MenuSection.Play;
     private CurrencyManager currencyManager;
+    
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else if (Instance != this)
+        {
+            Destroy(gameObject);
+        }
+    }
     
     private void Start()
     {
@@ -76,6 +90,123 @@ public class MainMenuController : MonoBehaviour
         
         CreateUI();
         CreatePlayerDemo();
+        
+        // Suscribirse a eventos de misiones para actualizar badges
+        if (MissionManager.Instance != null)
+        {
+            MissionManager.Instance.OnMissionCompleted += OnMissionCompleted;
+        }
+        else
+        {
+            // Si MissionManager aún no existe, intentar después
+            StartCoroutine(SubscribeToMissionEventsDelayed());
+        }
+        
+        // Actualizar badge inicial
+        StartCoroutine(UpdateMissionsBadgeDelayed());
+    }
+    
+    private System.Collections.IEnumerator SubscribeToMissionEventsDelayed()
+    {
+        yield return new WaitForSeconds(0.5f);
+        if (MissionManager.Instance != null)
+        {
+            MissionManager.Instance.OnMissionCompleted += OnMissionCompleted;
+        }
+    }
+    
+    private System.Collections.IEnumerator UpdateMissionsBadgeDelayed()
+    {
+        yield return new WaitForSeconds(0.5f);
+        UpdateMissionsBadge();
+    }
+    
+    private void OnMissionCompleted(MissionData mission)
+    {
+        UpdateMissionsBadge();
+    }
+    
+    private void CreateMissionsBadge(GameObject buttonParent, float buttonSize)
+    {
+        // Buscar el icono dentro del botón
+        Transform iconTransform = buttonParent.transform.Find("Icon");
+        if (iconTransform == null)
+        {
+            Debug.LogWarning("[MainMenuController] No se encontró el icono para el badge de misiones");
+            return;
+        }
+        
+        // Obtener el componente Image del icono para conocer su tamaño real
+        Image iconImage = iconTransform.GetComponent<Image>();
+        RectTransform iconRect = iconTransform.GetComponent<RectTransform>();
+        
+        missionsBadge = new GameObject("MissionsBadge");
+        missionsBadge.transform.SetParent(iconTransform, false); // Hijo del icono, no del botón
+        
+        Image badgeImage = missionsBadge.AddComponent<Image>();
+        // Crear sprite circular verde
+        float badgeSize = buttonSize * 0.08f; // Tamaño del badge
+        float badgeRadius = badgeSize * 0.5f;
+        badgeImage.sprite = SpriteGenerator.CreateCircleSprite(badgeRadius, new Color(0.2f, 1f, 0.2f, 1f)); // Verde
+        
+        RectTransform badgeRect = missionsBadge.GetComponent<RectTransform>();
+        // Anclar a la esquina superior derecha del icono
+        badgeRect.anchorMin = new Vector2(1f, 1f);
+        badgeRect.anchorMax = new Vector2(1f, 1f);
+        badgeRect.pivot = new Vector2(0.5f, 0.5f);
+        
+        // Calcular la posición basándonos en el tamaño real de la imagen del icono
+        float iconWidth = iconRect.sizeDelta.x;
+        float iconHeight = iconRect.sizeDelta.y;
+        
+        // Si la imagen tiene preserveAspect, calcular el tamaño real
+        if (iconImage != null && iconImage.preserveAspect && iconImage.sprite != null)
+        {
+            float spriteAspect = iconImage.sprite.rect.width / iconImage.sprite.rect.height;
+            float containerAspect = iconWidth / iconHeight;
+            
+            if (spriteAspect > containerAspect)
+            {
+                // La imagen está limitada por el ancho
+                iconHeight = iconWidth / spriteAspect;
+            }
+            else
+            {
+                // La imagen está limitada por el alto
+                iconWidth = iconHeight * spriteAspect;
+            }
+        }
+        
+        // Posicionar el badge en la esquina superior derecha de la imagen visual
+        // Con anchor (1,1) y pivot (0.5, 0.5), el centro del badge está en la esquina superior derecha
+        // Para moverlo hacia adentro (hacia el centro del icono), usamos valores negativos
+        // Calculamos la distancia desde la esquina hasta donde queremos el badge
+        float offsetX = iconWidth * 0.5f; // Mucho más hacia la izquierda
+        float offsetY = iconHeight * 0.15f; // Un poco más arriba
+        badgeRect.anchoredPosition = new Vector2(-offsetX, -offsetY);
+        badgeRect.sizeDelta = new Vector2(badgeSize, badgeSize);
+        
+        missionsBadge.SetActive(false); // Inicialmente oculto
+    }
+    
+    public void UpdateMissionsBadge()
+    {
+        if (missionsBadge == null || MissionManager.Instance == null) return;
+        
+        // Verificar si hay misiones completadas sin reclamar
+        List<MissionData> allMissions = MissionManager.Instance.GetActiveMissions();
+        bool hasCompletedUnclaimed = false;
+        
+        foreach (var mission in allMissions)
+        {
+            if (mission.isCompleted && !mission.isClaimed)
+            {
+                hasCompletedUnclaimed = true;
+                break;
+            }
+        }
+        
+        missionsBadge.SetActive(hasCompletedUnclaimed);
     }
     
     private void ConfigureScreenOrientation()
@@ -545,6 +676,9 @@ public class MainMenuController : MonoBehaviour
         // Botón Missions
         missionsNavButton = CreateBottomNavButton("MissionsButton", "Missions", buttonsContainer.transform, -startOffset - buttonSpacing, buttonSize, false);
         missionsNavButton.onClick.AddListener(() => NavigateTo(MenuSection.Missions));
+        
+        // Crear badge para misiones completadas
+        CreateMissionsBadge(missionsNavButton.gameObject, buttonSize);
         
         // Botón Leaderboard (derecha)
         leaderboardNavButton = CreateBottomNavButton("LeaderboardButton", "Leaderboard", buttonsContainer.transform, -startOffset, buttonSize, false);

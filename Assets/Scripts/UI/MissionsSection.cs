@@ -16,6 +16,11 @@ public class MissionsSection : MonoBehaviour
     private Button weeklyTabButton;
     private MissionCategory currentCategory = MissionCategory.Total;
     
+    // Badges para las pestañas
+    private GameObject totalTabBadge;
+    private GameObject dailyTabBadge;
+    private GameObject weeklyTabBadge;
+    
     private void Start()
     {
         Debug.Log("[MissionsSection] Start llamado. activeInHierarchy: " + gameObject.activeInHierarchy);
@@ -41,6 +46,12 @@ public class MissionsSection : MonoBehaviour
             Debug.Log("[MissionsSection] UI destruida, recreando...");
             CreateUI();
             RefreshMissions();
+            UpdateTabBadges();
+        }
+        else
+        {
+            // Actualizar badges cuando se activa la sección
+            UpdateTabBadges();
         }
         
         // Asegurar que los elementos sean visibles
@@ -95,6 +106,9 @@ public class MissionsSection : MonoBehaviour
         
         isInitialized = true;
         Debug.Log("[MissionsSection] Inicialización completada.");
+        
+        // Actualizar badges de pestañas
+        UpdateTabBadges();
     }
     
     private void CreateErrorUI()
@@ -336,9 +350,45 @@ public class MissionsSection : MonoBehaviour
         outline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.3f);
         outline.effectDistance = new Vector2(1, 1);
         
+        // Crear badge para la pestaña
+        CreateTabBadge(btnObj, category);
+        
         button.onClick.AddListener(() => OnTabClicked(category));
         
         return button;
+    }
+    
+    private void CreateTabBadge(GameObject buttonParent, MissionCategory category)
+    {
+        GameObject badge = new GameObject($"TabBadge_{category}");
+        badge.transform.SetParent(buttonParent.transform, false);
+        
+        Image badgeImage = badge.AddComponent<Image>();
+        // Crear sprite circular verde
+        badgeImage.sprite = SpriteGenerator.CreateCircleSprite(8f, new Color(0.2f, 1f, 0.2f, 1f)); // Verde
+        
+        RectTransform badgeRect = badge.GetComponent<RectTransform>();
+        badgeRect.anchorMin = new Vector2(1f, 1f);
+        badgeRect.anchorMax = new Vector2(1f, 1f);
+        badgeRect.pivot = new Vector2(0.5f, 0.5f);
+        badgeRect.anchoredPosition = new Vector2(-10, -10);
+        badgeRect.sizeDelta = new Vector2(16, 16);
+        
+        badge.SetActive(false); // Inicialmente oculto
+        
+        // Guardar referencia al badge
+        switch (category)
+        {
+            case MissionCategory.Total:
+                totalTabBadge = badge;
+                break;
+            case MissionCategory.Daily:
+                dailyTabBadge = badge;
+                break;
+            case MissionCategory.Weekly:
+                weeklyTabBadge = badge;
+                break;
+        }
     }
     
     private void OnTabClicked(MissionCategory category)
@@ -634,19 +684,81 @@ public class MissionsSection : MonoBehaviour
         if (missionManager != null && missionManager.ClaimReward(mission))
         {
             RefreshMissions();
+            UpdateTabBadges();
+            
+            // Actualizar badge del botón de navegación también
+            if (MainMenuController.Instance != null)
+            {
+                MainMenuController.Instance.UpdateMissionsBadge();
+            }
         }
     }
     
     private void OnMissionProgress(MissionData mission)
     {
         RefreshMissions();
+        UpdateTabBadges();
     }
     
     private void OnMissionCompleted(MissionData mission)
     {
         RefreshMissions();
+        UpdateTabBadges();
         // Aquí podrías mostrar una notificación
         Debug.Log($"¡Misión completada: {mission.title}!");
+    }
+    
+    private void UpdateTabBadges()
+    {
+        if (missionManager == null) return;
+        
+        // Actualizar badge de Totales
+        if (totalTabBadge != null)
+        {
+            List<MissionData> totalMissions = missionManager.GetActiveMissionsByCategory(MissionCategory.Total);
+            bool hasUnclaimed = false;
+            foreach (var m in totalMissions)
+            {
+                if (m.isCompleted && !m.isClaimed)
+                {
+                    hasUnclaimed = true;
+                    break;
+                }
+            }
+            totalTabBadge.SetActive(hasUnclaimed);
+        }
+        
+        // Actualizar badge de Diarias
+        if (dailyTabBadge != null)
+        {
+            List<MissionData> dailyMissions = missionManager.GetActiveMissionsByCategory(MissionCategory.Daily);
+            bool hasUnclaimed = false;
+            foreach (var m in dailyMissions)
+            {
+                if (m.isCompleted && !m.isClaimed)
+                {
+                    hasUnclaimed = true;
+                    break;
+                }
+            }
+            dailyTabBadge.SetActive(hasUnclaimed);
+        }
+        
+        // Actualizar badge de Semanales
+        if (weeklyTabBadge != null)
+        {
+            List<MissionData> weeklyMissions = missionManager.GetActiveMissionsByCategory(MissionCategory.Weekly);
+            bool hasUnclaimed = false;
+            foreach (var m in weeklyMissions)
+            {
+                if (m.isCompleted && !m.isClaimed)
+                {
+                    hasUnclaimed = true;
+                    break;
+                }
+            }
+            weeklyTabBadge.SetActive(hasUnclaimed);
+        }
     }
 }
 

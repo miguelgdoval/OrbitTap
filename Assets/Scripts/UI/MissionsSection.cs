@@ -9,6 +9,13 @@ public class MissionsSection : MonoBehaviour
     private ScrollRect scrollRect;
     private bool isInitialized = false;
     
+    // Pestañas de categorías
+    private GameObject tabsContainer;
+    private Button totalTabButton;
+    private Button dailyTabButton;
+    private Button weeklyTabButton;
+    private MissionCategory currentCategory = MissionCategory.Total;
+    
     private void Start()
     {
         Debug.Log("[MissionsSection] Start llamado. activeInHierarchy: " + gameObject.activeInHierarchy);
@@ -142,8 +149,11 @@ public class MissionsSection : MonoBehaviour
         titleRect.anchorMin = new Vector2(0.5f, 1f);
         titleRect.anchorMax = new Vector2(0.5f, 1f);
         titleRect.pivot = new Vector2(0.5f, 1f);
-        titleRect.anchoredPosition = new Vector2(0, -40); // Más cerca del borde superior
+        titleRect.anchoredPosition = new Vector2(0, -40);
         titleRect.sizeDelta = new Vector2(600, 80);
+        
+        // Pestañas de categorías
+        CreateCategoryTabs();
         
         // Scroll View con márgenes en todas las direcciones (más estrecho)
         GameObject scrollObj = new GameObject("MissionsScrollView");
@@ -153,7 +163,7 @@ public class MissionsSection : MonoBehaviour
         // Márgenes: izquierda, derecha, arriba, abajo (más anchos para hacerlo estrecho)
         float marginLeft = 200f; // Aumentado para hacerlo más estrecho
         float marginRight = 200f; // Aumentado para hacerlo más estrecho
-        float marginTop = 140f; // Espacio para el título (reducido)
+        float marginTop = 200f; // Espacio para el título y pestañas
         float marginBottom = 250f; // Espacio para la navegación inferior (aumentado para que no tape las misiones)
         
         scrollRectTransform.anchorMin = new Vector2(0, 0);
@@ -261,9 +271,121 @@ public class MissionsSection : MonoBehaviour
         Debug.Log($"[MissionsSection] UI creada. Content sizeDelta: {contentRect.sizeDelta}, Viewport sizeDelta: {viewportRect.sizeDelta}");
     }
     
+    private void CreateCategoryTabs()
+    {
+        // Contenedor de pestañas
+        tabsContainer = new GameObject("CategoryTabs");
+        tabsContainer.transform.SetParent(transform, false);
+        RectTransform tabsRect = tabsContainer.AddComponent<RectTransform>();
+        tabsRect.anchorMin = new Vector2(0.5f, 1f);
+        tabsRect.anchorMax = new Vector2(0.5f, 1f);
+        tabsRect.pivot = new Vector2(0.5f, 1f);
+        tabsRect.anchoredPosition = new Vector2(0, -120);
+        tabsRect.sizeDelta = new Vector2(600, 50);
+        
+        HorizontalLayoutGroup tabsLayout = tabsContainer.AddComponent<HorizontalLayoutGroup>();
+        tabsLayout.spacing = 10f;
+        tabsLayout.childControlWidth = true;
+        tabsLayout.childControlHeight = true;
+        tabsLayout.childForceExpandWidth = true;
+        tabsLayout.childForceExpandHeight = true;
+        
+        // Botón Totales
+        totalTabButton = CreateTabButton("TOTALES", MissionCategory.Total);
+        totalTabButton.transform.SetParent(tabsContainer.transform, false);
+        
+        // Botón Diarias
+        dailyTabButton = CreateTabButton("DIARIAS", MissionCategory.Daily);
+        dailyTabButton.transform.SetParent(tabsContainer.transform, false);
+        
+        // Botón Semanales
+        weeklyTabButton = CreateTabButton("SEMANALES", MissionCategory.Weekly);
+        weeklyTabButton.transform.SetParent(tabsContainer.transform, false);
+        
+        // Activar pestaña inicial
+        UpdateTabButtons();
+    }
+    
+    private Button CreateTabButton(string text, MissionCategory category)
+    {
+        GameObject btnObj = new GameObject($"Tab_{category}");
+        Button button = btnObj.AddComponent<Button>();
+        Image btnImage = btnObj.AddComponent<Image>();
+        btnImage.color = new Color(0.1f, 0.1f, 0.2f, 0.8f);
+        
+        RectTransform btnRect = btnObj.GetComponent<RectTransform>();
+        btnRect.sizeDelta = new Vector2(0, 50);
+        
+        GameObject textObj = new GameObject("Text");
+        textObj.transform.SetParent(btnObj.transform, false);
+        Text btnText = textObj.AddComponent<Text>();
+        btnText.text = text;
+        btnText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        btnText.fontSize = 24;
+        btnText.fontStyle = FontStyle.Bold;
+        btnText.color = Color.white;
+        btnText.alignment = TextAnchor.MiddleCenter;
+        
+        RectTransform textRect = textObj.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.sizeDelta = Vector2.zero;
+        textRect.anchoredPosition = Vector2.zero;
+        
+        Outline outline = btnObj.AddComponent<Outline>();
+        outline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.3f);
+        outline.effectDistance = new Vector2(1, 1);
+        
+        button.onClick.AddListener(() => OnTabClicked(category));
+        
+        return button;
+    }
+    
+    private void OnTabClicked(MissionCategory category)
+    {
+        currentCategory = category;
+        UpdateTabButtons();
+        RefreshMissions();
+    }
+    
+    private void UpdateTabButtons()
+    {
+        UpdateTabButton(totalTabButton, MissionCategory.Total);
+        UpdateTabButton(dailyTabButton, MissionCategory.Daily);
+        UpdateTabButton(weeklyTabButton, MissionCategory.Weekly);
+    }
+    
+    private void UpdateTabButton(Button button, MissionCategory category)
+    {
+        if (button == null) return;
+        
+        bool isActive = currentCategory == category;
+        Image btnImage = button.GetComponent<Image>();
+        Outline outline = button.GetComponent<Outline>();
+        
+        if (isActive)
+        {
+            btnImage.color = new Color(CosmicTheme.NeonCyan.r * 0.3f, CosmicTheme.NeonCyan.g * 0.3f, CosmicTheme.NeonCyan.b * 0.5f, 0.8f);
+            if (outline != null)
+            {
+                outline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.8f);
+                outline.effectDistance = new Vector2(2, 2);
+            }
+        }
+        else
+        {
+            btnImage.color = new Color(0.1f, 0.1f, 0.2f, 0.8f);
+            if (outline != null)
+            {
+                outline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.3f);
+                outline.effectDistance = new Vector2(1, 1);
+            }
+        }
+    }
+    
     private void RefreshMissions()
     {
-        Debug.Log("[MissionsSection] RefreshMissions llamado.");
+        Debug.Log($"[MissionsSection] RefreshMissions llamado. Categoría: {currentCategory}");
         
         if (contentPanel == null)
         {
@@ -283,9 +405,9 @@ public class MissionsSection : MonoBehaviour
             Destroy(child.gameObject);
         }
         
-        // Crear UI para cada misión activa
-        List<MissionData> missions = missionManager.GetActiveMissions();
-        Debug.Log($"[MissionsSection] Misiones activas encontradas: {missions.Count}");
+        // Obtener misiones de la categoría actual
+        List<MissionData> missions = missionManager.GetActiveMissionsByCategory(currentCategory);
+        Debug.Log($"[MissionsSection] Misiones activas encontradas en categoría {currentCategory}: {missions.Count}");
         
         if (missions.Count == 0)
         {

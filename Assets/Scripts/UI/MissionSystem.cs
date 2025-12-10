@@ -3,6 +3,16 @@ using System;
 using System.Collections.Generic;
 
 /// <summary>
+/// Categorías de misiones
+/// </summary>
+public enum MissionCategory
+{
+    Total,      // Misiones permanentes/totales
+    Daily,      // Misiones diarias (se resetean cada día)
+    Weekly      // Misiones semanales (se resetean cada semana)
+}
+
+/// <summary>
 /// Tipos de objetivos que puede tener una misión
 /// </summary>
 public enum MissionObjectiveType
@@ -75,13 +85,13 @@ public class MissionData
     public MissionReward reward;        // Recompensa
     public bool isCompleted;            // Si está completada
     public bool isClaimed;              // Si la recompensa fue reclamada
-    public bool isDaily;                // Si es una misión diaria
-    public DateTime? dailyResetTime;    // Hora de reset (para misiones diarias)
+    public MissionCategory category;    // Categoría de la misión
+    public DateTime? resetTime;         // Hora de reset (para diarias/semanales)
     public int priority;                // Prioridad de visualización
     
     public MissionData(string id, string title, string description, 
                       MissionObjectiveType objectiveType, int targetValue, 
-                      MissionReward reward, bool isDaily = false)
+                      MissionReward reward, MissionCategory category = MissionCategory.Total)
     {
         this.id = id;
         this.title = title;
@@ -92,8 +102,34 @@ public class MissionData
         this.reward = reward;
         this.isCompleted = false;
         this.isClaimed = false;
-        this.isDaily = isDaily;
+        this.category = category;
         this.priority = 0;
+        
+        // Configurar reset time según la categoría
+        if (category == MissionCategory.Daily)
+        {
+            this.resetTime = GetNextDailyReset();
+        }
+        else if (category == MissionCategory.Weekly)
+        {
+            this.resetTime = GetNextWeeklyReset();
+        }
+    }
+    
+    private DateTime GetNextDailyReset()
+    {
+        DateTime now = DateTime.Now;
+        DateTime tomorrow = now.Date.AddDays(1);
+        return tomorrow;
+    }
+    
+    private DateTime GetNextWeeklyReset()
+    {
+        DateTime now = DateTime.Now;
+        // Reset cada lunes a las 00:00
+        int daysUntilMonday = ((int)DayOfWeek.Monday - (int)now.DayOfWeek + 7) % 7;
+        if (daysUntilMonday == 0 && now.Hour >= 0) daysUntilMonday = 7; // Si ya es lunes, reset el próximo
+        return now.Date.AddDays(daysUntilMonday);
     }
     
     public float GetProgressPercentage()
@@ -118,8 +154,13 @@ public class MissionManager : MonoBehaviour
     
     private const string MISSIONS_KEY = "MissionsData";
     private const string MISSION_PROGRESS_PREFIX = "MissionProgress_";
+    private const string LAST_DAILY_RESET_KEY = "LastDailyReset";
+    private const string LAST_WEEKLY_RESET_KEY = "LastWeeklyReset";
     
     private List<MissionData> allMissions = new List<MissionData>();
+    private List<MissionData> totalMissions = new List<MissionData>();
+    private List<MissionData> dailyMissions = new List<MissionData>();
+    private List<MissionData> weeklyMissions = new List<MissionData>();
     private List<MissionData> activeMissions = new List<MissionData>();
     
     public System.Action<MissionData> OnMissionProgress;
@@ -150,117 +191,359 @@ public class MissionManager : MonoBehaviour
     private void InitializeMissions()
     {
         Debug.Log("[MissionManager] Inicializando misiones...");
-        // Misiones permanentes
-        allMissions.Add(new MissionData(
+        
+        // Verificar y resetear misiones diarias/semanales si es necesario
+        CheckAndResetTimedMissions();
+        
+        // Misiones Totales/Permanentes
+        InitializeTotalMissions();
+        
+        // Misiones Diarias (siempre las mismas para todos)
+        InitializeDailyMissions();
+        
+        // Misiones Semanales (siempre las mismas para todos)
+        InitializeWeeklyMissions();
+        
+        RefreshActiveMissions();
+        Debug.Log($"[MissionManager] Misiones inicializadas. Total: {allMissions.Count}, Totales: {totalMissions.Count}, Diarias: {dailyMissions.Count}, Semanales: {weeklyMissions.Count}");
+    }
+    
+    /// <summary>
+    /// Inicializa las misiones totales/permanentes
+    /// </summary>
+    private void InitializeTotalMissions()
+    {
+        totalMissions.Add(new MissionData(
             "first_game",
             "Primera Órbita",
             "Juega tu primera partida",
             MissionObjectiveType.PlayGames,
             1,
-            new MissionReward(RewardType.Currency, 50)
+            new MissionReward(RewardType.Currency, 50),
+            MissionCategory.Total
         ));
         
-        allMissions.Add(new MissionData(
+        totalMissions.Add(new MissionData(
             "score_10",
             "Explorador Novato",
             "Alcanza una puntuación de 10",
             MissionObjectiveType.ReachScore,
             10,
-            new MissionReward(RewardType.Currency, 25)
+            new MissionReward(RewardType.Currency, 25),
+            MissionCategory.Total
         ));
         
-        allMissions.Add(new MissionData(
+        totalMissions.Add(new MissionData(
             "score_50",
             "Viajero Estelar",
             "Alcanza una puntuación de 50",
             MissionObjectiveType.ReachScore,
             50,
-            new MissionReward(RewardType.Currency, 100)
+            new MissionReward(RewardType.Currency, 100),
+            MissionCategory.Total
         ));
         
-        allMissions.Add(new MissionData(
+        totalMissions.Add(new MissionData(
             "score_100",
             "Maestro del Espacio",
             "Alcanza una puntuación de 100",
             MissionObjectiveType.ReachScore,
             100,
-            new MissionReward(RewardType.Currency, 250)
+            new MissionReward(RewardType.Currency, 250),
+            MissionCategory.Total
         ));
         
-        allMissions.Add(new MissionData(
+        totalMissions.Add(new MissionData(
             "score_200",
             "Leyenda Cósmica",
             "Alcanza una puntuación de 200",
             MissionObjectiveType.ReachScore,
             200,
-            new MissionReward(RewardType.Currency, 500)
+            new MissionReward(RewardType.Currency, 500),
+            MissionCategory.Total
         ));
         
-        allMissions.Add(new MissionData(
+        totalMissions.Add(new MissionData(
             "survive_30",
             "Supervivencia Básica",
             "Sobrevive 30 segundos en una partida",
             MissionObjectiveType.SurviveTime,
             30,
-            new MissionReward(RewardType.Currency, 75)
+            new MissionReward(RewardType.Currency, 75),
+            MissionCategory.Total
         ));
         
-        allMissions.Add(new MissionData(
+        totalMissions.Add(new MissionData(
             "survive_60",
             "Supervivencia Avanzada",
             "Sobrevive 60 segundos en una partida",
             MissionObjectiveType.SurviveTime,
             60,
-            new MissionReward(RewardType.Currency, 150)
+            new MissionReward(RewardType.Currency, 150),
+            MissionCategory.Total
         ));
         
-        allMissions.Add(new MissionData(
+        totalMissions.Add(new MissionData(
             "play_5",
             "Veterano",
             "Juega 5 partidas",
             MissionObjectiveType.PlayGames,
             5,
-            new MissionReward(RewardType.Currency, 150)
+            new MissionReward(RewardType.Currency, 150),
+            MissionCategory.Total
         ));
         
-        allMissions.Add(new MissionData(
+        totalMissions.Add(new MissionData(
             "play_10",
             "Experto",
             "Juega 10 partidas",
             MissionObjectiveType.PlayGames,
             10,
-            new MissionReward(RewardType.Currency, 300)
+            new MissionReward(RewardType.Currency, 300),
+            MissionCategory.Total
         ));
         
-        allMissions.Add(new MissionData(
+        totalMissions.Add(new MissionData(
             "play_25",
             "Maestro",
             "Juega 25 partidas",
             MissionObjectiveType.PlayGames,
             25,
-            new MissionReward(RewardType.Currency, 750)
+            new MissionReward(RewardType.Currency, 750),
+            MissionCategory.Total
         ));
         
-        allMissions.Add(new MissionData(
+        totalMissions.Add(new MissionData(
             "high_score_50",
             "Nuevo Récord",
             "Alcanza un nuevo récord de 50 puntos",
             MissionObjectiveType.ReachHighScore,
             50,
-            new MissionReward(RewardType.Currency, 200)
+            new MissionReward(RewardType.Currency, 200),
+            MissionCategory.Total
         ));
         
-        allMissions.Add(new MissionData(
+        totalMissions.Add(new MissionData(
             "high_score_100",
             "Récord Épico",
             "Alcanza un nuevo récord de 100 puntos",
             MissionObjectiveType.ReachHighScore,
             100,
-            new MissionReward(RewardType.Currency, 500)
+            new MissionReward(RewardType.Currency, 500),
+            MissionCategory.Total
         ));
         
-        RefreshActiveMissions();
-        Debug.Log($"[MissionManager] Misiones inicializadas. Total: {allMissions.Count}, Activas: {activeMissions.Count}");
+        allMissions.AddRange(totalMissions);
+    }
+    
+    /// <summary>
+    /// Inicializa las misiones diarias (siempre las mismas para todos)
+    /// </summary>
+    private void InitializeDailyMissions()
+    {
+        dailyMissions.Add(new MissionData(
+            "daily_play_3",
+            "Jugador Diario",
+            "Juega 3 partidas hoy",
+            MissionObjectiveType.PlayGames,
+            3,
+            new MissionReward(RewardType.Currency, 50),
+            MissionCategory.Daily
+        ));
+        
+        dailyMissions.Add(new MissionData(
+            "daily_score_20",
+            "Puntuación Diaria",
+            "Alcanza 20 puntos en una partida",
+            MissionObjectiveType.ReachScore,
+            20,
+            new MissionReward(RewardType.Currency, 40),
+            MissionCategory.Daily
+        ));
+        
+        dailyMissions.Add(new MissionData(
+            "daily_score_40",
+            "Desafío Diario",
+            "Alcanza 40 puntos en una partida",
+            MissionObjectiveType.ReachScore,
+            40,
+            new MissionReward(RewardType.Currency, 60),
+            MissionCategory.Daily
+        ));
+        
+        dailyMissions.Add(new MissionData(
+            "daily_play_5",
+            "Jugador Activo",
+            "Juega 5 partidas hoy",
+            MissionObjectiveType.PlayGames,
+            5,
+            new MissionReward(RewardType.Currency, 75),
+            MissionCategory.Daily
+        ));
+        
+        allMissions.AddRange(dailyMissions);
+    }
+    
+    /// <summary>
+    /// Inicializa las misiones semanales (siempre las mismas para todos)
+    /// </summary>
+    private void InitializeWeeklyMissions()
+    {
+        weeklyMissions.Add(new MissionData(
+            "weekly_play_15",
+            "Jugador Semanal",
+            "Juega 15 partidas esta semana",
+            MissionObjectiveType.PlayGames,
+            15,
+            new MissionReward(RewardType.Currency, 200),
+            MissionCategory.Weekly
+        ));
+        
+        weeklyMissions.Add(new MissionData(
+            "weekly_score_100",
+            "Puntuación Semanal",
+            "Alcanza 100 puntos en una partida",
+            MissionObjectiveType.ReachScore,
+            100,
+            new MissionReward(RewardType.Currency, 250),
+            MissionCategory.Weekly
+        ));
+        
+        weeklyMissions.Add(new MissionData(
+            "weekly_play_20",
+            "Veterano Semanal",
+            "Juega 20 partidas esta semana",
+            MissionObjectiveType.PlayGames,
+            20,
+            new MissionReward(RewardType.Currency, 300),
+            MissionCategory.Weekly
+        ));
+        
+        weeklyMissions.Add(new MissionData(
+            "weekly_score_150",
+            "Maestro Semanal",
+            "Alcanza 150 puntos en una partida",
+            MissionObjectiveType.ReachScore,
+            150,
+            new MissionReward(RewardType.Currency, 400),
+            MissionCategory.Weekly
+        ));
+        
+        allMissions.AddRange(weeklyMissions);
+    }
+    
+    /// <summary>
+    /// Verifica y resetea misiones diarias/semanales si es necesario
+    /// </summary>
+    private void CheckAndResetTimedMissions()
+    {
+        DateTime now = DateTime.Now;
+        DateTime lastDailyReset = GetLastDailyReset();
+        DateTime lastWeeklyReset = GetLastWeeklyReset();
+        
+        // Verificar si ha pasado un día desde el último reset diario
+        if (now.Date > lastDailyReset.Date)
+        {
+            ResetDailyMissions();
+            SaveLastDailyReset(now);
+        }
+        
+        // Verificar si ha pasado una semana desde el último reset semanal
+        if (GetWeekNumber(now) > GetWeekNumber(lastWeeklyReset) || 
+            (GetWeekNumber(now) == GetWeekNumber(lastWeeklyReset) && now.Year > lastWeeklyReset.Year))
+        {
+            ResetWeeklyMissions();
+            SaveLastWeeklyReset(now);
+        }
+    }
+    
+    private int GetWeekNumber(DateTime date)
+    {
+        System.Globalization.CultureInfo ci = System.Globalization.CultureInfo.CurrentCulture;
+        return ci.Calendar.GetWeekOfYear(date, System.Globalization.CalendarWeekRule.FirstDay, DayOfWeek.Monday);
+    }
+    
+    private DateTime GetLastDailyReset()
+    {
+        string dateStr = PlayerPrefs.GetString(LAST_DAILY_RESET_KEY, "");
+        if (string.IsNullOrEmpty(dateStr))
+            return DateTime.MinValue;
+        
+        if (DateTime.TryParse(dateStr, out DateTime date))
+            return date;
+        
+        return DateTime.MinValue;
+    }
+    
+    private DateTime GetLastWeeklyReset()
+    {
+        string dateStr = PlayerPrefs.GetString(LAST_WEEKLY_RESET_KEY, "");
+        if (string.IsNullOrEmpty(dateStr))
+            return DateTime.MinValue;
+        
+        if (DateTime.TryParse(dateStr, out DateTime date))
+            return date;
+        
+        return DateTime.MinValue;
+    }
+    
+    private void SaveLastDailyReset(DateTime date)
+    {
+        PlayerPrefs.SetString(LAST_DAILY_RESET_KEY, date.ToString("yyyy-MM-dd"));
+        PlayerPrefs.Save();
+    }
+    
+    private void SaveLastWeeklyReset(DateTime date)
+    {
+        PlayerPrefs.SetString(LAST_WEEKLY_RESET_KEY, date.ToString("yyyy-MM-dd"));
+        PlayerPrefs.Save();
+    }
+    
+    /// <summary>
+    /// Resetea todas las misiones diarias
+    /// </summary>
+    private void ResetDailyMissions()
+    {
+        Debug.Log("[MissionManager] Reseteando misiones diarias...");
+        foreach (var mission in dailyMissions)
+        {
+            mission.currentProgress = 0;
+            mission.isCompleted = false;
+            mission.isClaimed = false;
+            mission.resetTime = GetNextDailyReset();
+            SaveMissionProgress(mission);
+        }
+    }
+    
+    /// <summary>
+    /// Resetea todas las misiones semanales
+    /// </summary>
+    private void ResetWeeklyMissions()
+    {
+        Debug.Log("[MissionManager] Reseteando misiones semanales...");
+        foreach (var mission in weeklyMissions)
+        {
+            mission.currentProgress = 0;
+            mission.isCompleted = false;
+            mission.isClaimed = false;
+            mission.resetTime = GetNextWeeklyReset();
+            SaveMissionProgress(mission);
+        }
+    }
+    
+    private DateTime GetNextDailyReset()
+    {
+        DateTime now = DateTime.Now;
+        return now.Date.AddDays(1);
+    }
+    
+    private DateTime GetNextWeeklyReset()
+    {
+        DateTime now = DateTime.Now;
+        // Reset cada lunes a las 00:00
+        int daysUntilMonday = ((int)DayOfWeek.Monday - (int)now.DayOfWeek + 7) % 7;
+        if (daysUntilMonday == 0) daysUntilMonday = 7; // Si ya es lunes, reset el próximo
+        return now.Date.AddDays(daysUntilMonday);
     }
     
     /// <summary>
@@ -273,36 +556,26 @@ public class MissionManager : MonoBehaviour
         {
             if (!mission.isClaimed)
             {
-                // Si es diaria, verificar si necesita reset
-                if (mission.isDaily && mission.dailyResetTime.HasValue)
-                {
-                    if (DateTime.Now >= mission.dailyResetTime.Value)
-                    {
-                        ResetDailyMission(mission);
-                    }
-                }
-                
                 activeMissions.Add(mission);
             }
         }
         
-        // Ordenar por prioridad y estado (completadas primero)
+        // Ordenar por categoría, luego por prioridad y estado (completadas primero)
         activeMissions.Sort((a, b) => {
+            // Primero por categoría: Diarias, Semanales, Totales
+            if (a.category != b.category)
+            {
+                if (a.category == MissionCategory.Daily) return -1;
+                if (b.category == MissionCategory.Daily) return 1;
+                if (a.category == MissionCategory.Weekly) return -1;
+                if (b.category == MissionCategory.Weekly) return 1;
+            }
+            // Luego por estado (completadas primero)
             if (a.isCompleted != b.isCompleted)
                 return a.isCompleted ? -1 : 1;
+            // Finalmente por prioridad
             return b.priority.CompareTo(a.priority);
         });
-    }
-    
-    /// <summary>
-    /// Resetea una misión diaria
-    /// </summary>
-    private void ResetDailyMission(MissionData mission)
-    {
-        mission.currentProgress = 0;
-        mission.isCompleted = false;
-        mission.isClaimed = false;
-        mission.dailyResetTime = DateTime.Now.AddDays(1);
     }
     
     /// <summary>
@@ -444,7 +717,8 @@ public class MissionManager : MonoBehaviour
     /// </summary>
     private void LoadMissionsProgress()
     {
-        foreach (var mission in allMissions)
+        // Cargar progreso de misiones totales
+        foreach (var mission in totalMissions)
         {
             string key = MISSION_PROGRESS_PREFIX + mission.id;
             if (PlayerPrefs.HasKey(key))
@@ -456,6 +730,35 @@ public class MissionManager : MonoBehaviour
                 mission.isClaimed = progress.isClaimed;
             }
         }
+        
+        // Cargar progreso de misiones diarias y semanales (solo si no se han reseteado)
+        // El reset se hace en CheckAndResetTimedMissions antes de cargar
+        foreach (var mission in dailyMissions)
+        {
+            string key = MISSION_PROGRESS_PREFIX + mission.id;
+            if (PlayerPrefs.HasKey(key))
+            {
+                string data = PlayerPrefs.GetString(key);
+                MissionProgressData progress = JsonUtility.FromJson<MissionProgressData>(data);
+                mission.currentProgress = progress.currentProgress;
+                mission.isCompleted = progress.isCompleted;
+                mission.isClaimed = progress.isClaimed;
+            }
+        }
+        
+        foreach (var mission in weeklyMissions)
+        {
+            string key = MISSION_PROGRESS_PREFIX + mission.id;
+            if (PlayerPrefs.HasKey(key))
+            {
+                string data = PlayerPrefs.GetString(key);
+                MissionProgressData progress = JsonUtility.FromJson<MissionProgressData>(data);
+                mission.currentProgress = progress.currentProgress;
+                mission.isCompleted = progress.isCompleted;
+                mission.isClaimed = progress.isClaimed;
+            }
+        }
+        
         RefreshActiveMissions();
     }
     
@@ -466,9 +769,38 @@ public class MissionManager : MonoBehaviour
         return activeMissions;
     }
     
+    public List<MissionData> GetActiveMissionsByCategory(MissionCategory category)
+    {
+        RefreshActiveMissions();
+        List<MissionData> filtered = new List<MissionData>();
+        foreach (var mission in activeMissions)
+        {
+            if (mission.category == category)
+            {
+                filtered.Add(mission);
+            }
+        }
+        return filtered;
+    }
+    
     public List<MissionData> GetAllMissions()
     {
         return allMissions;
+    }
+    
+    public List<MissionData> GetTotalMissions()
+    {
+        return totalMissions;
+    }
+    
+    public List<MissionData> GetDailyMissions()
+    {
+        return dailyMissions;
+    }
+    
+    public List<MissionData> GetWeeklyMissions()
+    {
+        return weeklyMissions;
     }
     
     // Clase auxiliar para serialización

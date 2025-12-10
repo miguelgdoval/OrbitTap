@@ -104,6 +104,18 @@ public class GameManager : MonoBehaviour
         StartCoroutine(LoadGameOverSceneDelayed());
     }
     
+    /// <summary>
+    /// Se llama cuando se inicia una nueva partida
+    /// </summary>
+    public void OnGameStart()
+    {
+        // Reportar que se inició una partida
+        if (MissionManager.Instance != null)
+        {
+            MissionManager.Instance.ReportProgress(MissionObjectiveType.PlayGames);
+        }
+    }
+    
     private System.Collections.IEnumerator LoadGameOverSceneDelayed()
     {
         // Esperar 1 segundo para que la animación de destrucción se complete

@@ -203,6 +203,34 @@ public class GameInitializer : MonoBehaviour
             GameObject audioManager = new GameObject("AudioManager");
             audioManager.AddComponent<AudioManager>();
         }
+        
+        // Crear MissionManager
+        if (MissionManager.Instance == null)
+        {
+            GameObject missionManager = new GameObject("MissionManager");
+            missionManager.AddComponent<MissionManager>();
+        }
+        
+        // Crear CurrencyManager
+        if (CurrencyManager.Instance == null)
+        {
+            GameObject currencyManager = new GameObject("CurrencyManager");
+            currencyManager.AddComponent<CurrencyManager>();
+        }
+        
+        // Notificar que el juego ha iniciado (para misiones)
+        StartCoroutine(NotifyGameStartDelayed());
+    }
+    
+    private System.Collections.IEnumerator NotifyGameStartDelayed()
+    {
+        // Esperar un frame para asegurar que todos los managers estén listos
+        yield return null;
+        
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnGameStart();
+        }
     }
 
     private void LoadObstaclePrefabs(ObstacleManager om)

@@ -67,6 +67,13 @@ public class MainMenuController : MonoBehaviour
             currencyManager = CurrencyManager.Instance;
         }
         
+        // Crear o encontrar MissionManager
+        if (MissionManager.Instance == null)
+        {
+            GameObject missionObj = new GameObject("MissionManager");
+            missionObj.AddComponent<MissionManager>();
+        }
+        
         CreateUI();
         CreatePlayerDemo();
     }
@@ -137,6 +144,7 @@ public class MainMenuController : MonoBehaviour
         CreatePlaySection();
         CreateSkinsSection();
         CreateShopSection();
+        CreateMissionsSection();
         CreateBottomNavigation();
         
         // Inicialmente mostrar solo Play
@@ -907,30 +915,16 @@ public class MainMenuController : MonoBehaviour
     
     private void CreateMissionsSection()
     {
-        missionsSection = new GameObject("MissionsSection");
-        missionsSection.transform.SetParent(canvas.transform, false);
-        RectTransform missionsRect = missionsSection.AddComponent<RectTransform>();
+        GameObject missionsObj = new GameObject("MissionsSection");
+        missionsObj.transform.SetParent(canvas.transform, false);
+        RectTransform missionsRect = missionsObj.AddComponent<RectTransform>();
         missionsRect.anchorMin = Vector2.zero;
         missionsRect.anchorMax = Vector2.one;
         missionsRect.sizeDelta = Vector2.zero;
+        missionsSection = missionsObj;
         
-        // Placeholder para Missions
-        GameObject placeholder = new GameObject("Placeholder");
-        placeholder.transform.SetParent(missionsSection.transform, false);
-        Text placeholderText = placeholder.AddComponent<Text>();
-        placeholderText.text = "Missions / Challenges\n\nPróximamente...";
-        placeholderText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        placeholderText.fontSize = 32;
-        placeholderText.color = CosmicTheme.NeonCyan;
-        placeholderText.alignment = TextAnchor.MiddleCenter;
-        
-        RectTransform placeholderRect = placeholder.GetComponent<RectTransform>();
-        placeholderRect.anchorMin = new Vector2(0.5f, 0.5f);
-        placeholderRect.anchorMax = new Vector2(0.5f, 0.5f);
-        placeholderRect.pivot = new Vector2(0.5f, 0.5f);
-        placeholderRect.anchoredPosition = Vector2.zero;
-        placeholderRect.sizeDelta = new Vector2(600, 200);
-        
+        // Añadir componente MissionsSection
+        MissionsSection missionsComponent = missionsObj.AddComponent<MissionsSection>();
         missionsSection.SetActive(false);
     }
     

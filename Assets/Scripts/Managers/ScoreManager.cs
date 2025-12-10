@@ -33,6 +33,14 @@ public class ScoreManager : MonoBehaviour
         {
             scoreText.text = Mathf.FloorToInt(score).ToString();
         }
+        
+        // Reportar progreso de puntuación a MissionManager
+        if (MissionManager.Instance != null)
+        {
+            int currentScoreInt = Mathf.FloorToInt(score);
+            MissionManager.Instance.ReportValue(MissionObjectiveType.ReachScore, currentScoreInt);
+            MissionManager.Instance.ReportValue(MissionObjectiveType.SurviveTime, currentScoreInt);
+        }
     }
     
     /// <summary>
@@ -54,6 +62,12 @@ public class ScoreManager : MonoBehaviour
         {
             highScore = currentScore;
             PlayerPrefs.SetInt(HIGH_SCORE_KEY, highScore);
+            
+            // Reportar nuevo récord a MissionManager
+            if (MissionManager.Instance != null)
+            {
+                MissionManager.Instance.ReportValue(MissionObjectiveType.ReachHighScore, highScore);
+            }
         }
         
         PlayerPrefs.Save();

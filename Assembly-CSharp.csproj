@@ -76,6 +76,7 @@
     <Compile Include="Assets/Scripts/Obstacles/ObstacleMover.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundDiagnostics.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundPreset.cs" />
+    <Compile Include="Assets/Scripts/UI/MissionSystem.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundManager.cs" />
     <Compile Include="Assets/Scripts/Player/PlayerOrbit.cs" />
     <Compile Include="Assets/Scripts/Obstacles/DoorFixed.cs" />
@@ -98,6 +99,7 @@
     <Compile Include="Assets/Scripts/UI/SettingsPanel.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundTroubleshooter.cs" />
     <Compile Include="Assets/Scripts/Player/PlanetInnerEnergyController.cs" />
+    <Compile Include="Assets/Scripts/UI/MissionsSection.cs" />
     <Compile Include="Assets/Scripts/Managers/GameManager.cs" />
     <Compile Include="Assets/Scripts/Obstacles/RotatingArc.cs" />
     <Compile Include="Assets/Scripts/UI/MenuNavigation.cs" />

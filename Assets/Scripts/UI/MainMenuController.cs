@@ -1694,7 +1694,8 @@ public class MainMenuController : MonoBehaviour
         Sprite sprite = LoadSpriteResource($"Art/Protagonist/{actualFileName}", actualFileName);
         if (sprite != null)
         {
-            return NormalizePlanetSize(sprite, referenceSize);
+            // No normalizar - usar el sprite tal como está configurado en Unity
+            return sprite;
         }
         
         // Si falla, intentar con el nombre original
@@ -1703,7 +1704,8 @@ public class MainMenuController : MonoBehaviour
             sprite = LoadSpriteResource($"Art/Protagonist/{selectedPlanet}", selectedPlanet);
             if (sprite != null)
             {
-                return NormalizePlanetSize(sprite, referenceSize);
+                // No normalizar - usar el sprite tal como está configurado en Unity
+                return sprite;
             }
         }
         
@@ -1740,7 +1742,8 @@ public class MainMenuController : MonoBehaviour
                 string normalizedSpriteName = normalizeName(spriteName);
                 if (normalizedSpriteName == normalizedSelectedPlanet)
                 {
-                    return NormalizePlanetSize(foundSprite, referenceSize);
+                    // No normalizar - usar el sprite tal como está configurado en Unity
+                    return foundSprite;
                 }
             }
         }

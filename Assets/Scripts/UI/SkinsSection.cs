@@ -757,8 +757,9 @@ public class SkinsSection : BaseMenuSection
         Sprite sprite = Resources.Load<Sprite>(resourcePath);
         if (sprite != null)
         {
-            Debug.Log($"[SkinsSection] Sprite cargado desde Resources: {resourcePath}");
-            return NormalizePlanetSize(sprite, referenceSize);
+            Debug.Log($"[SkinsSection] Sprite cargado desde Resources: {resourcePath} (PPU: {sprite.pixelsPerUnit})");
+            // No normalizar - usar el sprite tal como está configurado en Unity
+            return sprite;
         }
         
         // Intentar cargar como Texture2D
@@ -766,8 +767,8 @@ public class SkinsSection : BaseMenuSection
         if (texture != null)
         {
             Debug.Log($"[SkinsSection] Texture2D cargado desde Resources, creando sprite: {resourcePath}");
-            // Calcular pixelsPerUnit para que tenga el tamaño de referencia
-            float pixelsPerUnit = Mathf.Max(texture.width, texture.height) / referenceSize;
+            // Usar un pixelsPerUnit por defecto razonable (100 es común en Unity)
+            float pixelsPerUnit = 100f;
             return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
         }
         
@@ -843,8 +844,9 @@ public class SkinsSection : BaseMenuSection
                 
                 if (normalizedSpriteName == normalizedPlanetName)
                 {
-                    Debug.Log($"[SkinsSection] ✓ Sprite encontrado por nombre normalizado: {spriteName} (buscado: {planetName})");
-                    return NormalizePlanetSize(foundSprite, referenceSize);
+                    Debug.Log($"[SkinsSection] ✓ Sprite encontrado por nombre normalizado: {spriteName} (buscado: {planetName}, PPU: {foundSprite.pixelsPerUnit})");
+                    // No normalizar - usar el sprite tal como está configurado en Unity
+                    return foundSprite;
                 }
             }
         }
@@ -901,9 +903,9 @@ public class SkinsSection : BaseMenuSection
                         string normalizedSpriteName = normalizeNameEditor(spriteName);
                         if (normalizedSpriteName == normalizedPlanetNameEditor)
                         {
-                            Debug.Log($"[SkinsSection] Sprite encontrado en AssetDatabase por nombre normalizado: {spriteName} (path: {path})");
-                            float referenceSizeEditor = GetReferencePlanetSize();
-                            return NormalizePlanetSize(foundSprite, referenceSizeEditor);
+                            Debug.Log($"[SkinsSection] Sprite encontrado en AssetDatabase por nombre normalizado: {spriteName} (path: {path}, PPU: {foundSprite.pixelsPerUnit})");
+                            // No normalizar - usar el sprite tal como está configurado en Unity
+                            return foundSprite;
                         }
                     }
                 }
@@ -917,17 +919,17 @@ public class SkinsSection : BaseMenuSection
                 sprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path);
                 if (sprite != null)
                 {
-                    Debug.Log($"[SkinsSection] Sprite cargado desde AssetDatabase: {path}");
-                    float referenceSizeEditor = GetReferencePlanetSize();
-                    return NormalizePlanetSize(sprite, referenceSizeEditor);
+                    Debug.Log($"[SkinsSection] Sprite cargado desde AssetDatabase: {path} (PPU: {sprite.pixelsPerUnit})");
+                    // No normalizar - usar el sprite tal como está configurado en Unity
+                    return sprite;
                 }
                 
                 texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(path);
                 if (texture != null)
                 {
                     Debug.Log($"[SkinsSection] Texture2D cargado desde AssetDatabase, creando sprite: {path}");
-                    float referenceSizeEditor = GetReferencePlanetSize();
-                    float pixelsPerUnit = Mathf.Max(texture.width, texture.height) / referenceSizeEditor;
+                    // Usar un pixelsPerUnit por defecto razonable (100 es común en Unity)
+                    float pixelsPerUnit = 100f;
                     return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
                 }
             }

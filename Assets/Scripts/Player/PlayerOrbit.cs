@@ -199,15 +199,16 @@ public class PlayerOrbit : MonoBehaviour
                 Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
                 if (sprite != null)
                 {
-                    return NormalizePlanetSize(sprite, referenceSize);
+                    // No normalizar - usar el sprite tal como está configurado en Unity
+                    return sprite;
                 }
                 
                 // Si no se encuentra como Sprite, intentar como Texture2D
                 Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
                 if (texture != null)
                 {
-                    // Calcular pixelsPerUnit para que tenga el tamaño de referencia
-                    float pixelsPerUnit = Mathf.Max(texture.width, texture.height) / referenceSize;
+                    // Usar un pixelsPerUnit por defecto razonable (100 es común en Unity)
+                    float pixelsPerUnit = 100f;
                     return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
                 }
             }
@@ -227,13 +228,15 @@ public class PlayerOrbit : MonoBehaviour
                     Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
                     if (sprite != null)
                     {
-                        return NormalizePlanetSize(sprite, referenceSize);
+                        // No normalizar - usar el sprite tal como está configurado en Unity
+                        return sprite;
                     }
                     
                     Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
                     if (texture != null)
                     {
-                        float pixelsPerUnit = Mathf.Max(texture.width, texture.height) / referenceSize;
+                        // Usar un pixelsPerUnit por defecto razonable (100 es común en Unity)
+                        float pixelsPerUnit = 100f;
                         return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
                     }
                 }
@@ -267,7 +270,8 @@ public class PlayerOrbit : MonoBehaviour
         Sprite sprite = Resources.Load<Sprite>($"Art/Protagonist/{actualFileName}");
         if (sprite != null)
         {
-            return NormalizePlanetSize(sprite, referenceSize);
+            // No normalizar - usar el sprite tal como está configurado en Unity
+            return sprite;
         }
         
         // Si falla, intentar con el nombre original
@@ -276,7 +280,8 @@ public class PlayerOrbit : MonoBehaviour
             sprite = Resources.Load<Sprite>($"Art/Protagonist/{selectedPlanet}");
             if (sprite != null)
             {
-                return NormalizePlanetSize(sprite, referenceSize);
+                // No normalizar - usar el sprite tal como está configurado en Unity
+                return sprite;
             }
         }
         
@@ -313,7 +318,8 @@ public class PlayerOrbit : MonoBehaviour
                 string normalizedSpriteName = normalizeName(spriteName);
                 if (normalizedSpriteName == normalizedSelectedPlanet)
                 {
-                    return NormalizePlanetSize(foundSprite, referenceSize);
+                    // No normalizar - usar el sprite tal como está configurado en Unity
+                    return foundSprite;
                 }
             }
         }

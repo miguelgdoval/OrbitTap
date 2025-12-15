@@ -174,8 +174,19 @@ public class MissionManager : MonoBehaviour
             Debug.Log("[MissionManager] Creando nueva instancia.");
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            // 1) Crear TODAS las misiones (sin tocar progreso)
             InitializeMissions();
+
+            // 2) Cargar el progreso guardado de PlayerPrefs
             LoadMissionsProgress();
+
+            // 3) Ahora que las listas y el progreso existen, comprobamos si toca reset diario/semanal
+            CheckAndResetTimedMissions();
+
+            // 4) Refrescar lista activa tras posibles resets
+            RefreshActiveMissions();
+
             Debug.Log($"[MissionManager] Inicializado. Total misiones: {allMissions.Count}, Activas: {activeMissions.Count}");
         }
         else
@@ -186,24 +197,21 @@ public class MissionManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Inicializa todas las misiones disponibles
+    /// Inicializa todas las misiones disponibles (solo define los datos base)
     /// </summary>
     private void InitializeMissions()
     {
-        Debug.Log("[MissionManager] Inicializando misiones...");
-        
-        // Verificar y resetear misiones diarias/semanales si es necesario
-        CheckAndResetTimedMissions();
-        
+        Debug.Log("[MissionManager] Inicializando misiones (definición de datos)...");
+
         // Misiones Totales/Permanentes
         InitializeTotalMissions();
-        
+
         // Misiones Diarias (siempre las mismas para todos)
         InitializeDailyMissions();
-        
+
         // Misiones Semanales (siempre las mismas para todos)
         InitializeWeeklyMissions();
-        
+
         RefreshActiveMissions();
         Debug.Log($"[MissionManager] Misiones inicializadas. Total: {allMissions.Count}, Totales: {totalMissions.Count}, Diarias: {dailyMissions.Count}, Semanales: {weeklyMissions.Count}");
     }
@@ -338,19 +346,11 @@ public class MissionManager : MonoBehaviour
     
     /// <summary>
     /// Inicializa las misiones diarias (siempre las mismas para todos)
+    /// Ordenadas por tipo y dificultad: primero puntuación (fácil a difícil), luego jugar partidas
     /// </summary>
     private void InitializeDailyMissions()
     {
-        dailyMissions.Add(new MissionData(
-            "daily_play_3",
-            "Jugador Diario",
-            "Juega 3 partidas hoy",
-            MissionObjectiveType.PlayGames,
-            3,
-            new MissionReward(RewardType.Currency, 50),
-            MissionCategory.Daily
-        ));
-        
+        // Misiones de puntuación (ordenadas de fácil a difícil)
         dailyMissions.Add(new MissionData(
             "daily_score_20",
             "Puntuación Diaria",
@@ -371,6 +371,17 @@ public class MissionManager : MonoBehaviour
             MissionCategory.Daily
         ));
         
+        // Misiones de jugar partidas (ordenadas de fácil a difícil)
+        dailyMissions.Add(new MissionData(
+            "daily_play_3",
+            "Jugador Diario",
+            "Juega 3 partidas hoy",
+            MissionObjectiveType.PlayGames,
+            3,
+            new MissionReward(RewardType.Currency, 50),
+            MissionCategory.Daily
+        ));
+        
         dailyMissions.Add(new MissionData(
             "daily_play_5",
             "Jugador Activo",
@@ -386,19 +397,11 @@ public class MissionManager : MonoBehaviour
     
     /// <summary>
     /// Inicializa las misiones semanales (siempre las mismas para todos)
+    /// Ordenadas por tipo y dificultad: primero puntuación (fácil a difícil), luego jugar partidas
     /// </summary>
     private void InitializeWeeklyMissions()
     {
-        weeklyMissions.Add(new MissionData(
-            "weekly_play_15",
-            "Jugador Semanal",
-            "Juega 15 partidas esta semana",
-            MissionObjectiveType.PlayGames,
-            15,
-            new MissionReward(RewardType.Currency, 200),
-            MissionCategory.Weekly
-        ));
-        
+        // Misiones de puntuación (ordenadas de fácil a difícil)
         weeklyMissions.Add(new MissionData(
             "weekly_score_100",
             "Puntuación Semanal",
@@ -410,22 +413,33 @@ public class MissionManager : MonoBehaviour
         ));
         
         weeklyMissions.Add(new MissionData(
-            "weekly_play_20",
-            "Veterano Semanal",
-            "Juega 20 partidas esta semana",
-            MissionObjectiveType.PlayGames,
-            20,
-            new MissionReward(RewardType.Currency, 300),
-            MissionCategory.Weekly
-        ));
-        
-        weeklyMissions.Add(new MissionData(
             "weekly_score_150",
             "Maestro Semanal",
             "Alcanza 150 puntos en una partida",
             MissionObjectiveType.ReachScore,
             150,
             new MissionReward(RewardType.Currency, 400),
+            MissionCategory.Weekly
+        ));
+        
+        // Misiones de jugar partidas (ordenadas de fácil a difícil)
+        weeklyMissions.Add(new MissionData(
+            "weekly_play_15",
+            "Jugador Semanal",
+            "Juega 15 partidas esta semana",
+            MissionObjectiveType.PlayGames,
+            15,
+            new MissionReward(RewardType.Currency, 200),
+            MissionCategory.Weekly
+        ));
+        
+        weeklyMissions.Add(new MissionData(
+            "weekly_play_20",
+            "Veterano Semanal",
+            "Juega 20 partidas esta semana",
+            MissionObjectiveType.PlayGames,
+            20,
+            new MissionReward(RewardType.Currency, 300),
             MissionCategory.Weekly
         ));
         
@@ -501,12 +515,20 @@ public class MissionManager : MonoBehaviour
     
     /// <summary>
     /// Resetea todas las misiones diarias
+    /// Si una misión no fue reclamada en el período anterior, se pierde completamente
     /// </summary>
     private void ResetDailyMissions()
     {
         Debug.Log("[MissionManager] Reseteando misiones diarias...");
         foreach (var mission in dailyMissions)
         {
+            // Si la misión estaba completada pero no reclamada, se pierde
+            if (mission.isCompleted && !mission.isClaimed)
+            {
+                Debug.Log($"[MissionManager] Misión diaria '{mission.id}' completada pero no reclamada. Se pierde.");
+            }
+            
+            // Resetear completamente: progreso, estado de completado y reclamado
             mission.currentProgress = 0;
             mission.isCompleted = false;
             mission.isClaimed = false;
@@ -517,12 +539,20 @@ public class MissionManager : MonoBehaviour
     
     /// <summary>
     /// Resetea todas las misiones semanales
+    /// Si una misión no fue reclamada en el período anterior, se pierde completamente
     /// </summary>
     private void ResetWeeklyMissions()
     {
         Debug.Log("[MissionManager] Reseteando misiones semanales...");
         foreach (var mission in weeklyMissions)
         {
+            // Si la misión estaba completada pero no reclamada, se pierde
+            if (mission.isCompleted && !mission.isClaimed)
+            {
+                Debug.Log($"[MissionManager] Misión semanal '{mission.id}' completada pero no reclamada. Se pierde.");
+            }
+            
+            // Resetear completamente: progreso, estado de completado y reclamado
             mission.currentProgress = 0;
             mission.isCompleted = false;
             mission.isClaimed = false;

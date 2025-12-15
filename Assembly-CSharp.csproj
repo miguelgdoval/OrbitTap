@@ -68,6 +68,7 @@
     <Compile Include="Assets/Scripts/UI/MainMenuController.cs" />
     <Compile Include="Assets/Scripts/Visual/SacredOrbitRing.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/TestBackgroundSystem.cs" />
+    <Compile Include="Assets/Scripts/UI/LeaderboardSection.cs" />
     <Compile Include="Assets/Scripts/Managers/ObstacleManager.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleBase.cs" />
     <Compile Include="Assets/Scripts/UI/ShopSection.cs" />
@@ -83,6 +84,7 @@
     <Compile Include="Assets/Scripts/Player/PlanetDamageEffect.cs" />
     <Compile Include="Assets/Scripts/Managers/GameInitializer.cs" />
     <Compile Include="Assets/Scripts/Managers/ScoreManager.cs" />
+    <Compile Include="Assets/Scripts/Managers/LocalLeaderboardManager.cs" />
     <Compile Include="Assets/Scripts/Visual/StarParticleTrail.cs" />
     <Compile Include="Assets/Scripts/Managers/OrbitSafetySystem.cs" />
     <Compile Include="Assets/Scripts/UI/SkinsSection.cs" />

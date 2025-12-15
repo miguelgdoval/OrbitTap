@@ -57,6 +57,20 @@ public class ScoreManager : MonoBehaviour
         
         // Save last score
         PlayerPrefs.SetInt("LastScore", currentScore);
+
+        // Asegurar que existe LocalLeaderboardManager incluso si se entra directo a la escena de juego
+        if (LocalLeaderboardManager.Instance == null)
+        {
+            GameObject leaderboardObj = new GameObject("LocalLeaderboardManager");
+            leaderboardObj.AddComponent<LocalLeaderboardManager>();
+        }
+
+        // Añadir siempre la puntuación actual al leaderboard local
+        if (LocalLeaderboardManager.Instance != null)
+        {
+            Debug.Log($"[ScoreManager] Añadiendo puntuación {currentScore} al leaderboard local");
+            LocalLeaderboardManager.Instance.AddScore(currentScore);
+        }
         
         if (currentScore > highScore)
         {

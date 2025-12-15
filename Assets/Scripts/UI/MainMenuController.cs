@@ -88,6 +88,13 @@ public class MainMenuController : MonoBehaviour
             missionObj.AddComponent<MissionManager>();
         }
         
+        // Crear o encontrar LocalLeaderboardManager
+        if (LocalLeaderboardManager.Instance == null)
+        {
+            GameObject leaderboardObj = new GameObject("LocalLeaderboardManager");
+            leaderboardObj.AddComponent<LocalLeaderboardManager>();
+        }
+        
         CreateUI();
         CreatePlayerDemo();
         
@@ -276,6 +283,7 @@ public class MainMenuController : MonoBehaviour
         CreateSkinsSection();
         CreateShopSection();
         CreateMissionsSection();
+        CreateLeaderboardSection();
         CreateBottomNavigation();
         
         // Inicialmente mostrar solo Play
@@ -1071,23 +1079,8 @@ public class MainMenuController : MonoBehaviour
         leaderboardRect.anchorMax = Vector2.one;
         leaderboardRect.sizeDelta = Vector2.zero;
         
-        // Placeholder para Leaderboard
-        GameObject placeholder = new GameObject("Placeholder");
-        placeholder.transform.SetParent(leaderboardSection.transform, false);
-        Text placeholderText = placeholder.AddComponent<Text>();
-        placeholderText.text = "Leaderboard\n\nPróximamente...";
-        placeholderText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        placeholderText.fontSize = 32;
-        placeholderText.color = CosmicTheme.NeonCyan;
-        placeholderText.alignment = TextAnchor.MiddleCenter;
-        
-        RectTransform placeholderRect = placeholder.GetComponent<RectTransform>();
-        placeholderRect.anchorMin = new Vector2(0.5f, 0.5f);
-        placeholderRect.anchorMax = new Vector2(0.5f, 0.5f);
-        placeholderRect.pivot = new Vector2(0.5f, 0.5f);
-        placeholderRect.anchoredPosition = Vector2.zero;
-        placeholderRect.sizeDelta = new Vector2(600, 200);
-        
+        // Añadir componente LeaderboardSection
+        LeaderboardSection leaderboardComponent = leaderboardSection.AddComponent<LeaderboardSection>();
         leaderboardSection.SetActive(false);
     }
     

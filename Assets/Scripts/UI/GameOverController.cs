@@ -45,7 +45,23 @@ public class GameOverController : MonoBehaviour
         Debug.Log("GameOverController: Actualizando UI...");
         UpdateUI();
         
+        // Mostrar anuncio intersticial después de un delay
+        StartCoroutine(ShowAdAfterDelay(1f));
+        
         Debug.Log("GameOverController: Inicialización completa");
+    }
+    
+    /// <summary>
+    /// Muestra un anuncio intersticial después de un delay
+    /// </summary>
+    private System.Collections.IEnumerator ShowAdAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        
+        if (AdManager.Instance != null)
+        {
+            AdManager.Instance.ShowInterstitialAd();
+        }
     }
 
     private void CreateUI()

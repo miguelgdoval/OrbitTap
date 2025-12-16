@@ -95,6 +95,13 @@ public class MainMenuController : MonoBehaviour
             leaderboardObj.AddComponent<LocalLeaderboardManager>();
         }
         
+        // Crear o encontrar AdManager
+        if (AdManager.Instance == null)
+        {
+            GameObject adManagerObj = new GameObject("AdManager");
+            adManagerObj.AddComponent<AdManager>();
+        }
+        
         CreateUI();
         CreatePlayerDemo();
         

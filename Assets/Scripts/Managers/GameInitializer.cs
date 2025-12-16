@@ -218,6 +218,13 @@ public class GameInitializer : MonoBehaviour
             currencyManager.AddComponent<CurrencyManager>();
         }
         
+        // Crear AdManager
+        if (AdManager.Instance == null)
+        {
+            GameObject adManager = new GameObject("AdManager");
+            adManager.AddComponent<AdManager>();
+        }
+        
         // Notificar que el juego ha iniciado (para misiones)
         StartCoroutine(NotifyGameStartDelayed());
     }

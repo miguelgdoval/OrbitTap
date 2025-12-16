@@ -74,9 +74,12 @@ public class ShopSection : BaseMenuSection
         yPos = CreateShopItem(content.transform, "STARTER BUNDLE", "Exclusive Skin + 500 ⭐", "€1.49", 
             "70% OFF", yPos, Color.cyan, () => OnStarterBundleClicked());
         
-        // Remove Ads
-        yPos = CreateShopItem(content.transform, "REMOVE ADS", "No more interruptions", "€2.99", 
-            "", yPos, CosmicTheme.SoftGold, () => OnRemoveAdsClicked());
+        // Remove Ads (solo mostrar si no está comprado)
+        if (AdManager.Instance == null || !AdManager.Instance.HasRemovedAds())
+        {
+            yPos = CreateShopItem(content.transform, "REMOVE ADS", "No more interruptions", "€2.99", 
+                "", yPos, CosmicTheme.SoftGold, () => OnRemoveAdsClicked());
+        }
         
         // Paquetes de monedas
         yPos = CreateShopItem(content.transform, "500 ⭐", "Stellar Shards", "€0.99", 
@@ -235,8 +238,30 @@ public class ShopSection : BaseMenuSection
     
     private void OnRemoveAdsClicked()
     {
-        Debug.Log("Remove Ads clicked - TODO: Implement purchase");
-        // TODO: Implementar compra IAP
+        Debug.Log("Remove Ads clicked");
+        
+        // Verificar si ya tiene Remove Ads comprado
+        if (AdManager.Instance != null && AdManager.Instance.HasRemovedAds())
+        {
+            Debug.Log("Remove Ads ya está activo");
+            // Aquí podrías mostrar un mensaje al usuario
+            return;
+        }
+        
+        // TODO: Aquí irá la lógica de IAP cuando la implementes
+        // Por ahora, simulamos la compra para testing
+        if (AdManager.Instance != null)
+        {
+            AdManager.Instance.SetRemoveAdsPurchased();
+            Debug.Log("Remove Ads activado (modo test - implementar IAP real)");
+            
+            // Mostrar mensaje al usuario (puedes crear un sistema de notificaciones o popup)
+            // Por ahora solo un log
+        }
+        else
+        {
+            Debug.LogWarning("AdManager no encontrado");
+        }
     }
     
     private void OnCurrencyPackClicked(int amount, float price)

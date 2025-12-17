@@ -102,8 +102,18 @@ public class MainMenuController : MonoBehaviour
             adManagerObj.AddComponent<AdManager>();
         }
         
+        // Crear PrivacyPolicyManager
+        if (PrivacyPolicyManager.Instance == null)
+        {
+            GameObject privacyObj = new GameObject("PrivacyPolicyManager");
+            privacyObj.AddComponent<PrivacyPolicyManager>();
+        }
+        
         CreateUI();
         CreatePlayerDemo();
+        
+        // Mostrar política de privacidad si es la primera vez (después de crear UI)
+        StartCoroutine(ShowPrivacyPolicyDelayed());
         
         // Suscribirse a eventos de misiones para actualizar badges
         if (MissionManager.Instance != null)
@@ -133,6 +143,17 @@ public class MainMenuController : MonoBehaviour
     {
         yield return new WaitForSeconds(0.5f);
         UpdateMissionsBadge();
+    }
+    
+    private System.Collections.IEnumerator ShowPrivacyPolicyDelayed()
+    {
+        // Esperar a que la UI esté completamente creada
+        yield return new WaitForSeconds(0.5f);
+        
+        if (PrivacyPolicyManager.Instance != null)
+        {
+            PrivacyPolicyManager.Instance.ShowPrivacyPolicyFirstTime();
+        }
     }
     
     private void OnMissionCompleted(MissionData mission)

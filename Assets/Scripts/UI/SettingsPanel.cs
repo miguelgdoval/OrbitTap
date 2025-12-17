@@ -603,6 +603,15 @@ public class SettingsPanel : MonoBehaviour
         creditsRect.sizeDelta = new Vector2(400, 60);
         yPos -= 80f;
         
+        // Botón Privacy Policy
+        CreateNeonButton(section.transform, "Privacy Policy", yPos, () => {
+            if (PrivacyPolicyManager.Instance != null)
+            {
+                PrivacyPolicyManager.Instance.OpenPrivacyPolicyURL();
+            }
+        });
+        yPos -= 80f;
+        
         // Botón Restore Purchases
         CreateNeonButton(section.transform, "Restore Purchases", yPos, () => {
             Debug.Log("Restore Purchases clicked - TODO: Implement");

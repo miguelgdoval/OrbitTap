@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using static LogHelper;
 
 /// <summary>
 /// Sistema universal de destrucción para obstáculos.
@@ -113,13 +114,13 @@ public class ObstacleDestructionController : MonoBehaviour
         {
             // SIEMPRE usar la posición pasada - es la posición correcta del obstáculo
             finalPosition = collisionPosition.Value;
-            Debug.Log($"ObstacleDestructionController: Usando posición pasada: {finalPosition} (exactPosition del hijo era: {exactPosition})");
+            Log($"ObstacleDestructionController: Usando posición pasada: {finalPosition} (exactPosition del hijo era: {exactPosition})");
         }
         else
         {
             // Si no se pasó punto, usar la posición actual del obstáculo
             finalPosition = exactPosition;
-            Debug.Log($"ObstacleDestructionController: No se pasó posición, usando exactPosition: {finalPosition}");
+            Log($"ObstacleDestructionController: No se pasó posición, usando exactPosition: {finalPosition}");
         }
         
         // Guardar la posición exacta
@@ -165,7 +166,7 @@ public class ObstacleDestructionController : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"Error al crear fragmentos/partículas: {e.Message}");
+            LogError($"Error al crear fragmentos/partículas: {e.Message}");
         }
         
         // Mantener posición fija durante toda la secuencia
@@ -283,7 +284,7 @@ public class ObstacleDestructionController : MonoBehaviour
         Vector3 particlePosition = originalPosition;
         
         // DEBUG: Verificar posición de partículas
-        Debug.Log($"ObstacleDestructionController: Creando partículas en posición: {particlePosition}, originalPosition: {originalPosition}, transform.position: {transform.position}");
+        Log($"ObstacleDestructionController: Creando partículas en posición: {particlePosition}, originalPosition: {originalPosition}, transform.position: {transform.position}");
         
         // Crear GameObject para las partículas en la posición exacta
         GameObject particleSystemObj = new GameObject("ObstacleExplosionParticles");
@@ -387,7 +388,7 @@ public class ObstacleDestructionController : MonoBehaviour
     {
         if (spriteRenderer == null || spriteRenderer.sprite == null)
         {
-            Debug.LogWarning("ObstacleDestructionController: No sprite available for fragments");
+            LogWarning("ObstacleDestructionController: No sprite available for fragments");
             return;
         }
         
@@ -454,11 +455,11 @@ public class ObstacleDestructionController : MonoBehaviour
         
         if (visiblePixelCount == 0)
         {
-            Debug.LogWarning("ObstacleDestructionController: La textura legible no tiene píxeles visibles. El sprite puede no haberse renderizado correctamente.");
+            LogWarning("ObstacleDestructionController: La textura legible no tiene píxeles visibles. El sprite puede no haberse renderizado correctamente.");
         }
         else
         {
-            Debug.Log($"ObstacleDestructionController: Textura legible creada con {visiblePixelCount} píxeles visibles de {allPixels.Length} totales.");
+            Log($"ObstacleDestructionController: Textura legible creada con {visiblePixelCount} píxeles visibles de {allPixels.Length} totales.");
         }
         
         RenderTexture.active = previous;
@@ -471,7 +472,7 @@ public class ObstacleDestructionController : MonoBehaviour
         // Verificar que la textura se creó correctamente
         if (readableTexture == null || readableTexture.width == 0 || readableTexture.height == 0)
         {
-            Debug.LogError("ObstacleDestructionController: No se pudo crear la textura legible para fragmentos");
+            LogError("ObstacleDestructionController: No se pudo crear la textura legible para fragmentos");
             if (readableTexture != null) Destroy(readableTexture);
             return;
         }
@@ -490,7 +491,7 @@ public class ObstacleDestructionController : MonoBehaviour
         
         if (!hasContent)
         {
-            Debug.LogWarning("ObstacleDestructionController: La textura legible está vacía. Los fragmentos pueden no verse correctamente.");
+            LogWarning("ObstacleDestructionController: La textura legible está vacía. Los fragmentos pueden no verse correctamente.");
         }
         
         // Crear fragmentos con tamaños y posiciones variadas
@@ -639,7 +640,7 @@ public class ObstacleDestructionController : MonoBehaviour
             // Activar fragmento
             fragment.SetActive(true);
             
-            Debug.Log($"ObstacleDestructionController: Fragmento {fragmentsCreated + 1} creado en posición {fragment.transform.position}, escala {fragment.transform.localScale}, velocidad {rb.velocity}, sortingOrder {fragRenderer.sortingOrder}");
+            Log($"ObstacleDestructionController: Fragmento {fragmentsCreated + 1} creado en posición {fragment.transform.position}, escala {fragment.transform.localScale}, velocidad {rb.velocity}, sortingOrder {fragRenderer.sortingOrder}");
             
             // Animar fragmento: hacerlo más pequeño hasta desaparecer
             StartCoroutine(AnimateFragmentScale(fragment, initialScale, Random.Range(0.4f, 0.6f)));
@@ -647,7 +648,7 @@ public class ObstacleDestructionController : MonoBehaviour
             fragmentsCreated++;
         }
         
-        Debug.Log($"ObstacleDestructionController: Creados {fragmentsCreated} fragmentos del sprite (saltados: {fragmentsSkipped})");
+        Log($"ObstacleDestructionController: Creados {fragmentsCreated} fragmentos del sprite (saltados: {fragmentsSkipped})");
         
         // Limpiar textura legible
         Destroy(readableTexture);

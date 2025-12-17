@@ -2,6 +2,7 @@ using UnityEngine;
 #if UNITY_ADS
 using UnityEngine.Advertisements;
 #endif
+using static LogHelper;
 
 /// <summary>
 /// Manager para gestionar los anuncios del juego usando Unity Ads
@@ -15,7 +16,7 @@ public class AdManager : MonoBehaviour
     
     [Header("Unity Ads Configuration")]
     [SerializeField] private string androidGameId = "YOUR_ANDROID_GAME_ID";
-    [SerializeField] private string iosGameId = "YOUR_IOS_GAME_ID";
+    [SerializeField] private string iosGameId = "YOUR_IOS_GAME_ID"; // Reservado para futura implementación iOS
     [SerializeField] private bool testMode = true; // Cambiar a false en producción
     
     [Header("Ad Frequency Settings")]
@@ -74,7 +75,7 @@ public class AdManager : MonoBehaviour
             return;
         }
         
-        Debug.Log($"[AdManager] Inicializando Unity Ads con Game ID: {gameId}");
+        Log($"[AdManager] Inicializando Unity Ads con Game ID: {gameId}");
         Advertisement.Initialize(gameId, testMode, this);
 #else
         Debug.LogWarning("[AdManager] Unity Ads no está instalado. Instala el paquete desde Package Manager.");
@@ -96,7 +97,7 @@ public class AdManager : MonoBehaviour
     {
         PlayerPrefs.SetInt(REMOVE_ADS_KEY, 1);
         PlayerPrefs.Save();
-        Debug.Log("[AdManager] Remove Ads comprado. Los anuncios ya no se mostrarán.");
+        Log("[AdManager] Remove Ads comprado. Los anuncios ya no se mostrarán.");
     }
     
     /// <summary>
@@ -106,7 +107,7 @@ public class AdManager : MonoBehaviour
     {
         if (HasRemovedAds())
         {
-            Debug.Log("[AdManager] Anuncios desactivados (Remove Ads comprado)");
+            Log("[AdManager] Anuncios desactivados (Remove Ads comprado)");
             return;
         }
         
@@ -117,7 +118,7 @@ public class AdManager : MonoBehaviour
             return;
         }
         
-        Debug.Log("[AdManager] Cargando anuncio intersticial...");
+        Log("[AdManager] Cargando anuncio intersticial...");
         Advertisement.Load(INTERSTITIAL_AD_ID, this);
 #else
         Debug.LogWarning("[AdManager] Unity Ads no está instalado.");
@@ -145,7 +146,7 @@ public class AdManager : MonoBehaviour
             // Verificar puntuación mínima solo si no se fuerza el anuncio
             if (gameScore > 0 && gameScore < minGameScore)
             {
-                Debug.Log($"[AdManager] Puntuación muy baja ({gameScore}), no se muestra anuncio (partidas: {gamesPlayedSinceLastAd}/{gamesBetweenAds})");
+                Log($"[AdManager] Puntuación muy baja ({gameScore}), no se muestra anuncio (partidas: {gamesPlayedSinceLastAd}/{gamesBetweenAds})");
                 // Incrementar contador aunque no se muestre anuncio
                 PlayerPrefs.SetInt(GAMES_SINCE_AD_KEY, gamesPlayedSinceLastAd);
                 PlayerPrefs.Save();
@@ -157,13 +158,13 @@ public class AdManager : MonoBehaviour
             {
                 PlayerPrefs.SetInt(GAMES_SINCE_AD_KEY, gamesPlayedSinceLastAd);
                 PlayerPrefs.Save();
-                Debug.Log($"[AdManager] Partidas desde último anuncio: {gamesPlayedSinceLastAd}/{gamesBetweenAds}");
+                Log($"[AdManager] Partidas desde último anuncio: {gamesPlayedSinceLastAd}/{gamesBetweenAds}");
                 return false;
             }
         }
         else
         {
-            Debug.Log($"[AdManager] Forzando anuncio después de {gamesPlayedSinceLastAd} partidas (ignorando puntuación mínima)");
+            Log($"[AdManager] Forzando anuncio después de {gamesPlayedSinceLastAd} partidas (ignorando puntuación mínima)");
         }
         
         // Verificar cooldown temporal (usar timestamp Unix para persistir entre sesiones)
@@ -174,14 +175,14 @@ public class AdManager : MonoBehaviour
         if (timeSinceLastAd < minTimeBetweenAds && lastAdTimestamp > 0 && !forceAd)
         {
             float timeRemaining = (float)(minTimeBetweenAds - timeSinceLastAd);
-            Debug.Log($"[AdManager] Cooldown activo. Tiempo restante: {timeRemaining:F1}s");
+            Log($"[AdManager] Cooldown activo. Tiempo restante: {timeRemaining:F1}s");
             // No incrementar contador si está en cooldown, para que cuente cuando pase el tiempo
             return false;
         }
         
         // NO resetear contador aquí - se reseteará cuando el anuncio realmente se muestre
         // Esto evita que se resetee si el anuncio falla al mostrarse
-        Debug.Log("[AdManager] Condiciones cumplidas, se intentará mostrar anuncio intersticial");
+        Log("[AdManager] Condiciones cumplidas, se intentará mostrar anuncio intersticial");
         return true;
     }
     
@@ -194,7 +195,7 @@ public class AdManager : MonoBehaviour
         PlayerPrefs.SetInt(GAMES_SINCE_AD_KEY, 0);
         PlayerPrefs.SetString(LAST_AD_TIME_KEY, currentTime.ToString());
         PlayerPrefs.Save();
-        Debug.Log("[AdManager] Contadores de anuncios reseteados");
+        Log("[AdManager] Contadores de anuncios reseteados");
     }
     
     /// <summary>
@@ -204,7 +205,7 @@ public class AdManager : MonoBehaviour
     {
         if (HasRemovedAds())
         {
-            Debug.Log("[AdManager] Anuncios desactivados (Remove Ads comprado)");
+            Log("[AdManager] Anuncios desactivados (Remove Ads comprado)");
             return;
         }
         
@@ -228,7 +229,7 @@ public class AdManager : MonoBehaviour
         
         // Limpiar flag de pendiente ya que vamos a mostrar el anuncio
         pendingInterstitialShow = false;
-        Debug.Log("[AdManager] Mostrando anuncio intersticial...");
+        Log("[AdManager] Mostrando anuncio intersticial...");
         Advertisement.Show(INTERSTITIAL_AD_ID, this);
 #else
         Debug.LogWarning("[AdManager] Unity Ads no está instalado.");
@@ -242,7 +243,7 @@ public class AdManager : MonoBehaviour
     {
         if (HasRemovedAds())
         {
-            Debug.Log("[AdManager] Anuncios desactivados (Remove Ads comprado)");
+            Log("[AdManager] Anuncios desactivados (Remove Ads comprado)");
             return;
         }
         
@@ -253,7 +254,7 @@ public class AdManager : MonoBehaviour
             return;
         }
         
-        Debug.Log("[AdManager] Cargando anuncio con recompensa...");
+        Log("[AdManager] Cargando anuncio con recompensa...");
         Advertisement.Load(REWARDED_AD_ID, this);
 #else
         Debug.LogWarning("[AdManager] Unity Ads no está instalado.");
@@ -267,7 +268,7 @@ public class AdManager : MonoBehaviour
     {
         if (HasRemovedAds())
         {
-            Debug.Log("[AdManager] Anuncios desactivados (Remove Ads comprado)");
+            Log("[AdManager] Anuncios desactivados (Remove Ads comprado)");
             return;
         }
         
@@ -279,7 +280,7 @@ public class AdManager : MonoBehaviour
             return;
         }
         
-        Debug.Log("[AdManager] Mostrando anuncio con recompensa...");
+        Log("[AdManager] Mostrando anuncio con recompensa...");
         Advertisement.Show(REWARDED_AD_ID, this);
 #else
         Debug.LogWarning("[AdManager] Unity Ads no está instalado.");
@@ -291,7 +292,7 @@ public class AdManager : MonoBehaviour
     
     public void OnInitializationComplete()
     {
-        Debug.Log("[AdManager] Unity Ads inicializado correctamente");
+        Log("[AdManager] Unity Ads inicializado correctamente");
         isInitialized = true;
         
         // Cargar anuncios después de la inicialización
@@ -310,7 +311,7 @@ public class AdManager : MonoBehaviour
     
     public void OnUnityAdsAdLoaded(string adUnitId)
     {
-        Debug.Log($"[AdManager] Anuncio cargado: {adUnitId}");
+        Log($"[AdManager] Anuncio cargado: {adUnitId}");
         
         if (adUnitId == INTERSTITIAL_AD_ID)
         {
@@ -320,7 +321,7 @@ public class AdManager : MonoBehaviour
             // Si había un anuncio pendiente de mostrar, mostrarlo ahora
             if (pendingInterstitialShow)
             {
-                Debug.Log("[AdManager] Anuncio ahora está listo, mostrándolo automáticamente...");
+                Log("[AdManager] Anuncio ahora está listo, mostrándolo automáticamente...");
                 pendingInterstitialShow = false;
                 ShowInterstitialAd();
             }
@@ -367,7 +368,7 @@ public class AdManager : MonoBehaviour
     
     public void OnUnityAdsShowStart(string adUnitId)
     {
-        Debug.Log($"[AdManager] Anuncio mostrado: {adUnitId}");
+        Log($"[AdManager] Anuncio mostrado: {adUnitId}");
         
         // Resetear contadores cuando el anuncio realmente se muestra
         if (adUnitId == INTERSTITIAL_AD_ID)
@@ -382,12 +383,12 @@ public class AdManager : MonoBehaviour
     
     public void OnUnityAdsShowClick(string adUnitId)
     {
-        Debug.Log($"[AdManager] Anuncio clickeado: {adUnitId}");
+        Log($"[AdManager] Anuncio clickeado: {adUnitId}");
     }
     
     public void OnUnityAdsShowComplete(string adUnitId, UnityAdsShowCompletionState showCompletionState)
     {
-        Debug.Log($"[AdManager] Anuncio completado: {adUnitId}, Estado: {showCompletionState}");
+        Log($"[AdManager] Anuncio completado: {adUnitId}, Estado: {showCompletionState}");
         
         // Reanudar el juego
         Time.timeScale = 1f;
@@ -418,7 +419,7 @@ public class AdManager : MonoBehaviour
     /// </summary>
     private void OnRewardedAdCompleted()
     {
-        Debug.Log("[AdManager] Recompensa otorgada por ver anuncio");
+        Log("[AdManager] Recompensa otorgada por ver anuncio");
         // Aquí puedes dar monedas, vidas extra, etc.
         if (CurrencyManager.Instance != null)
         {

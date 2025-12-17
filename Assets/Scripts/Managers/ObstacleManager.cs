@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using static LogHelper;
 
 public class ObstacleManager : MonoBehaviour
 {
@@ -78,7 +79,7 @@ public class ObstacleManager : MonoBehaviour
 
     private void Start()
     {
-        Debug.Log("ObstacleManager: Start() called");
+        Log("ObstacleManager: Start() called");
         
         mainCamera = Camera.main;
         if (mainCamera == null)
@@ -92,7 +93,7 @@ public class ObstacleManager : MonoBehaviour
         }
         else
         {
-            Debug.Log($"ObstacleManager: Camera found - Orthographic: {mainCamera.orthographic}, Size: {mainCamera.orthographicSize}");
+            Log($"ObstacleManager: Camera found - Orthographic: {mainCamera.orthographic}, Size: {mainCamera.orthographicSize}");
         }
 
         if (center == null)
@@ -141,7 +142,7 @@ public class ObstacleManager : MonoBehaviour
             if (spiralFragmentPrefab != null) loadedPrefabs++;
             if (zigzagBarrierPrefab != null) loadedPrefabs++;
             
-            Debug.Log($"ObstacleManager: Loaded {loadedPrefabs}/8 prefabs (Max difficulty: {maxDifficultyLevel})");
+            Log($"ObstacleManager: Loaded {loadedPrefabs}/8 prefabs (Max difficulty: {maxDifficultyLevel})");
         }
 
         // Inicializar intervalos actuales
@@ -173,7 +174,7 @@ public class ObstacleManager : MonoBehaviour
         // Spawnear el primer obstáculo inmediatamente
         nextSpawnTime = 0f;
         timeSinceLastSpawn = 0f;
-        Debug.Log($"ObstacleManager: First obstacle will spawn immediately");
+        Log($"ObstacleManager: First obstacle will spawn immediately");
     }
 
     private void LoadPrefabsIfNeeded()
@@ -271,7 +272,7 @@ public class ObstacleManager : MonoBehaviour
                 string presetName = GetPresetNameFromDifficulty(currentLevel);
                 BackgroundSystemAPI.SetPreset(presetName, 1f); // Transición de 1 segundo
                 lastDifficultyLevel = currentLevel;
-                Debug.Log($"ObstacleManager: Difficulty level changed to {currentLevel}, background updated to {presetName}");
+                Log($"ObstacleManager: Difficulty level changed to {currentLevel}, background updated to {presetName}");
             }
             
             timeSinceDifficultyUpdate = 0f;
@@ -299,17 +300,17 @@ public class ObstacleManager : MonoBehaviour
             
             if (timeSinceLastSpawn >= adjustedSpawnTime && obstaclesOnScreen < maxObstaclesOnScreen)
             {
-                Debug.Log($"ObstacleManager: Attempting to spawn obstacle (time: {timeSinceLastSpawn}, threshold: {adjustedSpawnTime}, obstacles on screen: {obstaclesOnScreen}/{maxObstaclesOnScreen})");
+                Log($"ObstacleManager: Attempting to spawn obstacle (time: {timeSinceLastSpawn}, threshold: {adjustedSpawnTime}, obstacles on screen: {obstaclesOnScreen}/{maxObstaclesOnScreen})");
                 SpawnObstacle();
                 timeSinceLastSpawn = 0f;
                 nextSpawnTime = Random.Range(currentMinSpawnInterval, currentMaxSpawnInterval);
-                Debug.Log($"ObstacleManager: Next spawn in {nextSpawnTime} seconds (min: {currentMinSpawnInterval:F2}, max: {currentMaxSpawnInterval:F2})");
+                Log($"ObstacleManager: Next spawn in {nextSpawnTime} seconds (min: {currentMinSpawnInterval:F2}, max: {currentMaxSpawnInterval:F2})");
             }
             else if (obstaclesOnScreen >= maxObstaclesOnScreen)
             {
                 // Esperar un poco más antes de intentar spawnear de nuevo
                 timeSinceLastSpawn = adjustedSpawnTime - 0.5f; // Reducir el tiempo para intentar de nuevo pronto
-                Debug.Log($"ObstacleManager: Max obstacles reached ({obstaclesOnScreen}/{maxObstaclesOnScreen}), waiting...");
+                Log($"ObstacleManager: Max obstacles reached ({obstaclesOnScreen}/{maxObstaclesOnScreen}), waiting...");
             }
         }
     }
@@ -350,7 +351,7 @@ public class ObstacleManager : MonoBehaviour
                     {
                         lastNearMissTime = Time.time;
                         breathingRoomTimer = breathingRoomDuration;
-                        Debug.Log($"ObstacleManager: Near miss detected! Breathing room activated for {breathingRoomDuration}s");
+                        Log($"ObstacleManager: Near miss detected! Breathing room activated for {breathingRoomDuration}s");
                     }
                 }
             }

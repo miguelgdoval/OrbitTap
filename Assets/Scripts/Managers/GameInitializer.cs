@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using static LogHelper;
 
 /// <summary>
 /// Este script inicializa todos los elementos del juego en tiempo de ejecución
@@ -61,7 +62,7 @@ public class GameInitializer : MonoBehaviour
             catch
             {
                 // Si el tag no existe, usar el nombre del GameObject como alternativa
-                Debug.LogWarning("Tag 'Player' no encontrado. Usando nombre del GameObject para detección.");
+                LogWarning("Tag 'Player' no encontrado. Usando nombre del GameObject para detección.");
             }
             
             player.transform.position = new Vector3(2, 0, 0);
@@ -295,7 +296,7 @@ public class GameInitializer : MonoBehaviour
         {
             // Usar bounds.size que da el tamaño real en unidades del mundo (considera el rect visible del sprite)
             float worldSize = Mathf.Max(referenceSprite.bounds.size.x, referenceSprite.bounds.size.y);
-            Debug.Log($"[GameInitializer] Tamaño de referencia calculado: {worldSize} (Asteroide Errante bounds: {referenceSprite.bounds.size}, rect: {referenceSprite.rect.width}x{referenceSprite.rect.height}, PPU: {referenceSprite.pixelsPerUnit})");
+            Log($"[GameInitializer] Tamaño de referencia calculado: {worldSize} (Asteroide Errante bounds: {referenceSprite.bounds.size}, rect: {referenceSprite.rect.width}x{referenceSprite.rect.height}, PPU: {referenceSprite.pixelsPerUnit})");
             return worldSize;
         }
         
@@ -337,12 +338,12 @@ public class GameInitializer : MonoBehaviour
         // Calcular el tamaño actual del sprite en unidades del mundo usando bounds (tamaño visual real)
         float currentWorldSize = Mathf.Max(originalSprite.bounds.size.x, originalSprite.bounds.size.y);
         
-        Debug.Log($"[GameInitializer] Normalizando sprite '{originalSprite.name}': Tamaño actual (bounds): {currentWorldSize}, Objetivo: {targetWorldSize}, PPU actual: {originalSprite.pixelsPerUnit}, Rect: {originalSprite.rect.width}x{originalSprite.rect.height}, Bounds: {originalSprite.bounds.size}");
+        Log($"[GameInitializer] Normalizando sprite '{originalSprite.name}': Tamaño actual (bounds): {currentWorldSize}, Objetivo: {targetWorldSize}, PPU actual: {originalSprite.pixelsPerUnit}, Rect: {originalSprite.rect.width}x{originalSprite.rect.height}, Bounds: {originalSprite.bounds.size}");
         
         // Si ya tiene el tamaño correcto (con un margen de error pequeño), no hacer nada
         if (Mathf.Abs(currentWorldSize - targetWorldSize) < 0.01f)
         {
-            Debug.Log($"[GameInitializer] Sprite '{originalSprite.name}' ya tiene el tamaño correcto, no se normaliza");
+            Log($"[GameInitializer] Sprite '{originalSprite.name}' ya tiene el tamaño correcto, no se normaliza");
             return originalSprite;
         }
         
@@ -350,7 +351,7 @@ public class GameInitializer : MonoBehaviour
         // Usamos el tamaño del rect en píxeles dividido por el tamaño objetivo en unidades del mundo
         float newPixelsPerUnit = Mathf.Max(originalSprite.rect.width, originalSprite.rect.height) / targetWorldSize;
         
-        Debug.Log($"[GameInitializer] Normalizando sprite '{originalSprite.name}': Nuevo PPU: {newPixelsPerUnit} (anterior: {originalSprite.pixelsPerUnit})");
+        Log($"[GameInitializer] Normalizando sprite '{originalSprite.name}': Nuevo PPU: {newPixelsPerUnit} (anterior: {originalSprite.pixelsPerUnit})");
         
         // Crear un nuevo sprite con el pixelsPerUnit ajustado
         return Sprite.Create(
@@ -388,7 +389,7 @@ public class GameInitializer : MonoBehaviour
         Sprite sprite = Resources.Load<Sprite>($"Art/Protagonist/{actualFileName}");
         if (sprite != null)
         {
-            Debug.Log($"[GameInitializer] Sprite cargado: {actualFileName} (PPU: {sprite.pixelsPerUnit})");
+            Log($"[GameInitializer] Sprite cargado: {actualFileName} (PPU: {sprite.pixelsPerUnit})");
             // No normalizar - usar el sprite tal como está configurado en Unity
             return sprite;
         }
@@ -399,7 +400,7 @@ public class GameInitializer : MonoBehaviour
             sprite = Resources.Load<Sprite>($"Art/Protagonist/{selectedPlanet}");
             if (sprite != null)
             {
-                Debug.Log($"[GameInitializer] Sprite cargado: {selectedPlanet} (PPU: {sprite.pixelsPerUnit})");
+                Log($"[GameInitializer] Sprite cargado: {selectedPlanet} (PPU: {sprite.pixelsPerUnit})");
                 // No normalizar - usar el sprite tal como está configurado en Unity
                 return sprite;
             }
@@ -458,7 +459,7 @@ public class GameInitializer : MonoBehaviour
                 string normalizedSpriteName = normalizeName(spriteName);
                 if (normalizedSpriteName == normalizedSelectedPlanet)
                 {
-                    Debug.Log($"[GameInitializer] Sprite encontrado por nombre normalizado: {spriteName} (PPU: {foundSprite.pixelsPerUnit})");
+                    Log($"[GameInitializer] Sprite encontrado por nombre normalizado: {spriteName} (PPU: {foundSprite.pixelsPerUnit})");
                     // No normalizar - usar el sprite tal como está configurado en Unity
                     return foundSprite;
                 }
@@ -481,7 +482,7 @@ public class GameInitializer : MonoBehaviour
                 sprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path);
                 if (sprite != null)
                 {
-                    Debug.Log($"[GameInitializer] Sprite cargado desde AssetDatabase: {path} (PPU: {sprite.pixelsPerUnit})");
+                    Log($"[GameInitializer] Sprite cargado desde AssetDatabase: {path} (PPU: {sprite.pixelsPerUnit})");
                     // No normalizar - usar el sprite tal como está configurado en Unity
                     return sprite;
                 }
@@ -497,7 +498,7 @@ public class GameInitializer : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning($"No se pudo cargar el sprite del planeta: {e.Message}");
+            LogWarning($"No se pudo cargar el sprite del planeta: {e.Message}");
         }
         #endif
         

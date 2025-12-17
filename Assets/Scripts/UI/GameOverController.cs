@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using static LogHelper;
 
 public class GameOverController : MonoBehaviour
 {
@@ -12,12 +13,12 @@ public class GameOverController : MonoBehaviour
 
     private void Awake()
     {
-        Debug.Log("GameOverController: Awake() llamado");
+        Log("GameOverController: Awake() llamado");
     }
 
     private void Start()
     {
-        Debug.Log("GameOverController: Start() llamado - createUIAtRuntime = " + createUIAtRuntime);
+        Log("GameOverController: Start() llamado - createUIAtRuntime = " + createUIAtRuntime);
         
         // Configurar fondo cósmico
         if (GetComponent<CosmicBackground>() == null)
@@ -28,12 +29,12 @@ public class GameOverController : MonoBehaviour
         // Forzar creación de UI si no existe
         if (createUIAtRuntime || GameObject.Find("Canvas") == null)
         {
-            Debug.Log("GameOverController: Creando UI...");
+            Log("GameOverController: Creando UI...");
             CreateUI();
         }
         else
         {
-            Debug.Log("GameOverController: Canvas ya existe, buscando componentes...");
+            Log("GameOverController: Canvas ya existe, buscando componentes...");
             GameObject canvas = GameObject.Find("Canvas");
             if (canvas != null)
             {
@@ -42,13 +43,13 @@ public class GameOverController : MonoBehaviour
             }
         }
         
-        Debug.Log("GameOverController: Actualizando UI...");
+        Log("GameOverController: Actualizando UI...");
         UpdateUI();
         
         // Verificar si se debe mostrar anuncio intersticial (con lógica inteligente)
         CheckAndShowInterstitialAd();
         
-        Debug.Log("GameOverController: Inicialización completa");
+        Log("GameOverController: Inicialización completa");
     }
     
     /// <summary>
@@ -58,24 +59,24 @@ public class GameOverController : MonoBehaviour
     {
         if (AdManager.Instance == null)
         {
-            Debug.LogWarning("[GameOverController] AdManager.Instance es null");
+            LogWarning("[GameOverController] AdManager.Instance es null");
             return;
         }
         
         // Obtener puntuación de la partida (el score es igual al tiempo sobrevivido en segundos)
         int gameScore = PlayerPrefs.GetInt("LastScore", 0);
-        Debug.Log($"[GameOverController] Verificando anuncio. Puntuación: {gameScore}");
+        Log($"[GameOverController] Verificando anuncio. Puntuación: {gameScore}");
         
         // Verificar si se debe mostrar el anuncio
         if (AdManager.Instance.ShouldShowInterstitialAd(gameScore))
         {
-            Debug.Log("[GameOverController] Condiciones cumplidas, programando anuncio para mostrar en 1 segundo...");
+            Log("[GameOverController] Condiciones cumplidas, programando anuncio para mostrar en 1 segundo...");
             // Mostrar anuncio después de un pequeño delay
             StartCoroutine(ShowAdAfterDelay(1f));
         }
         else
         {
-            Debug.Log("[GameOverController] No se mostrará anuncio (condiciones no cumplidas)");
+            Log("[GameOverController] No se mostrará anuncio (condiciones no cumplidas)");
         }
     }
     
@@ -88,12 +89,12 @@ public class GameOverController : MonoBehaviour
         
         if (AdManager.Instance != null)
         {
-            Debug.Log("[GameOverController] Intentando mostrar anuncio intersticial...");
+            Log("[GameOverController] Intentando mostrar anuncio intersticial...");
             AdManager.Instance.ShowInterstitialAd();
         }
         else
         {
-            Debug.LogWarning("[GameOverController] AdManager.Instance es null al intentar mostrar anuncio");
+            LogWarning("[GameOverController] AdManager.Instance es null al intentar mostrar anuncio");
         }
     }
 
@@ -103,7 +104,7 @@ public class GameOverController : MonoBehaviour
         GameObject canvas = GameObject.Find("Canvas");
         if (canvas == null)
         {
-            Debug.Log("GameOverController: Creando Canvas...");
+            Log("GameOverController: Creando Canvas...");
             canvas = new GameObject("Canvas");
             Canvas canvasComponent = canvas.AddComponent<Canvas>();
             canvasComponent.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -115,11 +116,11 @@ public class GameOverController : MonoBehaviour
             canvasRect.anchorMin = Vector2.zero;
             canvasRect.anchorMax = Vector2.one;
             canvasRect.sizeDelta = Vector2.zero;
-            Debug.Log("GameOverController: Canvas creado");
+            Log("GameOverController: Canvas creado");
         }
         else
         {
-            Debug.Log("GameOverController: Canvas ya existe");
+            Log("GameOverController: Canvas ya existe");
         }
 
         // Create Score Text

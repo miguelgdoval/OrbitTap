@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 
 /// <summary>
 /// Hace que los obstáculos brillen aleatoriamente para darles variación visual
@@ -26,7 +27,7 @@ public class ObstacleGlow : MonoBehaviour
         
         if (spriteRenderers.Length == 0)
         {
-            Debug.LogWarning($"ObstacleGlow: No SpriteRenderers found on {gameObject.name}");
+            LogWarning($"ObstacleGlow: No SpriteRenderers found on {gameObject.name}");
             return;
         }
 

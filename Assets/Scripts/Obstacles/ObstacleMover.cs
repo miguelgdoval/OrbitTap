@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 
 /// <summary>
 /// Componente que mueve los obstáculos en una dirección y los destruye cuando salen de la pantalla
@@ -22,7 +23,7 @@ public class ObstacleMover : MonoBehaviour
             mainCamera = FindObjectOfType<Camera>();
         }
         
-        Debug.Log($"ObstacleMover: {gameObject.name} started at {transform.position}, direction: {direction}, speed: {speed}");
+        Log($"ObstacleMover: {gameObject.name} started at {transform.position}, direction: {direction}, speed: {speed}");
     }
 
     private void Update()
@@ -38,7 +39,7 @@ public class ObstacleMover : MonoBehaviour
         // Verificar que la dirección sea válida
         if (direction == Vector2.zero)
         {
-            Debug.LogWarning($"ObstacleMover: Direction is zero for {gameObject.name}");
+            LogWarning($"ObstacleMover: Direction is zero for {gameObject.name}");
             return;
         }
 
@@ -51,7 +52,7 @@ public class ObstacleMover : MonoBehaviour
         if (!hasEnteredScreen && IsOnScreen())
         {
             hasEnteredScreen = true;
-            Debug.Log($"ObstacleMover: {gameObject.name} entered screen at {transform.position}");
+            Log($"ObstacleMover: {gameObject.name} entered screen at {transform.position}");
         }
 
         // Solo destruir si ya entró a la pantalla y ahora está fuera
@@ -62,7 +63,7 @@ public class ObstacleMover : MonoBehaviour
             // Verificar si hay un ObstacleDestructionController en proceso de destrucción
             if (destructionController == null || !destructionController.IsDestroying())
             {
-                Debug.Log($"ObstacleMover: Destroying {gameObject.name} - out of screen after entering");
+                Log($"ObstacleMover: Destroying {gameObject.name} - out of screen after entering");
                 Destroy(gameObject);
             }
         }

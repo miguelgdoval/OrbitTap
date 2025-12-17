@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using static LogHelper;
 
 public class MissionsSection : MonoBehaviour
 {
@@ -23,7 +24,7 @@ public class MissionsSection : MonoBehaviour
     
     private void Start()
     {
-        Debug.Log("[MissionsSection] Start llamado. activeInHierarchy: " + gameObject.activeInHierarchy);
+        Log("[MissionsSection] Start llamado. activeInHierarchy: " + gameObject.activeInHierarchy);
         // Solo inicializar si el GameObject está activo
         if (gameObject.activeInHierarchy && !isInitialized)
         {
@@ -33,7 +34,7 @@ public class MissionsSection : MonoBehaviour
     
     private void OnEnable()
     {
-        Debug.Log("[MissionsSection] OnEnable llamado. isInitialized: " + isInitialized);
+        Log("[MissionsSection] OnEnable llamado. isInitialized: " + isInitialized);
         
         // Inicializar cuando se active el GameObject
         if (!isInitialized)
@@ -43,7 +44,7 @@ public class MissionsSection : MonoBehaviour
         else if (contentPanel == null)
         {
             // Si ya estaba inicializado pero la UI fue destruida, recrearla
-            Debug.Log("[MissionsSection] UI destruida, recreando...");
+            Log("[MissionsSection] UI destruida, recreando...");
             CreateUI();
             RefreshMissions();
             UpdateTabBadges();
@@ -59,7 +60,7 @@ public class MissionsSection : MonoBehaviour
         {
             // Forzar actualización del layout
             Canvas.ForceUpdateCanvases();
-            Debug.Log($"[MissionsSection] ScrollRect verificado después de OnEnable. Content hijos: {scrollRect.content.childCount}");
+            Log($"[MissionsSection] ScrollRect verificado después de OnEnable. Content hijos: {scrollRect.content.childCount}");
         }
     }
     
@@ -67,11 +68,11 @@ public class MissionsSection : MonoBehaviour
     {
         if (isInitialized && contentPanel != null) 
         {
-            Debug.Log("[MissionsSection] Ya inicializado, saltando...");
+            Log("[MissionsSection] Ya inicializado, saltando...");
             return;
         }
         
-        Debug.Log("[MissionsSection] Inicializando...");
+        Log("[MissionsSection] Inicializando...");
         
         missionManager = MissionManager.Instance;
         if (missionManager == null)
@@ -80,7 +81,7 @@ public class MissionsSection : MonoBehaviour
             // Intentar crear el MissionManager si no existe
             GameObject missionManagerObj = new GameObject("MissionManager");
             missionManager = missionManagerObj.AddComponent<MissionManager>();
-            Debug.Log("[MissionsSection] MissionManager creado.");
+            Log("[MissionsSection] MissionManager creado.");
         }
         
         if (missionManager == null)
@@ -90,10 +91,10 @@ public class MissionsSection : MonoBehaviour
             return;
         }
         
-        Debug.Log("[MissionsSection] MissionManager encontrado. Creando UI...");
+        Log("[MissionsSection] MissionManager encontrado. Creando UI...");
         CreateUI();
         
-        Debug.Log("[MissionsSection] Refrescando misiones...");
+        Log("[MissionsSection] Refrescando misiones...");
         RefreshMissions();
         
         // Suscribirse a eventos

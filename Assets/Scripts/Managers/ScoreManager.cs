@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using static LogHelper;
 
 public class ScoreManager : MonoBehaviour
 {
@@ -68,7 +69,7 @@ public class ScoreManager : MonoBehaviour
         // Añadir siempre la puntuación actual al leaderboard local
         if (LocalLeaderboardManager.Instance != null)
         {
-            Debug.Log($"[ScoreManager] Añadiendo puntuación {currentScore} al leaderboard local");
+            Log($"[ScoreManager] Añadiendo puntuación {currentScore} al leaderboard local");
             LocalLeaderboardManager.Instance.AddScore(currentScore);
         }
         

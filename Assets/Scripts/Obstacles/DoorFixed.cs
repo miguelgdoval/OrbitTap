@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 
 [ObstacleDifficulty(ObstacleDifficultyLevel.Easy)]
 public class DoorFixed : ObstacleBase, IObstacleDifficulty
@@ -14,9 +15,9 @@ public class DoorFixed : ObstacleBase, IObstacleDifficulty
 
     private void Start()
     {
-        Debug.Log($"DoorFixed: Start() called for {gameObject.name} at {transform.position}");
+        Log($"DoorFixed: Start() called for {gameObject.name} at {transform.position}");
         CreateDoor();
-        Debug.Log($"DoorFixed: CreateDoor() completed for {gameObject.name}");
+        Log($"DoorFixed: CreateDoor() completed for {gameObject.name}");
     }
 
     private void CreateDoor()

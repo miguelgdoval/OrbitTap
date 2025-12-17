@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using static LogHelper;
 
 /// <summary>
 /// Sistema de efectos de daño fracturado para planetas.
@@ -51,7 +52,7 @@ public class PlanetDamageEffect : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer == null)
         {
-            Debug.LogWarning($"PlanetDamageEffect: No SpriteRenderer found on {gameObject.name}. Component disabled.");
+            LogWarning($"PlanetDamageEffect: No SpriteRenderer found on {gameObject.name}. Component disabled.");
             enabled = false;
             return;
         }
@@ -74,7 +75,7 @@ public class PlanetDamageEffect : MonoBehaviour
         
         if (damageShader == null)
         {
-            Debug.LogWarning("PlanetDamageEffect: Shader 'Custom/FracturedDamageShader' not found. Damage effects will not work.");
+            LogWarning("PlanetDamageEffect: Shader 'Custom/FracturedDamageShader' not found. Damage effects will not work.");
             return;
         }
         

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Text;
+using static LogHelper;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -244,7 +245,7 @@ public class PlayerOrbit : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning($"No se pudo cargar el sprite del planeta: {e.Message}");
+            LogWarning($"No se pudo cargar el sprite del planeta: {e.Message}");
         }
         return null;
     }

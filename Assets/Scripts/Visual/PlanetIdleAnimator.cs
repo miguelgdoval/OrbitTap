@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 
 /// <summary>
 /// Sistema universal de animación idle para planetas.
@@ -59,7 +60,7 @@ public class PlanetIdleAnimator : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer == null)
         {
-            Debug.LogWarning($"PlanetIdleAnimator: No SpriteRenderer found on {gameObject.name}. Component disabled.");
+            LogWarning($"PlanetIdleAnimator: No SpriteRenderer found on {gameObject.name}. Component disabled.");
             enabled = false;
             return;
         }
@@ -95,7 +96,7 @@ public class PlanetIdleAnimator : MonoBehaviour
         
         if (planetShader == null)
         {
-            Debug.LogWarning("PlanetIdleAnimator: Shader 'Custom/FakePlanetLight' or 'Custom/FakePlanetLightURP' not found. Using default material. The fake lighting effect will not work, but rotation and breathing will still function.");
+            LogWarning("PlanetIdleAnimator: Shader 'Custom/FakePlanetLight' or 'Custom/FakePlanetLightURP' not found. Using default material. The fake lighting effect will not work, but rotation and breathing will still function.");
             // Continuar sin el shader - las otras animaciones seguirán funcionando
             return;
         }

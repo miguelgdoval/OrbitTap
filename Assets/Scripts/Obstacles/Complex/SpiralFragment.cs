@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 
 /// <summary>
 /// Fragmento que rota mientras se mueve, creando una trayectoria espiral
@@ -22,14 +23,14 @@ public class SpiralFragment : ObstacleBase, IObstacleDifficulty
 
     private void Start()
     {
-        Debug.Log($"SpiralFragment: Start() called for {gameObject.name} at {transform.position}");
+        Log($"SpiralFragment: Start() called for {gameObject.name} at {transform.position}");
         initialPosition = transform.position;
         CreateFragment();
         
         // Obtener el ObstacleMover para modificar su dirección
         mover = GetComponent<ObstacleMover>();
         
-        Debug.Log($"SpiralFragment: CreateFragment() completed for {gameObject.name}");
+        Log($"SpiralFragment: CreateFragment() completed for {gameObject.name}");
     }
 
     private void Update()

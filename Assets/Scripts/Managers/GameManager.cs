@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static LogHelper;
 
 public class GameManager : MonoBehaviour
 {
@@ -79,20 +80,20 @@ public class GameManager : MonoBehaviour
     {
         if (isGameOver)
         {
-            Debug.Log("GameManager: GameOver ya fue llamado, ignorando...");
+            Log("GameManager: GameOver ya fue llamado, ignorando...");
             return;
         }
 
-        Debug.Log("GameManager: GameOver() llamado");
+        Log("GameManager: GameOver() llamado");
         isGameOver = true;
         
         // Detener la puntuación y guardar
         ScoreManager scoreManager = FindObjectOfType<ScoreManager>();
         if (scoreManager != null)
         {
-            Debug.Log("GameManager: Deteniendo puntuación...");
+            Log("GameManager: Deteniendo puntuación...");
             scoreManager.StopScoring();
-            Debug.Log("GameManager: Guardando puntuación...");
+            Log("GameManager: Guardando puntuación...");
             scoreManager.SaveHighScore();
         }
         else
@@ -136,13 +137,13 @@ public class GameManager : MonoBehaviour
     
     public static void CleanupGameScene()
     {
-        Debug.Log("GameManager: Limpiando elementos de la escena Game...");
+        Log("GameManager: Limpiando elementos de la escena Game...");
         
         // Destruir CosmicBackground de la escena Game
         GameObject cosmicBg = GameObject.Find("CosmicBackground");
         if (cosmicBg != null)
         {
-            Debug.Log("GameManager: Destruyendo CosmicBackground...");
+            Log("GameManager: Destruyendo CosmicBackground...");
             Destroy(cosmicBg);
         }
         
@@ -150,7 +151,7 @@ public class GameManager : MonoBehaviour
         BackgroundManager bgManager = FindObjectOfType<BackgroundManager>();
         if (bgManager != null)
         {
-            Debug.Log("GameManager: Limpiando BackgroundManager...");
+            Log("GameManager: Limpiando BackgroundManager...");
             // Destruir el BackgroundManager completo (incluye todas las capas)
             Destroy(bgManager.gameObject);
         }
@@ -162,12 +163,12 @@ public class GameManager : MonoBehaviour
             GameObject obj = GameObject.Find(name);
             if (obj != null)
             {
-                Debug.Log($"GameManager: Destruyendo objeto: {name}");
+                Log($"GameManager: Destruyendo objeto: {name}");
                 Destroy(obj);
             }
         }
         
-        Debug.Log("GameManager: Limpieza completada");
+        Log("GameManager: Limpieza completada");
     }
 
     public void RestartGame()

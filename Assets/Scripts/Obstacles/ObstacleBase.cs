@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -11,7 +12,7 @@ public class ObstacleBase : MonoBehaviour
         if (GetComponent<ObstacleDestructionController>() == null)
         {
             ObstacleDestructionController destructionController = gameObject.AddComponent<ObstacleDestructionController>();
-            Debug.Log($"ObstacleBase: Agregado ObstacleDestructionController a {gameObject.name}");
+            Log($"ObstacleBase: Agregado ObstacleDestructionController a {gameObject.name}");
         }
     }
     
@@ -56,7 +57,7 @@ public class ObstacleBase : MonoBehaviour
             }
             catch (System.Exception e)
             {
-                Debug.LogWarning($"No se pudo cargar el sprite {spriteName}: {e.Message}");
+                LogWarning($"No se pudo cargar el sprite {spriteName}: {e.Message}");
             }
         }
         #endif
@@ -96,7 +97,7 @@ public class ObstacleBase : MonoBehaviour
         {
             hasTriggeredCollision = true; // Marcar para evitar múltiples triggers
             
-            Debug.Log("Colisión detectada con Player! GameObject: " + collision.gameObject.name);
+            Log("Colisión detectada con Player! GameObject: " + collision.gameObject.name);
             
             // CRÍTICO: Detener PlayerOrbit INMEDIATAMENTE antes de cualquier otra cosa
             GameObject playerObj = collision.gameObject;
@@ -129,7 +130,7 @@ public class ObstacleBase : MonoBehaviour
             transform.position = obstacleExactPosition; // Forzar posición fija
             
             // DEBUG: Verificar posición
-            Debug.Log($"ObstacleBase: Posición del OBSTÁCULO capturada - {obstacleExactPosition}, transform.position: {transform.position}");
+            Log($"ObstacleBase: Posición del OBSTÁCULO capturada - {obstacleExactPosition}, transform.position: {transform.position}");
             
             // Destruir el obstáculo primero, pasando la posición del OBSTÁCULO (donde está)
             ObstacleDestructionController obstacleDestruction = GetComponent<ObstacleDestructionController>();
@@ -137,7 +138,7 @@ public class ObstacleBase : MonoBehaviour
             {
                 // Si no existe, agregarlo ahora
                 obstacleDestruction = gameObject.AddComponent<ObstacleDestructionController>();
-                Debug.Log($"ObstacleBase: ObstacleDestructionController agregado dinámicamente a {gameObject.name} (OnTriggerEnter2D)");
+                Log($"ObstacleBase: ObstacleDestructionController agregado dinámicamente a {gameObject.name} (OnTriggerEnter2D)");
             }
             if (obstacleDestruction != null)
             {
@@ -145,7 +146,7 @@ public class ObstacleBase : MonoBehaviour
             }
             else
             {
-                Debug.LogError($"ObstacleBase: No se pudo obtener o crear ObstacleDestructionController para {gameObject.name} (OnTriggerEnter2D)");
+                LogError($"ObstacleBase: No se pudo obtener o crear ObstacleDestructionController para {gameObject.name} (OnTriggerEnter2D)");
             }
             
             // Activar animación de destrucción del planeta INMEDIATAMENTE
@@ -164,7 +165,7 @@ public class ObstacleBase : MonoBehaviour
             }
             else
             {
-                Debug.LogError("GameManager.Instance es null!");
+                LogError("GameManager.Instance es null!");
             }
         }
     }
@@ -179,7 +180,7 @@ public class ObstacleBase : MonoBehaviour
         
         if (isPlayer)
         {
-            Debug.Log("Colisión normal detectada con Player!");
+            Log("Colisión normal detectada con Player!");
             
             // CRÍTICO: Capturar la posición del PLANETA (punto de colisión real)
             // La explosión debe ocurrir donde está el planeta, que es el punto de contacto
@@ -202,7 +203,7 @@ public class ObstacleBase : MonoBehaviour
             }
             
             // DEBUG: Verificar posición
-            Debug.Log($"ObstacleBase: Usando posición del PLANETA como punto de colisión (OnCollisionEnter2D) - {collisionPoint}");
+            Log($"ObstacleBase: Usando posición del PLANETA como punto de colisión (OnCollisionEnter2D) - {collisionPoint}");
             
             // Destruir el obstáculo primero, pasando la posición del PLANETA (punto de contacto real)
             ObstacleDestructionController obstacleDestruction = GetComponent<ObstacleDestructionController>();
@@ -210,7 +211,7 @@ public class ObstacleBase : MonoBehaviour
             {
                 // Si no existe, agregarlo ahora
                 obstacleDestruction = gameObject.AddComponent<ObstacleDestructionController>();
-                Debug.Log($"ObstacleBase: ObstacleDestructionController agregado dinámicamente a {gameObject.name} (OnCollisionEnter2D)");
+                Log($"ObstacleBase: ObstacleDestructionController agregado dinámicamente a {gameObject.name} (OnCollisionEnter2D)");
             }
             if (obstacleDestruction != null)
             {
@@ -218,7 +219,7 @@ public class ObstacleBase : MonoBehaviour
             }
             else
             {
-                Debug.LogError($"ObstacleBase: No se pudo obtener o crear ObstacleDestructionController para {gameObject.name} (OnCollisionEnter2D)");
+                LogError($"ObstacleBase: No se pudo obtener o crear ObstacleDestructionController para {gameObject.name} (OnCollisionEnter2D)");
             }
             
             // Activar animación de destrucción del planeta con la posición exacta del planeta

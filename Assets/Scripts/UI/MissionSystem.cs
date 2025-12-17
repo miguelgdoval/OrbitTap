@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using static LogHelper;
 
 /// <summary>
 /// Categorías de misiones
@@ -168,10 +169,10 @@ public class MissionManager : MonoBehaviour
     
     private void Awake()
     {
-        Debug.Log("[MissionManager] Awake llamado.");
+        Log("[MissionManager] Awake llamado.");
         if (Instance == null)
         {
-            Debug.Log("[MissionManager] Creando nueva instancia.");
+            Log("[MissionManager] Creando nueva instancia.");
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
@@ -187,11 +188,11 @@ public class MissionManager : MonoBehaviour
             // 4) Refrescar lista activa tras posibles resets
             RefreshActiveMissions();
 
-            Debug.Log($"[MissionManager] Inicializado. Total misiones: {allMissions.Count}, Activas: {activeMissions.Count}");
+            Log($"[MissionManager] Inicializado. Total misiones: {allMissions.Count}, Activas: {activeMissions.Count}");
         }
         else
         {
-            Debug.Log("[MissionManager] Instancia ya existe, destruyendo duplicado.");
+            Log("[MissionManager] Instancia ya existe, destruyendo duplicado.");
             Destroy(gameObject);
         }
     }
@@ -201,7 +202,7 @@ public class MissionManager : MonoBehaviour
     /// </summary>
     private void InitializeMissions()
     {
-        Debug.Log("[MissionManager] Inicializando misiones (definición de datos)...");
+        Log("[MissionManager] Inicializando misiones (definición de datos)...");
 
         // Misiones Totales/Permanentes
         InitializeTotalMissions();
@@ -213,7 +214,7 @@ public class MissionManager : MonoBehaviour
         InitializeWeeklyMissions();
 
         RefreshActiveMissions();
-        Debug.Log($"[MissionManager] Misiones inicializadas. Total: {allMissions.Count}, Totales: {totalMissions.Count}, Diarias: {dailyMissions.Count}, Semanales: {weeklyMissions.Count}");
+        Log($"[MissionManager] Misiones inicializadas. Total: {allMissions.Count}, Totales: {totalMissions.Count}, Diarias: {dailyMissions.Count}, Semanales: {weeklyMissions.Count}");
     }
     
     /// <summary>
@@ -519,13 +520,13 @@ public class MissionManager : MonoBehaviour
     /// </summary>
     private void ResetDailyMissions()
     {
-        Debug.Log("[MissionManager] Reseteando misiones diarias...");
+        Log("[MissionManager] Reseteando misiones diarias...");
         foreach (var mission in dailyMissions)
         {
             // Si la misión estaba completada pero no reclamada, se pierde
             if (mission.isCompleted && !mission.isClaimed)
             {
-                Debug.Log($"[MissionManager] Misión diaria '{mission.id}' completada pero no reclamada. Se pierde.");
+                Log($"[MissionManager] Misión diaria '{mission.id}' completada pero no reclamada. Se pierde.");
             }
             
             // Resetear completamente: progreso, estado de completado y reclamado
@@ -543,13 +544,13 @@ public class MissionManager : MonoBehaviour
     /// </summary>
     private void ResetWeeklyMissions()
     {
-        Debug.Log("[MissionManager] Reseteando misiones semanales...");
+        Log("[MissionManager] Reseteando misiones semanales...");
         foreach (var mission in weeklyMissions)
         {
             // Si la misión estaba completada pero no reclamada, se pierde
             if (mission.isCompleted && !mission.isClaimed)
             {
-                Debug.Log($"[MissionManager] Misión semanal '{mission.id}' completada pero no reclamada. Se pierde.");
+                Log($"[MissionManager] Misión semanal '{mission.id}' completada pero no reclamada. Se pierde.");
             }
             
             // Resetear completamente: progreso, estado de completado y reclamado
@@ -795,7 +796,7 @@ public class MissionManager : MonoBehaviour
     public List<MissionData> GetActiveMissions()
     {
         RefreshActiveMissions();
-        Debug.Log($"[MissionManager] GetActiveMissions llamado. Retornando {activeMissions.Count} misiones.");
+        Log($"[MissionManager] GetActiveMissions llamado. Retornando {activeMissions.Count} misiones.");
         return activeMissions;
     }
     

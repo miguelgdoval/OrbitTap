@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 
 /// <summary>
 /// Helper script para configurar correctamente los fondos al inicio
@@ -31,7 +32,7 @@ public class BackgroundSetupHelper : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer == null || spriteRenderer.sprite == null)
         {
-            Debug.LogWarning($"BackgroundSetupHelper: {gameObject.name} no tiene SpriteRenderer o sprite asignado");
+            LogWarning($"BackgroundSetupHelper: {gameObject.name} no tiene SpriteRenderer o sprite asignado");
             return;
         }
         
@@ -43,7 +44,7 @@ public class BackgroundSetupHelper : MonoBehaviour
         
         if (mainCamera == null)
         {
-            Debug.LogWarning("BackgroundSetupHelper: No se encontró la cámara");
+            LogWarning("BackgroundSetupHelper: No se encontró la cámara");
             return;
         }
         
@@ -72,7 +73,7 @@ public class BackgroundSetupHelper : MonoBehaviour
             transform.localScale = new Vector3(scale, scale, 1f);
         }
         
-        Debug.Log($"BackgroundSetupHelper: {gameObject.name} configurado correctamente (Scale: {transform.localScale}, Z: {zPosition})");
+        Log($"BackgroundSetupHelper: {gameObject.name} configurado correctamente (Scale: {transform.localScale}, Z: {zPosition})");
     }
     
     /// <summary>

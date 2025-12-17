@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 
 /// <summary>
 /// Anillo que pulsa (expande y contrae) creando ventanas de oportunidad para el jugador
@@ -25,10 +26,10 @@ public class PulsatingRing : ObstacleBase, IObstacleDifficulty
 
     private void Start()
     {
-        Debug.Log($"PulsatingRing: Start() called for {gameObject.name} at {transform.position}");
+        Log($"PulsatingRing: Start() called for {gameObject.name} at {transform.position}");
         CreateRing();
         currentRadius = minRadius;
-        Debug.Log($"PulsatingRing: CreateRing() completed for {gameObject.name}");
+        Log($"PulsatingRing: CreateRing() completed for {gameObject.name}");
     }
 
     private void Update()

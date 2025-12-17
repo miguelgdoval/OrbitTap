@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using static LogHelper;
 
 /// <summary>
 /// Entrada individual del leaderboard
@@ -32,7 +33,7 @@ public class LocalLeaderboardManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
             LoadLeaderboard();
-            Debug.Log($"[LocalLeaderboardManager] Inicializado. Entradas cargadas: {entries.Count}");
+            Log($"[LocalLeaderboardManager] Inicializado. Entradas cargadas: {entries.Count}");
         }
         else
         {
@@ -66,7 +67,7 @@ public class LocalLeaderboardManager : MonoBehaviour
         entries = entries.OrderByDescending(e => e.score).Take(MAX_ENTRIES).ToList();
         
         SaveLeaderboard();
-        Debug.Log($"[LocalLeaderboardManager] Puntuación añadida: {score} puntos. Total entradas: {entries.Count}");
+        Log($"[LocalLeaderboardManager] Puntuación añadida: {score} puntos. Total entradas: {entries.Count}");
     }
     
     /// <summary>

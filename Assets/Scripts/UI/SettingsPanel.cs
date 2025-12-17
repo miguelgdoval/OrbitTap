@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
+using static LogHelper;
 
 /// <summary>
 /// Panel de opciones mejorado con diseño Space Neon Minimal
@@ -614,7 +615,7 @@ public class SettingsPanel : MonoBehaviour
         
         // Botón Restore Purchases
         CreateNeonButton(section.transform, "Restore Purchases", yPos, () => {
-            Debug.Log("Restore Purchases clicked - TODO: Implement");
+            Log("Restore Purchases clicked - TODO: Implement");
         });
         
         sectionContent[SettingsSection.Legal] = section;

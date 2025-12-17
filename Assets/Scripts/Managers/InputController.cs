@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 
 public class InputController : MonoBehaviour
 {
@@ -9,7 +10,7 @@ public class InputController : MonoBehaviour
         player = FindObjectOfType<PlayerOrbit>();
         if (player == null)
         {
-            Debug.LogError("InputController: PlayerOrbit not found!");
+            LogError("InputController: PlayerOrbit not found!");
         }
     }
 

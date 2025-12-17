@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 
 /// <summary>
 /// Componente que detecta colisiones en los hijos de los obstáculos
@@ -31,7 +32,7 @@ public class ObstacleCollisionDetector : MonoBehaviour
         {
             hasTriggeredCollision = true; // Marcar para evitar múltiples triggers
             
-            Debug.Log("Colisión detectada en hijo del obstáculo! GameObject: " + gameObject.name);
+            Log("Colisión detectada en hijo del obstáculo! GameObject: " + gameObject.name);
             
             // CRÍTICO: Detener PlayerOrbit INMEDIATAMENTE antes de cualquier otra cosa
             GameObject playerObj = collision.gameObject;
@@ -58,14 +59,14 @@ public class ObstacleCollisionDetector : MonoBehaviour
                 collisionPoint = obstacleExactPosition;
                 
                 // DEBUG: Verificar posición
-                Debug.Log($"ObstacleCollisionDetector: Posición del PADRE (obstáculo) capturada - {obstacleExactPosition}");
+                Log($"ObstacleCollisionDetector: Posición del PADRE (obstáculo) capturada - {obstacleExactPosition}");
             }
             else
             {
                 // Si no hay padre, usar la posición de este GameObject
                 Vector3 obstacleExactPosition = transform.position;
                 collisionPoint = obstacleExactPosition;
-                Debug.Log($"ObstacleCollisionDetector: Posición del obstáculo (sin padre) capturada - {obstacleExactPosition}");
+                Log($"ObstacleCollisionDetector: Posición del obstáculo (sin padre) capturada - {obstacleExactPosition}");
             }
             
             // CRÍTICO: Destruir solo este segmento hijo, NO el padre completo
@@ -106,7 +107,7 @@ public class ObstacleCollisionDetector : MonoBehaviour
             else
             {
                 // Fallback: destruir directamente este GameObject
-                Debug.LogWarning($"ObstacleCollisionDetector: No se pudo crear ObstacleDestructionController para {gameObject.name}, destruyendo directamente");
+                LogWarning($"ObstacleCollisionDetector: No se pudo crear ObstacleDestructionController para {gameObject.name}, destruyendo directamente");
                 if (parent != null)
                 {
                     transform.SetParent(null);
@@ -132,7 +133,7 @@ public class ObstacleCollisionDetector : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogError("ObstacleCollisionDetector: GameManager.Instance es null!");
+                    LogError("ObstacleCollisionDetector: GameManager.Instance es null!");
             }
         }
     }
@@ -148,7 +149,7 @@ public class ObstacleCollisionDetector : MonoBehaviour
         {
             hasTriggeredCollision = true; // Marcar para evitar múltiples triggers
             
-            Debug.Log("Colisión normal detectada en hijo del obstáculo! GameObject: " + gameObject.name);
+            Log("Colisión normal detectada en hijo del obstáculo! GameObject: " + gameObject.name);
             
             // CRÍTICO: Detener PlayerOrbit INMEDIATAMENTE antes de cualquier otra cosa
             GameObject playerObj = collision.gameObject;
@@ -175,14 +176,14 @@ public class ObstacleCollisionDetector : MonoBehaviour
                 collisionPoint = obstacleExactPosition;
                 
                 // DEBUG: Verificar posición
-                Debug.Log($"ObstacleCollisionDetector: Posición del PADRE (obstáculo) capturada (OnCollisionEnter2D) - {obstacleExactPosition}");
+                Log($"ObstacleCollisionDetector: Posición del PADRE (obstáculo) capturada (OnCollisionEnter2D) - {obstacleExactPosition}");
             }
             else
             {
                 // Si no hay padre, usar la posición de este GameObject
                 Vector3 obstacleExactPosition = transform.position;
                 collisionPoint = obstacleExactPosition;
-                Debug.Log($"ObstacleCollisionDetector: Posición del obstáculo (sin padre) capturada (OnCollisionEnter2D) - {obstacleExactPosition}");
+                Log($"ObstacleCollisionDetector: Posición del obstáculo (sin padre) capturada (OnCollisionEnter2D) - {obstacleExactPosition}");
             }
             
             // CRÍTICO: Destruir solo este segmento hijo, NO el padre completo
@@ -222,7 +223,7 @@ public class ObstacleCollisionDetector : MonoBehaviour
             else
             {
                 // Fallback: destruir directamente este GameObject
-                Debug.LogWarning($"ObstacleCollisionDetector: No se pudo crear ObstacleDestructionController para {gameObject.name}, destruyendo directamente");
+                LogWarning($"ObstacleCollisionDetector: No se pudo crear ObstacleDestructionController para {gameObject.name}, destruyendo directamente");
                 if (parent != null)
                 {
                     transform.SetParent(null);

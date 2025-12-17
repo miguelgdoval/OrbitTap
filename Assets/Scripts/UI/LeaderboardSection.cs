@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using static LogHelper;
 
 /// <summary>
 /// Sección del leaderboard en el menú principal
@@ -182,7 +183,7 @@ public class LeaderboardSection : BaseMenuSection
     {
         if (contentPanel == null)
         {
-            Debug.LogWarning("[LeaderboardSection] RefreshLeaderboard llamado pero contentPanel es null");
+            LogWarning("[LeaderboardSection] RefreshLeaderboard llamado pero contentPanel es null");
             return;
         }
         
@@ -197,11 +198,11 @@ public class LeaderboardSection : BaseMenuSection
             ? LocalLeaderboardManager.Instance.GetTopScores() 
             : new List<LeaderboardEntry>();
         
-        Debug.Log($"[LeaderboardSection] RefreshLeaderboard - entradas encontradas: {scores.Count}");
+        Log($"[LeaderboardSection] RefreshLeaderboard - entradas encontradas: {scores.Count}");
         
         if (scores.Count == 0)
         {
-            Debug.Log("[LeaderboardSection] No hay puntuaciones, mostrando mensaje vacío.");
+            Log("[LeaderboardSection] No hay puntuaciones, mostrando mensaje vacío.");
             // Mostrar mensaje si no hay puntuaciones
             GameObject noScoresObj = new GameObject("NoScores");
             noScoresObj.transform.SetParent(contentPanel.transform, false);
@@ -227,14 +228,14 @@ public class LeaderboardSection : BaseMenuSection
             CreateLeaderboardEntry(i + 1, scores[i]);
         }
 
-        Debug.Log($"[LeaderboardSection] Después de crear entradas, hijos en contentPanel: {contentPanel.transform.childCount}");
+        Log($"[LeaderboardSection] Después de crear entradas, hijos en contentPanel: {contentPanel.transform.childCount}");
     }
     
     private void CreateLeaderboardEntry(int rank, LeaderboardEntry entry)
     {
         GameObject entryObj = new GameObject($"Entry_{rank}");
         entryObj.transform.SetParent(contentPanel.transform, false);
-        Debug.Log($"[LeaderboardSection] Creando entrada #{rank} con score {entry.score}");
+        Log($"[LeaderboardSection] Creando entrada #{rank} con score {entry.score}");
         
         RectTransform entryRect = entryObj.AddComponent<RectTransform>();
         entryRect.sizeDelta = new Vector2(0, 80);

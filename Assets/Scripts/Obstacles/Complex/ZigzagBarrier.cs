@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 
 /// <summary>
 /// Barrera que se mueve en zigzag perpendicular a su dirección de movimiento
@@ -25,7 +26,7 @@ public class ZigzagBarrier : ObstacleBase, IObstacleDifficulty
 
     private void Start()
     {
-        Debug.Log($"ZigzagBarrier: Start() called for {gameObject.name} at {transform.position}");
+        Log($"ZigzagBarrier: Start() called for {gameObject.name} at {transform.position}");
         basePosition = transform.position;
         CreateBarrier();
         
@@ -42,7 +43,7 @@ public class ZigzagBarrier : ObstacleBase, IObstacleDifficulty
             perpendicularDirection = Vector2.up;
         }
         
-        Debug.Log($"ZigzagBarrier: CreateBarrier() completed for {gameObject.name}");
+        Log($"ZigzagBarrier: CreateBarrier() completed for {gameObject.name}");
     }
 
     private void Update()

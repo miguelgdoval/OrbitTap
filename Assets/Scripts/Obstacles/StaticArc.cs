@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 
 [ObstacleDifficulty(ObstacleDifficultyLevel.Easy)]
 public class StaticArc : ObstacleBase, IObstacleDifficulty
@@ -14,9 +15,9 @@ public class StaticArc : ObstacleBase, IObstacleDifficulty
 
     private void Start()
     {
-        Debug.Log($"StaticArc: Start() called for {gameObject.name} at {transform.position}");
+        Log($"StaticArc: Start() called for {gameObject.name} at {transform.position}");
         CreateArc();
-        Debug.Log($"StaticArc: CreateArc() completed for {gameObject.name}");
+        Log($"StaticArc: CreateArc() completed for {gameObject.name}");
     }
 
     private void CreateArc()

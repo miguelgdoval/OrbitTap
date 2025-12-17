@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using static LogHelper;
 using System.Linq;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -37,7 +38,7 @@ public class SkinsSection : BaseMenuSection
     
     private void OnEnable()
     {
-        Debug.Log($"[SkinsSection] OnEnable llamado. isInitialized: {isInitialized}, activeInHierarchy: {gameObject.activeInHierarchy}");
+        Log($"[SkinsSection] OnEnable llamado. isInitialized: {isInitialized}, activeInHierarchy: {gameObject.activeInHierarchy}");
         
         // Inicializar cuando se active el GameObject
         if (!isInitialized)
@@ -47,7 +48,7 @@ public class SkinsSection : BaseMenuSection
         else if (contentPanel == null)
         {
             // Si ya estaba inicializado pero la UI fue destruida, recrearla
-            Debug.Log("[SkinsSection] UI destruida, recreando...");
+            Log("[SkinsSection] UI destruida, recreando...");
             InitializePlanets();
             CreateUI();
         }
@@ -57,7 +58,7 @@ public class SkinsSection : BaseMenuSection
         {
             // Forzar actualización del layout
             Canvas.ForceUpdateCanvases();
-            Debug.Log($"[SkinsSection] ScrollRect verificado después de OnEnable. Content hijos: {scrollRect.content.childCount}");
+            Log($"[SkinsSection] ScrollRect verificado después de OnEnable. Content hijos: {scrollRect.content.childCount}");
         }
     }
     
@@ -70,7 +71,7 @@ public class SkinsSection : BaseMenuSection
         CreateUI();
         isInitialized = true;
         
-        Debug.Log($"[SkinsSection] Inicialización completada. UI creada: {contentPanel != null}");
+        Log($"[SkinsSection] Inicialización completada. UI creada: {contentPanel != null}");
     }
     
     private void InitializePlanets()
@@ -98,7 +99,7 @@ public class SkinsSection : BaseMenuSection
         // Cargar planeta seleccionado guardado
         string savedPlanet = PlayerPrefs.GetString(SELECTED_PLANET_KEY, "AsteroideErrante");
         
-        Debug.Log($"[SkinsSection] Inicializando planetas. Planeta guardado: {savedPlanet}");
+        Log($"[SkinsSection] Inicializando planetas. Planeta guardado: {savedPlanet}");
         
         // Primero intentar cargar desde la lista de nombres
         foreach (string planetName in planetNames)
@@ -118,7 +119,7 @@ public class SkinsSection : BaseMenuSection
                 bool isEquipped = planetName == savedPlanet;
                 PlanetData planet = new PlanetData(planetName, planetSprite, isEquipped);
                 availablePlanets.Add(planet);
-                Debug.Log($"[SkinsSection] Planeta cargado: {planetName} (archivo: {actualFileName})");
+                Log($"[SkinsSection] Planeta cargado: {planetName} (archivo: {actualFileName})");
                 
                 if (isEquipped)
                 {
@@ -127,18 +128,18 @@ public class SkinsSection : BaseMenuSection
             }
             else
             {
-                Debug.LogWarning($"[SkinsSection] No se pudo cargar el sprite del planeta: {planetName} (intentó: {actualFileName})");
+                LogWarning($"[SkinsSection] No se pudo cargar el sprite del planeta: {planetName} (intentó: {actualFileName})");
             }
         }
         
         // Si falta algún planeta (especialmente PlanetaOceánico con carácter especial), intentar cargar desde la carpeta
         if (availablePlanets.Count < planetNames.Length)
         {
-            Debug.Log($"[SkinsSection] Faltan {planetNames.Length - availablePlanets.Count} planetas. Intentando cargar desde la carpeta...");
+            Log($"[SkinsSection] Faltan {planetNames.Length - availablePlanets.Count} planetas. Intentando cargar desde la carpeta...");
             LoadMissingPlanetsFromFolder(planetNames, savedPlanet);
         }
         
-        Debug.Log($"[SkinsSection] Total de planetas cargados: {availablePlanets.Count}");
+        Log($"[SkinsSection] Total de planetas cargados: {availablePlanets.Count}");
         
         // Si no hay planeta equipado, equipar el primero
         if (currentEquippedPlanet == null && availablePlanets.Count > 0)
@@ -147,12 +148,12 @@ public class SkinsSection : BaseMenuSection
             currentEquippedPlanet.isEquipped = true;
             PlayerPrefs.SetString(SELECTED_PLANET_KEY, currentEquippedPlanet.name);
             PlayerPrefs.Save();
-            Debug.Log($"[SkinsSection] Planeta por defecto equipado: {currentEquippedPlanet.name}");
+            Log($"[SkinsSection] Planeta por defecto equipado: {currentEquippedPlanet.name}");
         }
         
         if (availablePlanets.Count == 0)
         {
-            Debug.LogError("[SkinsSection] ¡No se cargó ningún planeta! Verifica que los sprites estén en Resources/Art/Protagonist/ y estén configurados como Sprites en Unity.");
+            LogError("[SkinsSection] ¡No se cargó ningún planeta! Verifica que los sprites estén en Resources/Art/Protagonist/ y estén configurados como Sprites en Unity.");
         }
     }
     
@@ -162,7 +163,7 @@ public class SkinsSection : BaseMenuSection
         {
             // Intentar cargar todos los sprites de la carpeta Resources/Art/Protagonist
             Object[] allSprites = Resources.LoadAll("Art/Protagonist", typeof(Sprite));
-            Debug.Log($"[SkinsSection] Encontrados {allSprites.Length} sprites en Resources/Art/Protagonist");
+            Log($"[SkinsSection] Encontrados {allSprites.Length} sprites en Resources/Art/Protagonist");
             
             // Crear un HashSet con los nombres de planetas ya cargados para evitar duplicados
             System.Collections.Generic.HashSet<string> loadedNames = new System.Collections.Generic.HashSet<string>();
@@ -229,7 +230,7 @@ public class SkinsSection : BaseMenuSection
                             {
                                 isExpected = true;
                                 matchingExpectedName = expectedName;
-                                Debug.Log($"[SkinsSection] Match encontrado: '{spriteName}' (normalizado: '{normalizedSpriteName}') == '{expectedName}' (normalizado: '{normalizedExpectedName}')");
+                                Log($"[SkinsSection] Match encontrado: '{spriteName}' (normalizado: '{normalizedSpriteName}') == '{expectedName}' (normalizado: '{normalizedExpectedName}')");
                                 break;
                             }
                         }
@@ -243,7 +244,7 @@ public class SkinsSection : BaseMenuSection
                             PlanetData planet = new PlanetData(planetName, sprite, isEquipped);
                             availablePlanets.Add(planet);
                             loadedNormalizedNames.Add(normalizedSpriteName);
-                            Debug.Log($"[SkinsSection] ✓ Planeta cargado desde carpeta: {spriteName} -> {planetName}");
+                            Log($"[SkinsSection] ✓ Planeta cargado desde carpeta: {spriteName} -> {planetName}");
                             
                             if (isEquipped)
                             {
@@ -252,7 +253,7 @@ public class SkinsSection : BaseMenuSection
                         }
                         else
                         {
-                            Debug.Log($"[SkinsSection] Sprite '{spriteName}' (normalizado: '{normalizedSpriteName}') no coincide con ningún nombre esperado");
+                            Log($"[SkinsSection] Sprite '{spriteName}' (normalizado: '{normalizedSpriteName}') no coincide con ningún nombre esperado");
                         }
                     }
                 }
@@ -260,7 +261,7 @@ public class SkinsSection : BaseMenuSection
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"[SkinsSection] Error al cargar planetas desde carpeta: {e.Message}");
+            LogError($"[SkinsSection] Error al cargar planetas desde carpeta: {e.Message}");
         }
     }
     
@@ -270,11 +271,11 @@ public class SkinsSection : BaseMenuSection
         Canvas parentCanvas = GetComponentInParent<Canvas>();
         if (parentCanvas == null)
         {
-            Debug.LogError("[SkinsSection] No se encontró Canvas en el padre! Los elementos UI no se mostrarán.");
+            LogError("[SkinsSection] No se encontró Canvas en el padre! Los elementos UI no se mostrarán.");
         }
         else
         {
-            Debug.Log($"[SkinsSection] Canvas encontrado: {parentCanvas.name}");
+            Log($"[SkinsSection] Canvas encontrado: {parentCanvas.name}");
         }
         
         // Título con estilo del menú
@@ -300,7 +301,7 @@ public class SkinsSection : BaseMenuSection
         titleRect.anchoredPosition = new Vector2(0, -60);
         titleRect.sizeDelta = new Vector2(600, 80);
         
-        Debug.Log($"[SkinsSection] Creando UI. Planetas disponibles: {availablePlanets.Count}");
+        Log($"[SkinsSection] Creando UI. Planetas disponibles: {availablePlanets.Count}");
         
         // Si no hay planetas, mostrar mensaje
         if (availablePlanets.Count == 0)
@@ -377,13 +378,13 @@ public class SkinsSection : BaseMenuSection
         
         this.scrollRect.content = contentRect;
         
-        Debug.Log($"[SkinsSection] ScrollRect configurado. Viewport: {viewportRect.sizeDelta}, Content: {contentRect.sizeDelta}, Content pos: {contentRect.anchoredPosition}");
+        Log($"[SkinsSection] ScrollRect configurado. Viewport: {viewportRect.sizeDelta}, Content: {contentRect.sizeDelta}, Content pos: {contentRect.anchoredPosition}");
         
         // Crear botones de planeta
-        Debug.Log($"[SkinsSection] Creando {availablePlanets.Count} botones de planeta. contentPanel: {contentPanel != null}");
+        Log($"[SkinsSection] Creando {availablePlanets.Count} botones de planeta. contentPanel: {contentPanel != null}");
         if (contentPanel == null)
         {
-            Debug.LogError("[SkinsSection] contentPanel es null antes de crear botones!");
+            LogError("[SkinsSection] contentPanel es null antes de crear botones!");
             return;
         }
         
@@ -392,7 +393,7 @@ public class SkinsSection : BaseMenuSection
             CreatePlanetButton(availablePlanets[i], i, cardWidth, cardSpacing);
         }
         
-        Debug.Log($"[SkinsSection] Botones creados. Hijos de contentPanel: {contentPanel.transform.childCount}");
+        Log($"[SkinsSection] Botones creados. Hijos de contentPanel: {contentPanel.transform.childCount}");
         
         // Forzar actualización del layout
         Canvas.ForceUpdateCanvases();
@@ -400,11 +401,11 @@ public class SkinsSection : BaseMenuSection
         // Verificar que el ScrollRect esté configurado
         if (this.scrollRect != null && this.scrollRect.content != null && this.scrollRect.viewport != null)
         {
-            Debug.Log($"[SkinsSection] ScrollRect OK. Content size: {this.scrollRect.content.sizeDelta}, Viewport size: {this.scrollRect.viewport.sizeDelta}");
+            Log($"[SkinsSection] ScrollRect OK. Content size: {this.scrollRect.content.sizeDelta}, Viewport size: {this.scrollRect.viewport.sizeDelta}");
         }
         else
         {
-            Debug.LogError($"[SkinsSection] ScrollRect mal configurado! content: {this.scrollRect?.content != null}, viewport: {this.scrollRect?.viewport != null}");
+            LogError($"[SkinsSection] ScrollRect mal configurado! content: {this.scrollRect?.content != null}, viewport: {this.scrollRect?.viewport != null}");
         }
     }
     
@@ -412,7 +413,7 @@ public class SkinsSection : BaseMenuSection
     {
         if (contentPanel == null)
         {
-            Debug.LogError("[SkinsSection] contentPanel es null al crear botón de planeta!");
+            LogError("[SkinsSection] contentPanel es null al crear botón de planeta!");
             return;
         }
         
@@ -428,7 +429,7 @@ public class SkinsSection : BaseMenuSection
         planetRect.anchoredPosition = new Vector2(xPos + cardWidth * 0.5f, 0);
         planetRect.sizeDelta = new Vector2(cardWidth, 480);
         
-        Debug.Log($"[SkinsSection] Botón creado: {planet.name} en posición X: {planetRect.anchoredPosition.x}");
+        Log($"[SkinsSection] Botón creado: {planet.name} en posición X: {planetRect.anchoredPosition.x}");
         
         // Fondo del card (placa con estilo del menú)
         GameObject bgObj = new GameObject("Background");
@@ -608,7 +609,7 @@ public class SkinsSection : BaseMenuSection
         PlayerPrefs.SetString(SELECTED_PLANET_KEY, planet.name);
         PlayerPrefs.Save();
         
-        Debug.Log($"Planeta equipado: {planet.name}");
+        Log($"Planeta equipado: {planet.name}");
         
         // Actualizar player demo en el menú
         UpdatePlayerDemo();
@@ -677,7 +678,7 @@ public class SkinsSection : BaseMenuSection
         {
             // Usar bounds.size que da el tamaño real en unidades del mundo (considera el rect visible del sprite)
             float worldSize = Mathf.Max(referenceSprite.bounds.size.x, referenceSprite.bounds.size.y);
-            Debug.Log($"[SkinsSection] Tamaño de referencia calculado: {worldSize} (Asteroide Errante bounds: {referenceSprite.bounds.size}, rect: {referenceSprite.rect.width}x{referenceSprite.rect.height}, PPU: {referenceSprite.pixelsPerUnit})");
+            Log($"[SkinsSection] Tamaño de referencia calculado: {worldSize} (Asteroide Errante bounds: {referenceSprite.bounds.size}, rect: {referenceSprite.rect.width}x{referenceSprite.rect.height}, PPU: {referenceSprite.pixelsPerUnit})");
             return worldSize;
         }
         
@@ -698,7 +699,7 @@ public class SkinsSection : BaseMenuSection
                 if (referenceSprite != null)
                 {
                     float worldSize = Mathf.Max(referenceSprite.bounds.size.x, referenceSprite.bounds.size.y);
-                    Debug.Log($"[SkinsSection] Tamaño de referencia calculado (Editor): {worldSize} (Asteroide Errante bounds: {referenceSprite.bounds.size}, rect: {referenceSprite.rect.width}x{referenceSprite.rect.height}, PPU: {referenceSprite.pixelsPerUnit})");
+                    Log($"[SkinsSection] Tamaño de referencia calculado (Editor): {worldSize} (Asteroide Errante bounds: {referenceSprite.bounds.size}, rect: {referenceSprite.rect.width}x{referenceSprite.rect.height}, PPU: {referenceSprite.pixelsPerUnit})");
                     return worldSize;
                 }
             }
@@ -707,7 +708,7 @@ public class SkinsSection : BaseMenuSection
         #endif
         
         // Valor por defecto si no se encuentra (aproximado)
-        Debug.LogWarning("[SkinsSection] No se pudo cargar Asteroide Errante como referencia, usando valor por defecto: 1.0");
+        LogWarning("[SkinsSection] No se pudo cargar Asteroide Errante como referencia, usando valor por defecto: 1.0");
         return 1.0f;
     }
     
@@ -721,12 +722,12 @@ public class SkinsSection : BaseMenuSection
         // Calcular el tamaño actual del sprite en unidades del mundo usando bounds (tamaño visual real)
         float currentWorldSize = Mathf.Max(originalSprite.bounds.size.x, originalSprite.bounds.size.y);
         
-        Debug.Log($"[SkinsSection] Normalizando sprite '{originalSprite.name}': Tamaño actual (bounds): {currentWorldSize}, Objetivo: {targetWorldSize}, PPU actual: {originalSprite.pixelsPerUnit}, Rect: {originalSprite.rect.width}x{originalSprite.rect.height}, Bounds: {originalSprite.bounds.size}");
+        Log($"[SkinsSection] Normalizando sprite '{originalSprite.name}': Tamaño actual (bounds): {currentWorldSize}, Objetivo: {targetWorldSize}, PPU actual: {originalSprite.pixelsPerUnit}, Rect: {originalSprite.rect.width}x{originalSprite.rect.height}, Bounds: {originalSprite.bounds.size}");
         
         // Si ya tiene el tamaño correcto (con un margen de error pequeño), no hacer nada
         if (Mathf.Abs(currentWorldSize - targetWorldSize) < 0.01f)
         {
-            Debug.Log($"[SkinsSection] Sprite '{originalSprite.name}' ya tiene el tamaño correcto, no se normaliza");
+            Log($"[SkinsSection] Sprite '{originalSprite.name}' ya tiene el tamaño correcto, no se normaliza");
             return originalSprite;
         }
         
@@ -734,7 +735,7 @@ public class SkinsSection : BaseMenuSection
         // Usamos el tamaño del rect en píxeles dividido por el tamaño objetivo en unidades del mundo
         float newPixelsPerUnit = Mathf.Max(originalSprite.rect.width, originalSprite.rect.height) / targetWorldSize;
         
-        Debug.Log($"[SkinsSection] Normalizando sprite '{originalSprite.name}': Nuevo PPU: {newPixelsPerUnit} (anterior: {originalSprite.pixelsPerUnit})");
+        Log($"[SkinsSection] Normalizando sprite '{originalSprite.name}': Nuevo PPU: {newPixelsPerUnit} (anterior: {originalSprite.pixelsPerUnit})");
         
         // Crear un nuevo sprite con el pixelsPerUnit ajustado
         return Sprite.Create(
@@ -757,7 +758,7 @@ public class SkinsSection : BaseMenuSection
         Sprite sprite = Resources.Load<Sprite>(resourcePath);
         if (sprite != null)
         {
-            Debug.Log($"[SkinsSection] Sprite cargado desde Resources: {resourcePath} (PPU: {sprite.pixelsPerUnit})");
+            Log($"[SkinsSection] Sprite cargado desde Resources: {resourcePath} (PPU: {sprite.pixelsPerUnit})");
             // No normalizar - usar el sprite tal como está configurado en Unity
             return sprite;
         }
@@ -766,7 +767,7 @@ public class SkinsSection : BaseMenuSection
         Texture2D texture = Resources.Load<Texture2D>(resourcePath);
         if (texture != null)
         {
-            Debug.Log($"[SkinsSection] Texture2D cargado desde Resources, creando sprite: {resourcePath}");
+            Log($"[SkinsSection] Texture2D cargado desde Resources, creando sprite: {resourcePath}");
             // Usar un pixelsPerUnit por defecto razonable (100 es común en Unity)
             float pixelsPerUnit = 100f;
             return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
@@ -775,7 +776,7 @@ public class SkinsSection : BaseMenuSection
         // Si falla, intentar cargar todos los sprites y buscar por nombre normalizado
         // (útil para caracteres especiales como "í" en "PlanetaOceánico")
         Object[] allSprites = Resources.LoadAll("Art/Protagonist", typeof(Sprite));
-        Debug.Log($"[SkinsSection] Cargados {allSprites.Length} sprites desde Resources/Art/Protagonist para búsqueda normalizada");
+        Log($"[SkinsSection] Cargados {allSprites.Length} sprites desde Resources/Art/Protagonist para búsqueda normalizada");
         
         System.Func<string, string> normalizeName = (name) => {
             if (string.IsNullOrEmpty(name)) return "";
@@ -821,7 +822,7 @@ public class SkinsSection : BaseMenuSection
         };
         
         string normalizedPlanetName = normalizeName(planetName);
-        Debug.Log($"[SkinsSection] Buscando planeta normalizado: '{normalizedPlanetName}' (original: '{planetName}')");
+        Log($"[SkinsSection] Buscando planeta normalizado: '{normalizedPlanetName}' (original: '{planetName}')");
         
         foreach (Object obj in allSprites)
         {
@@ -833,25 +834,25 @@ public class SkinsSection : BaseMenuSection
                 // Debug detallado para el sprite problemático
                 if (spriteName.Contains("Oce") || spriteName.Contains("oce") || spriteName.Contains("í") || spriteName.Contains("Í"))
                 {
-                    Debug.Log($"[SkinsSection] DEBUG Oceánico - Original: '{spriteName}', Normalizado: '{normalizedSpriteName}', Buscado: '{normalizedPlanetName}'");
-                    Debug.Log($"[SkinsSection] DEBUG - Caracteres en original: {string.Join("|", spriteName.Select(c => $"'{c}'({(int)c})"))}");
-                    Debug.Log($"[SkinsSection] DEBUG - Caracteres en normalizado: {string.Join("|", normalizedSpriteName.Select(c => $"'{c}'({(int)c})"))}");
-                    Debug.Log($"[SkinsSection] DEBUG - Caracteres en buscado: {string.Join("|", normalizedPlanetName.Select(c => $"'{c}'({(int)c})"))}");
-                    Debug.Log($"[SkinsSection] DEBUG - Son iguales: {normalizedSpriteName == normalizedPlanetName}, Length: {normalizedSpriteName.Length} vs {normalizedPlanetName.Length}");
+                    Log($"[SkinsSection] DEBUG Oceánico - Original: '{spriteName}', Normalizado: '{normalizedSpriteName}', Buscado: '{normalizedPlanetName}'");
+                    Log($"[SkinsSection] DEBUG - Caracteres en original: {string.Join("|", spriteName.Select(c => $"'{c}'({(int)c})"))}");
+                    Log($"[SkinsSection] DEBUG - Caracteres en normalizado: {string.Join("|", normalizedSpriteName.Select(c => $"'{c}'({(int)c})"))}");
+                    Log($"[SkinsSection] DEBUG - Caracteres en buscado: {string.Join("|", normalizedPlanetName.Select(c => $"'{c}'({(int)c})"))}");
+                    Log($"[SkinsSection] DEBUG - Son iguales: {normalizedSpriteName == normalizedPlanetName}, Length: {normalizedSpriteName.Length} vs {normalizedPlanetName.Length}");
                 }
                 
-                Debug.Log($"[SkinsSection] Comparando: '{normalizedSpriteName}' (original: '{spriteName}') con '{normalizedPlanetName}'");
+                Log($"[SkinsSection] Comparando: '{normalizedSpriteName}' (original: '{spriteName}') con '{normalizedPlanetName}'");
                 
                 if (normalizedSpriteName == normalizedPlanetName)
                 {
-                    Debug.Log($"[SkinsSection] ✓ Sprite encontrado por nombre normalizado: {spriteName} (buscado: {planetName}, PPU: {foundSprite.pixelsPerUnit})");
+                    Log($"[SkinsSection] ✓ Sprite encontrado por nombre normalizado: {spriteName} (buscado: {planetName}, PPU: {foundSprite.pixelsPerUnit})");
                     // No normalizar - usar el sprite tal como está configurado en Unity
                     return foundSprite;
                 }
             }
         }
         
-        Debug.LogWarning($"[SkinsSection] No se encontró sprite normalizado para: {planetName}");
+        LogWarning($"[SkinsSection] No se encontró sprite normalizado para: {planetName}");
         
         #if UNITY_EDITOR
         // En el editor, intentar usar AssetDatabase como fallback
@@ -903,7 +904,7 @@ public class SkinsSection : BaseMenuSection
                         string normalizedSpriteName = normalizeNameEditor(spriteName);
                         if (normalizedSpriteName == normalizedPlanetNameEditor)
                         {
-                            Debug.Log($"[SkinsSection] Sprite encontrado en AssetDatabase por nombre normalizado: {spriteName} (path: {path}, PPU: {foundSprite.pixelsPerUnit})");
+                            Log($"[SkinsSection] Sprite encontrado en AssetDatabase por nombre normalizado: {spriteName} (path: {path}, PPU: {foundSprite.pixelsPerUnit})");
                             // No normalizar - usar el sprite tal como está configurado en Unity
                             return foundSprite;
                         }
@@ -914,12 +915,12 @@ public class SkinsSection : BaseMenuSection
             if (guids.Length > 0)
             {
                 string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
-                Debug.Log($"[SkinsSection] Encontrado en AssetDatabase: {path}");
+                Log($"[SkinsSection] Encontrado en AssetDatabase: {path}");
                 
                 sprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path);
                 if (sprite != null)
                 {
-                    Debug.Log($"[SkinsSection] Sprite cargado desde AssetDatabase: {path} (PPU: {sprite.pixelsPerUnit})");
+                    Log($"[SkinsSection] Sprite cargado desde AssetDatabase: {path} (PPU: {sprite.pixelsPerUnit})");
                     // No normalizar - usar el sprite tal como está configurado en Unity
                     return sprite;
                 }
@@ -927,7 +928,7 @@ public class SkinsSection : BaseMenuSection
                 texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(path);
                 if (texture != null)
                 {
-                    Debug.Log($"[SkinsSection] Texture2D cargado desde AssetDatabase, creando sprite: {path}");
+                    Log($"[SkinsSection] Texture2D cargado desde AssetDatabase, creando sprite: {path}");
                     // Usar un pixelsPerUnit por defecto razonable (100 es común en Unity)
                     float pixelsPerUnit = 100f;
                     return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
@@ -935,16 +936,16 @@ public class SkinsSection : BaseMenuSection
             }
             else
             {
-                Debug.LogWarning($"[SkinsSection] No se encontró {planetName} en AssetDatabase");
+                LogWarning($"[SkinsSection] No se encontró {planetName} en AssetDatabase");
             }
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning($"[SkinsSection] Error al cargar el sprite del planeta {planetName}: {e.Message}");
+            LogWarning($"[SkinsSection] Error al cargar el sprite del planeta {planetName}: {e.Message}");
         }
         #endif
         
-        Debug.LogWarning($"[SkinsSection] No se pudo cargar el sprite del planeta: {planetName} desde {resourcePath}");
+        LogWarning($"[SkinsSection] No se pudo cargar el sprite del planeta: {planetName} desde {resourcePath}");
         return null;
     }
 }

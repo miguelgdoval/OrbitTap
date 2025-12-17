@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using static LogHelper;
 
 /// <summary>
 /// Sección de tienda del menú principal
@@ -228,7 +229,7 @@ public class ShopSection : BaseMenuSection
     
     private void OnStarterBundleClicked()
     {
-        Debug.Log("Starter Bundle clicked - TODO: Implement purchase");
+        Log("Starter Bundle clicked - TODO: Implement purchase");
         // TODO: Implementar compra IAP
         if (CurrencyManager.Instance != null)
         {
@@ -238,12 +239,12 @@ public class ShopSection : BaseMenuSection
     
     private void OnRemoveAdsClicked()
     {
-        Debug.Log("Remove Ads clicked");
+        Log("Remove Ads clicked");
         
         // Verificar si ya tiene Remove Ads comprado
         if (AdManager.Instance != null && AdManager.Instance.HasRemovedAds())
         {
-            Debug.Log("Remove Ads ya está activo");
+            Log("Remove Ads ya está activo");
             // Aquí podrías mostrar un mensaje al usuario
             return;
         }
@@ -253,20 +254,20 @@ public class ShopSection : BaseMenuSection
         if (AdManager.Instance != null)
         {
             AdManager.Instance.SetRemoveAdsPurchased();
-            Debug.Log("Remove Ads activado (modo test - implementar IAP real)");
+            Log("Remove Ads activado (modo test - implementar IAP real)");
             
             // Mostrar mensaje al usuario (puedes crear un sistema de notificaciones o popup)
             // Por ahora solo un log
         }
         else
         {
-            Debug.LogWarning("AdManager no encontrado");
+            LogWarning("AdManager no encontrado");
         }
     }
     
     private void OnCurrencyPackClicked(int amount, float price)
     {
-        Debug.Log($"Currency pack clicked: {amount} for {price} - TODO: Implement purchase");
+        Log($"Currency pack clicked: {amount} for {price} - TODO: Implement purchase");
         // TODO: Implementar compra IAP
         // Por ahora, añadir monedas directamente para testing
         if (CurrencyManager.Instance != null)
@@ -277,7 +278,7 @@ public class ShopSection : BaseMenuSection
     
     private void OnPremiumSkinClicked()
     {
-        Debug.Log("Premium Skin clicked - TODO: Implement purchase");
+        Log("Premium Skin clicked - TODO: Implement purchase");
         // TODO: Implementar compra IAP
     }
 }

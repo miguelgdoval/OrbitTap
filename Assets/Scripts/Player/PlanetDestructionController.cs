@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using static LogHelper;
 
 /// <summary>
 /// Sistema universal de animación de destrucción para planetas.
@@ -191,7 +192,7 @@ public class PlanetDestructionController : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"Error al crear fragmentos/partículas: {e.Message}");
+            LogError($"Error al crear fragmentos/partículas: {e.Message}");
         }
         
         // Mantener posición fija durante toda la secuencia
@@ -448,7 +449,7 @@ public class PlanetDestructionController : MonoBehaviour
     {
         if (spriteRenderer == null || spriteRenderer.sprite == null)
         {
-            Debug.LogWarning("PlanetDestructionController: No sprite available for fragments");
+            LogWarning("PlanetDestructionController: No sprite available for fragments");
             return;
         }
         
@@ -518,11 +519,11 @@ public class PlanetDestructionController : MonoBehaviour
         
         if (visiblePixelCount == 0)
         {
-            Debug.LogWarning("PlanetDestructionController: La textura legible no tiene píxeles visibles. El sprite puede no haberse renderizado correctamente.");
+            LogWarning("PlanetDestructionController: La textura legible no tiene píxeles visibles. El sprite puede no haberse renderizado correctamente.");
         }
         else
         {
-            Debug.Log($"PlanetDestructionController: Textura legible creada con {visiblePixelCount} píxeles visibles de {allPixels.Length} totales.");
+            Log($"PlanetDestructionController: Textura legible creada con {visiblePixelCount} píxeles visibles de {allPixels.Length} totales.");
         }
         
         RenderTexture.active = previous;
@@ -535,7 +536,7 @@ public class PlanetDestructionController : MonoBehaviour
         // Verificar que la textura se creó correctamente
         if (readableTexture == null || readableTexture.width == 0 || readableTexture.height == 0)
         {
-            Debug.LogError("PlanetDestructionController: No se pudo crear la textura legible para fragmentos");
+            LogError("PlanetDestructionController: No se pudo crear la textura legible para fragmentos");
             if (readableTexture != null) Destroy(readableTexture);
             return;
         }
@@ -554,7 +555,7 @@ public class PlanetDestructionController : MonoBehaviour
         
         if (!hasContent)
         {
-            Debug.LogWarning("PlanetDestructionController: La textura legible está vacía. Los fragmentos pueden no verse correctamente.");
+            LogWarning("PlanetDestructionController: La textura legible está vacía. Los fragmentos pueden no verse correctamente.");
         }
         
         // Crear fragmentos con tamaños y posiciones variadas (más orgánico)
@@ -725,7 +726,7 @@ public class PlanetDestructionController : MonoBehaviour
                 fragmentsCreated++;
         }
         
-        Debug.Log($"PlanetDestructionController: Creados {fragmentsCreated} fragmentos del sprite");
+        Log($"PlanetDestructionController: Creados {fragmentsCreated} fragmentos del sprite");
         
         // Limpiar textura legible
         Destroy(readableTexture);

@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using static LogHelper;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -167,7 +168,7 @@ public class MainMenuController : MonoBehaviour
         Transform iconTransform = buttonParent.transform.Find("Icon");
         if (iconTransform == null)
         {
-            Debug.LogWarning("[MainMenuController] No se encontró el icono para el badge de misiones");
+            LogWarning("[MainMenuController] No se encontró el icono para el badge de misiones");
             return;
         }
         
@@ -302,7 +303,7 @@ public class MainMenuController : MonoBehaviour
         
         if (canvas == null)
         {
-            Debug.LogError("MainMenuController: Failed to create Canvas!");
+            LogError("MainMenuController: Failed to create Canvas!");
             return;
         }
         
@@ -322,7 +323,7 @@ public class MainMenuController : MonoBehaviour
     {
         if (canvas == null)
         {
-            Debug.LogError("MainMenuController: Canvas is null in CreateTopPanel!");
+            LogError("MainMenuController: Canvas is null in CreateTopPanel!");
             return;
         }
         
@@ -364,7 +365,7 @@ public class MainMenuController : MonoBehaviour
         else
         {
             // Fallback: usar un sprite simple si no se encuentra el icono
-            Debug.LogWarning("No se pudo cargar OptionsIcon, usando fallback");
+            LogWarning("No se pudo cargar OptionsIcon, usando fallback");
         }
         
         settingsIconImg.color = CosmicTheme.NeonCyan; // Color neon cian para el icono
@@ -1556,7 +1557,7 @@ public class MainMenuController : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning($"No se pudo cargar LetterO: {e.Message}");
+            LogWarning($"No se pudo cargar LetterO: {e.Message}");
         }
         #endif
         
@@ -1745,7 +1746,7 @@ public class MainMenuController : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning($"No se pudo cargar el sprite {assetName}: {e.Message}");
+            LogWarning($"No se pudo cargar el sprite {assetName}: {e.Message}");
         }
         #endif
         

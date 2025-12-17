@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 
 [ObstacleDifficulty(ObstacleDifficultyLevel.Medium)]
 public class RotatingArc : ObstacleBase, IObstacleDifficulty
@@ -15,9 +16,9 @@ public class RotatingArc : ObstacleBase, IObstacleDifficulty
 
     private void Start()
     {
-        Debug.Log($"RotatingArc: Start() called for {gameObject.name} at {transform.position}");
+        Log($"RotatingArc: Start() called for {gameObject.name} at {transform.position}");
         CreateArc();
-        Debug.Log($"RotatingArc: CreateArc() completed for {gameObject.name}");
+        Log($"RotatingArc: CreateArc() completed for {gameObject.name}");
     }
 
     private void Update()

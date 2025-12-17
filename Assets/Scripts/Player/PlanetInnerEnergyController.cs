@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using static LogHelper;
 
 /// <summary>
 /// Sistema de energía interna para planetas.
@@ -61,7 +62,7 @@ public class PlanetInnerEnergyController : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer == null)
         {
-            Debug.LogWarning($"PlanetInnerEnergyController: No SpriteRenderer found on {gameObject.name}. Component disabled.");
+            LogWarning($"PlanetInnerEnergyController: No SpriteRenderer found on {gameObject.name}. Component disabled.");
             enabled = false;
             return;
         }
@@ -85,7 +86,7 @@ public class PlanetInnerEnergyController : MonoBehaviour
         
         if (energyShader == null)
         {
-            Debug.LogWarning("PlanetInnerEnergyController: Shader 'Custom/PlanetInnerEnergyShader' not found. Energy effects will not work.");
+            LogWarning("PlanetInnerEnergyController: Shader 'Custom/PlanetInnerEnergyShader' not found. Energy effects will not work.");
             return;
         }
         

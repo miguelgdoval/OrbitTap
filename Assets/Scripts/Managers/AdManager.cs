@@ -16,7 +16,9 @@ public class AdManager : MonoBehaviour
     
     [Header("Unity Ads Configuration")]
     [SerializeField] private string androidGameId = "YOUR_ANDROID_GAME_ID";
+#pragma warning disable 0414 // Campo asignado pero nunca usado (reservado para iOS)
     [SerializeField] private string iosGameId = "YOUR_IOS_GAME_ID"; // Reservado para futura implementación iOS
+#pragma warning restore 0414
     [SerializeField] private bool testMode = true; // Cambiar a false en producción
     
     [Header("Ad Frequency Settings")]
@@ -26,10 +28,37 @@ public class AdManager : MonoBehaviour
     [SerializeField] private int gamesToForceAd = 5; // Después de X partidas, mostrar anuncio sí o sí (ignora minGameScore)
     
     private const string REMOVE_ADS_KEY = "RemoveAdsPurchased";
-    private const string INTERSTITIAL_AD_ID = "Interstitial_Android"; // O "Interstitial_iOS"
-    private const string REWARDED_AD_ID = "Rewarded_Android"; // O "Rewarded_iOS"
     private const string GAMES_SINCE_AD_KEY = "GamesSinceLastAd";
     private const string LAST_AD_TIME_KEY = "LastAdTimestamp";
+    
+    // Ad Unit IDs - se seleccionan automáticamente según la plataforma
+    private string INTERSTITIAL_AD_ID
+    {
+        get
+        {
+#if UNITY_ANDROID
+            return "Interstitial_Android";
+#elif UNITY_IOS
+            return "Interstitial_iOS";
+#else
+            return "Interstitial_Android"; // Fallback
+#endif
+        }
+    }
+    
+    private string REWARDED_AD_ID
+    {
+        get
+        {
+#if UNITY_ANDROID
+            return "Rewarded_Android";
+#elif UNITY_IOS
+            return "Rewarded_iOS";
+#else
+            return "Rewarded_Android"; // Fallback
+#endif
+        }
+    }
     
     private bool isInitialized = false;
     private bool isInterstitialReady = false;

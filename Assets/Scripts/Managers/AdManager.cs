@@ -18,13 +18,22 @@ public class AdManager : MonoBehaviour
     [SerializeField] private string iosGameId = "YOUR_IOS_GAME_ID";
     [SerializeField] private bool testMode = true; // Cambiar a false en producción
     
+    [Header("Ad Frequency Settings")]
+    [SerializeField] private int gamesBetweenAds = 3; // Mostrar cada 3 partidas
+    [SerializeField] private float minTimeBetweenAds = 180f; // 3 minutos en segundos
+    [SerializeField] private int minGameScore = 15; // Puntuación mínima para mostrar anuncio
+    [SerializeField] private int gamesToForceAd = 5; // Después de X partidas, mostrar anuncio sí o sí (ignora minGameScore)
+    
     private const string REMOVE_ADS_KEY = "RemoveAdsPurchased";
     private const string INTERSTITIAL_AD_ID = "Interstitial_Android"; // O "Interstitial_iOS"
     private const string REWARDED_AD_ID = "Rewarded_Android"; // O "Rewarded_iOS"
+    private const string GAMES_SINCE_AD_KEY = "GamesSinceLastAd";
+    private const string LAST_AD_TIME_KEY = "LastAdTimestamp";
     
     private bool isInitialized = false;
     private bool isInterstitialReady = false;
     private bool isRewardedReady = false;
+    private bool pendingInterstitialShow = false; // Flag para mostrar anuncio cuando esté listo
     
     // Eventos
     public System.Action OnAdInitialized;
@@ -116,6 +125,79 @@ public class AdManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Verifica si se debe mostrar un anuncio intersticial basado en frecuencia y condiciones
+    /// </summary>
+    public bool ShouldShowInterstitialAd(int gameScore = 0)
+    {
+        if (HasRemovedAds())
+        {
+            return false;
+        }
+        
+        // Verificar frecuencia de partidas
+        int gamesPlayedSinceLastAd = PlayerPrefs.GetInt(GAMES_SINCE_AD_KEY, 0) + 1;
+        
+        // Si ha jugado suficientes partidas para forzar anuncio, ignorar puntuación mínima
+        bool forceAd = gamesPlayedSinceLastAd >= gamesToForceAd;
+        
+        if (!forceAd)
+        {
+            // Verificar puntuación mínima solo si no se fuerza el anuncio
+            if (gameScore > 0 && gameScore < minGameScore)
+            {
+                Debug.Log($"[AdManager] Puntuación muy baja ({gameScore}), no se muestra anuncio (partidas: {gamesPlayedSinceLastAd}/{gamesBetweenAds})");
+                // Incrementar contador aunque no se muestre anuncio
+                PlayerPrefs.SetInt(GAMES_SINCE_AD_KEY, gamesPlayedSinceLastAd);
+                PlayerPrefs.Save();
+                return false;
+            }
+            
+            // Verificar si ha jugado suficientes partidas para el ciclo normal
+            if (gamesPlayedSinceLastAd < gamesBetweenAds)
+            {
+                PlayerPrefs.SetInt(GAMES_SINCE_AD_KEY, gamesPlayedSinceLastAd);
+                PlayerPrefs.Save();
+                Debug.Log($"[AdManager] Partidas desde último anuncio: {gamesPlayedSinceLastAd}/{gamesBetweenAds}");
+                return false;
+            }
+        }
+        else
+        {
+            Debug.Log($"[AdManager] Forzando anuncio después de {gamesPlayedSinceLastAd} partidas (ignorando puntuación mínima)");
+        }
+        
+        // Verificar cooldown temporal (usar timestamp Unix para persistir entre sesiones)
+        double lastAdTimestamp = System.Convert.ToDouble(PlayerPrefs.GetString(LAST_AD_TIME_KEY, "0"));
+        double currentTime = System.DateTime.UtcNow.Subtract(new System.DateTime(1970, 1, 1)).TotalSeconds;
+        double timeSinceLastAd = currentTime - lastAdTimestamp;
+        
+        if (timeSinceLastAd < minTimeBetweenAds && lastAdTimestamp > 0 && !forceAd)
+        {
+            float timeRemaining = (float)(minTimeBetweenAds - timeSinceLastAd);
+            Debug.Log($"[AdManager] Cooldown activo. Tiempo restante: {timeRemaining:F1}s");
+            // No incrementar contador si está en cooldown, para que cuente cuando pase el tiempo
+            return false;
+        }
+        
+        // NO resetear contador aquí - se reseteará cuando el anuncio realmente se muestre
+        // Esto evita que se resetee si el anuncio falla al mostrarse
+        Debug.Log("[AdManager] Condiciones cumplidas, se intentará mostrar anuncio intersticial");
+        return true;
+    }
+    
+    /// <summary>
+    /// Resetea los contadores de anuncios (se llama cuando el anuncio realmente se muestra)
+    /// </summary>
+    private void ResetAdCounters()
+    {
+        double currentTime = System.DateTime.UtcNow.Subtract(new System.DateTime(1970, 1, 1)).TotalSeconds;
+        PlayerPrefs.SetInt(GAMES_SINCE_AD_KEY, 0);
+        PlayerPrefs.SetString(LAST_AD_TIME_KEY, currentTime.ToString());
+        PlayerPrefs.Save();
+        Debug.Log("[AdManager] Contadores de anuncios reseteados");
+    }
+    
+    /// <summary>
     /// Muestra un anuncio intersticial
     /// </summary>
     public void ShowInterstitialAd()
@@ -127,13 +209,25 @@ public class AdManager : MonoBehaviour
         }
         
 #if UNITY_ADS
+        if (!isInitialized)
+        {
+            Debug.LogWarning("[AdManager] Ads no inicializados aún. No se puede mostrar anuncio.");
+            return;
+        }
+        
         if (!isInterstitialReady)
         {
             Debug.LogWarning("[AdManager] Anuncio intersticial no está listo. Intentando cargar...");
             LoadInterstitialAd();
+            // Marcar que hay un anuncio pendiente de mostrar
+            pendingInterstitialShow = true;
+            // NO resetear contador aquí porque el anuncio no se mostró
+            Debug.LogWarning("[AdManager] El anuncio se cargará y se mostrará automáticamente cuando esté listo. El contador NO se resetea hasta entonces.");
             return;
         }
         
+        // Limpiar flag de pendiente ya que vamos a mostrar el anuncio
+        pendingInterstitialShow = false;
         Debug.Log("[AdManager] Mostrando anuncio intersticial...");
         Advertisement.Show(INTERSTITIAL_AD_ID, this);
 #else
@@ -222,6 +316,14 @@ public class AdManager : MonoBehaviour
         {
             isInterstitialReady = true;
             OnInterstitialAdReady?.Invoke();
+            
+            // Si había un anuncio pendiente de mostrar, mostrarlo ahora
+            if (pendingInterstitialShow)
+            {
+                Debug.Log("[AdManager] Anuncio ahora está listo, mostrándolo automáticamente...");
+                pendingInterstitialShow = false;
+                ShowInterstitialAd();
+            }
         }
         else if (adUnitId == REWARDED_AD_ID)
         {
@@ -266,6 +368,13 @@ public class AdManager : MonoBehaviour
     public void OnUnityAdsShowStart(string adUnitId)
     {
         Debug.Log($"[AdManager] Anuncio mostrado: {adUnitId}");
+        
+        // Resetear contadores cuando el anuncio realmente se muestra
+        if (adUnitId == INTERSTITIAL_AD_ID)
+        {
+            pendingInterstitialShow = false; // Limpiar flag
+            ResetAdCounters();
+        }
         
         // Pausar el juego si es necesario
         Time.timeScale = 0f;

@@ -45,10 +45,38 @@ public class GameOverController : MonoBehaviour
         Debug.Log("GameOverController: Actualizando UI...");
         UpdateUI();
         
-        // Mostrar anuncio intersticial después de un delay
-        StartCoroutine(ShowAdAfterDelay(1f));
+        // Verificar si se debe mostrar anuncio intersticial (con lógica inteligente)
+        CheckAndShowInterstitialAd();
         
         Debug.Log("GameOverController: Inicialización completa");
+    }
+    
+    /// <summary>
+    /// Verifica las condiciones y muestra un anuncio intersticial si corresponde
+    /// </summary>
+    private void CheckAndShowInterstitialAd()
+    {
+        if (AdManager.Instance == null)
+        {
+            Debug.LogWarning("[GameOverController] AdManager.Instance es null");
+            return;
+        }
+        
+        // Obtener puntuación de la partida (el score es igual al tiempo sobrevivido en segundos)
+        int gameScore = PlayerPrefs.GetInt("LastScore", 0);
+        Debug.Log($"[GameOverController] Verificando anuncio. Puntuación: {gameScore}");
+        
+        // Verificar si se debe mostrar el anuncio
+        if (AdManager.Instance.ShouldShowInterstitialAd(gameScore))
+        {
+            Debug.Log("[GameOverController] Condiciones cumplidas, programando anuncio para mostrar en 1 segundo...");
+            // Mostrar anuncio después de un pequeño delay
+            StartCoroutine(ShowAdAfterDelay(1f));
+        }
+        else
+        {
+            Debug.Log("[GameOverController] No se mostrará anuncio (condiciones no cumplidas)");
+        }
     }
     
     /// <summary>
@@ -60,7 +88,12 @@ public class GameOverController : MonoBehaviour
         
         if (AdManager.Instance != null)
         {
+            Debug.Log("[GameOverController] Intentando mostrar anuncio intersticial...");
             AdManager.Instance.ShowInterstitialAd();
+        }
+        else
+        {
+            Debug.LogWarning("[GameOverController] AdManager.Instance es null al intentar mostrar anuncio");
         }
     }
 

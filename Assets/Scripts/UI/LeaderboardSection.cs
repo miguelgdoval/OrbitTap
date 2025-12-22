@@ -11,7 +11,8 @@ public class LeaderboardSection : BaseMenuSection
     public override MenuSection SectionType => MenuSection.Leaderboard;
     
     private GameObject contentPanel;
-    private ScrollRect scrollRect;
+    private GameObject leftColumn;
+    private GameObject rightColumn;
     private Text titleText;
     private int playerHighScore = 0;
     private bool isInitialized = false;
@@ -83,112 +84,77 @@ public class LeaderboardSection : BaseMenuSection
         titleRect.sizeDelta = new Vector2(800, 80);
         titleRect.anchoredPosition = new Vector2(0, -80);
         
-        // ScrollView para la lista
-        GameObject scrollViewObj = new GameObject("ScrollView");
-        scrollViewObj.transform.SetParent(transform, false);
-        scrollRect = scrollViewObj.AddComponent<ScrollRect>();
-        
-        RectTransform scrollRectTransform = scrollViewObj.GetComponent<RectTransform>();
-        // Anclar como en MissionsSection: ocupar casi toda la pantalla con márgenes
-        scrollRectTransform.anchorMin = Vector2.zero;
-        scrollRectTransform.anchorMax = Vector2.one;
-        scrollRectTransform.pivot = new Vector2(0.5f, 0.5f);
-        scrollRectTransform.sizeDelta = Vector2.zero;
-        scrollRectTransform.anchoredPosition = Vector2.zero;
-        
-        // Márgenes similares a misiones (izquierda/derecha/arriba/abajo)
-        scrollRectTransform.offsetMin = new Vector2(200, 140);   // left, bottom
-        scrollRectTransform.offsetMax = new Vector2(-200, -250); // right, top
-        
-        // Viewport
-        GameObject viewportObj = new GameObject("Viewport");
-        viewportObj.transform.SetParent(scrollViewObj.transform, false);
-        RectTransform viewportRect = viewportObj.AddComponent<RectTransform>();
-        viewportRect.anchorMin = Vector2.zero;
-        viewportRect.anchorMax = Vector2.one;
-        viewportRect.sizeDelta = Vector2.zero;
-        viewportRect.anchoredPosition = Vector2.zero;
-        
-        Image viewportImage = viewportObj.AddComponent<Image>();
-        viewportImage.color = new Color(0, 0, 0, 0.01f);
-        Mask mask = viewportObj.AddComponent<Mask>();
-        mask.showMaskGraphic = false;
-        
-        scrollRect.viewport = viewportRect;
-        
-        // Content Panel
+        // Contenedor principal (sin scroll)
         contentPanel = new GameObject("Content");
-        contentPanel.transform.SetParent(viewportObj.transform, false);
+        contentPanel.transform.SetParent(transform, false);
         RectTransform contentRect = contentPanel.AddComponent<RectTransform>();
-        // Hacer que el contenido se estire horizontalmente dentro del viewport (como en misiones)
-        contentRect.anchorMin = new Vector2(0f, 1f);
-        contentRect.anchorMax = new Vector2(1f, 1f);
-        contentRect.pivot = new Vector2(0.5f, 1f);
-        contentRect.sizeDelta = new Vector2(0, 100);
-        contentRect.anchoredPosition = Vector2.zero;
+        contentRect.anchorMin = new Vector2(0.5f, 0.5f);
+        contentRect.anchorMax = new Vector2(0.5f, 0.5f);
+        contentRect.pivot = new Vector2(0.5f, 0.5f);
+        contentRect.sizeDelta = new Vector2(1000, 600);
+        contentRect.anchoredPosition = new Vector2(0, -50);
         
-        VerticalLayoutGroup layout = contentPanel.AddComponent<VerticalLayoutGroup>();
-        layout.spacing = 15f;
-        layout.padding = new RectOffset(50, 50, 20, 20);
-        layout.childControlHeight = false;
-        layout.childControlWidth = true;
-        layout.childForceExpandWidth = false;
+        // Layout horizontal para las dos columnas
+        HorizontalLayoutGroup mainLayout = contentPanel.AddComponent<HorizontalLayoutGroup>();
+        mainLayout.spacing = 40f;
+        mainLayout.padding = new RectOffset(50, 50, 20, 20);
+        mainLayout.childControlHeight = true;
+        mainLayout.childControlWidth = false;
+        mainLayout.childForceExpandHeight = true;
+        mainLayout.childForceExpandWidth = false;
+        mainLayout.childAlignment = TextAnchor.MiddleCenter;
         
-        ContentSizeFitter sizeFitter = contentPanel.AddComponent<ContentSizeFitter>();
-        sizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        // Columna izquierda (posiciones 1-5)
+        leftColumn = new GameObject("LeftColumn");
+        leftColumn.transform.SetParent(contentPanel.transform, false);
+        RectTransform leftColumnRect = leftColumn.AddComponent<RectTransform>();
+        leftColumnRect.sizeDelta = new Vector2(450, 0);
         
-        scrollRect.content = contentRect;
-        scrollRect.vertical = true;
-        scrollRect.horizontal = false;
+        VerticalLayoutGroup leftLayout = leftColumn.AddComponent<VerticalLayoutGroup>();
+        leftLayout.spacing = 15f;
+        leftLayout.padding = new RectOffset(0, 0, 0, 0);
+        leftLayout.childControlHeight = false;
+        leftLayout.childControlWidth = true;
+        leftLayout.childForceExpandWidth = true;
+        leftLayout.childForceExpandHeight = false;
         
-        // Scrollbar
-        GameObject scrollbarObj = new GameObject("Scrollbar");
-        scrollbarObj.transform.SetParent(scrollViewObj.transform, false);
-        Scrollbar scrollbar = scrollbarObj.AddComponent<Scrollbar>();
+        LayoutElement leftLayoutElement = leftColumn.AddComponent<LayoutElement>();
+        leftLayoutElement.preferredWidth = 450;
+        leftLayoutElement.flexibleWidth = 0;
         
-        RectTransform scrollbarRect = scrollbarObj.GetComponent<RectTransform>();
-        scrollbarRect.anchorMin = new Vector2(0.5f, 0.02f);
-        scrollbarRect.anchorMax = new Vector2(0.5f, 0.98f);
-        scrollbarRect.pivot = new Vector2(0.5f, 0.5f);
-        scrollbarRect.anchoredPosition = new Vector2(310, 0);
-        scrollbarRect.sizeDelta = new Vector2(15, 0);
+        // Columna derecha (posiciones 6-10)
+        rightColumn = new GameObject("RightColumn");
+        rightColumn.transform.SetParent(contentPanel.transform, false);
+        RectTransform rightColumnRect = rightColumn.AddComponent<RectTransform>();
+        rightColumnRect.sizeDelta = new Vector2(450, 0);
         
-        // Background del scrollbar
-        GameObject scrollbarBg = new GameObject("Background");
-        scrollbarBg.transform.SetParent(scrollbarObj.transform, false);
-        Image scrollbarBgImage = scrollbarBg.AddComponent<Image>();
-        scrollbarBgImage.color = new Color(0.1f, 0.1f, 0.2f, 0.8f);
-        RectTransform scrollbarBgRect = scrollbarBg.GetComponent<RectTransform>();
-        scrollbarBgRect.anchorMin = Vector2.zero;
-        scrollbarBgRect.anchorMax = Vector2.one;
-        scrollbarBgRect.sizeDelta = Vector2.zero;
-        scrollbar.targetGraphic = scrollbarBgImage;
+        VerticalLayoutGroup rightLayout = rightColumn.AddComponent<VerticalLayoutGroup>();
+        rightLayout.spacing = 15f;
+        rightLayout.padding = new RectOffset(0, 0, 0, 0);
+        rightLayout.childControlHeight = false;
+        rightLayout.childControlWidth = true;
+        rightLayout.childForceExpandWidth = true;
+        rightLayout.childForceExpandHeight = false;
         
-        // Handle del scrollbar
-        GameObject scrollbarHandle = new GameObject("Handle");
-        scrollbarHandle.transform.SetParent(scrollbarBg.transform, false);
-        Image scrollbarHandleImage = scrollbarHandle.AddComponent<Image>();
-        scrollbarHandleImage.color = CosmicTheme.NeonCyan;
-        RectTransform scrollbarHandleRect = scrollbarHandle.GetComponent<RectTransform>();
-        scrollbarHandleRect.anchorMin = Vector2.zero;
-        scrollbarHandleRect.anchorMax = Vector2.one;
-        scrollbarHandleRect.sizeDelta = Vector2.zero;
-        scrollbar.handleRect = scrollbarHandleRect;
-        
-        scrollRect.verticalScrollbar = scrollbar;
-        scrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+        LayoutElement rightLayoutElement = rightColumn.AddComponent<LayoutElement>();
+        rightLayoutElement.preferredWidth = 450;
+        rightLayoutElement.flexibleWidth = 0;
     }
     
     private void RefreshLeaderboard()
     {
-        if (contentPanel == null)
+        if (contentPanel == null || leftColumn == null || rightColumn == null)
         {
-            LogWarning("[LeaderboardSection] RefreshLeaderboard llamado pero contentPanel es null");
+            LogWarning("[LeaderboardSection] RefreshLeaderboard llamado pero paneles son null");
             return;
         }
         
         // Limpiar entradas existentes
-        foreach (Transform child in contentPanel.transform)
+        foreach (Transform child in leftColumn.transform)
+        {
+            Destroy(child.gameObject);
+        }
+        foreach (Transform child in rightColumn.transform)
         {
             Destroy(child.gameObject);
         }
@@ -203,9 +169,9 @@ public class LeaderboardSection : BaseMenuSection
         if (scores.Count == 0)
         {
             Log("[LeaderboardSection] No hay puntuaciones, mostrando mensaje vacío.");
-            // Mostrar mensaje si no hay puntuaciones
+            // Mostrar mensaje si no hay puntuaciones (en la columna izquierda)
             GameObject noScoresObj = new GameObject("NoScores");
-            noScoresObj.transform.SetParent(contentPanel.transform, false);
+            noScoresObj.transform.SetParent(leftColumn.transform, false);
             Text noScoresText = noScoresObj.AddComponent<Text>();
             noScoresText.text = "Aún no hay puntuaciones.\n¡Juega para aparecer aquí!";
             noScoresText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
@@ -222,19 +188,22 @@ public class LeaderboardSection : BaseMenuSection
             return;
         }
         
-        // Crear entrada para cada puntuación
+        // Crear entradas distribuidas en dos columnas
         for (int i = 0; i < scores.Count; i++)
         {
-            CreateLeaderboardEntry(i + 1, scores[i]);
+            int rank = i + 1;
+            Transform parentColumn = (rank <= 5) ? leftColumn.transform : rightColumn.transform;
+            
+            CreateLeaderboardEntry(rank, scores[i], parentColumn);
         }
 
-        Log($"[LeaderboardSection] Después de crear entradas, hijos en contentPanel: {contentPanel.transform.childCount}");
+        Log($"[LeaderboardSection] Después de crear entradas, izquierda: {leftColumn.transform.childCount}, derecha: {rightColumn.transform.childCount}");
     }
     
-    private void CreateLeaderboardEntry(int rank, LeaderboardEntry entry)
+    private void CreateLeaderboardEntry(int rank, LeaderboardEntry entry, Transform parent)
     {
         GameObject entryObj = new GameObject($"Entry_{rank}");
-        entryObj.transform.SetParent(contentPanel.transform, false);
+        entryObj.transform.SetParent(parent, false);
         Log($"[LeaderboardSection] Creando entrada #{rank} con score {entry.score}");
         
         RectTransform entryRect = entryObj.AddComponent<RectTransform>();
@@ -242,7 +211,6 @@ public class LeaderboardSection : BaseMenuSection
         
         LayoutElement entryLayout = entryObj.AddComponent<LayoutElement>();
         entryLayout.preferredHeight = 80;
-        entryLayout.preferredWidth = 600;
         
         HorizontalLayoutGroup layout = entryObj.AddComponent<HorizontalLayoutGroup>();
         layout.spacing = 20f;

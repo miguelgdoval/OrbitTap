@@ -110,6 +110,13 @@ public class MainMenuController : MonoBehaviour
             privacyObj.AddComponent<PrivacyPolicyManager>();
         }
         
+        // Crear SocialShareManager
+        if (SocialShareManager.Instance == null)
+        {
+            GameObject socialObj = new GameObject("SocialShareManager");
+            socialObj.AddComponent<SocialShareManager>();
+        }
+        
         CreateUI();
         CreatePlayerDemo();
         

@@ -10,6 +10,8 @@ public class GameOverController : MonoBehaviour
     
     private Text scoreText;
     private Text highScoreText;
+    private Button shareButton;
+    private GameObject copyMessageObj;
 
     private void Awake()
     {
@@ -40,6 +42,16 @@ public class GameOverController : MonoBehaviour
             {
                 scoreText = GameObject.Find("ScoreText")?.GetComponent<Text>();
                 highScoreText = GameObject.Find("HighScoreText")?.GetComponent<Text>();
+                
+                // Asegurar que existe el botón de compartir
+                if (GameObject.Find("ShareButton") == null)
+                {
+                    CreateShareButton(canvas);
+                }
+                else
+                {
+                    shareButton = GameObject.Find("ShareButton")?.GetComponent<Button>();
+                }
             }
         }
         
@@ -188,6 +200,60 @@ public class GameOverController : MonoBehaviour
             tapRect.anchoredPosition = new Vector2(0, -100);
             tapRect.sizeDelta = new Vector2(300, 50);
         }
+        
+        // Crear botón de compartir
+        CreateShareButton(canvas);
+    }
+    
+    private void CreateShareButton(GameObject canvas)
+    {
+        GameObject shareBtnObj = new GameObject("ShareButton");
+        shareBtnObj.transform.SetParent(canvas.transform, false);
+        shareButton = shareBtnObj.AddComponent<Button>();
+        
+        Image shareBtnImg = shareBtnObj.AddComponent<Image>();
+        shareBtnImg.color = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.8f);
+        
+        RectTransform shareBtnRect = shareBtnObj.GetComponent<RectTransform>();
+        shareBtnRect.anchorMin = new Vector2(0.5f, 0f);
+        shareBtnRect.anchorMax = new Vector2(0.5f, 0f);
+        shareBtnRect.pivot = new Vector2(0.5f, 0.5f);
+        shareBtnRect.sizeDelta = new Vector2(200, 50);
+        shareBtnRect.anchoredPosition = new Vector2(0, 100);
+        
+        GameObject shareTextObj = new GameObject("Text");
+        shareTextObj.transform.SetParent(shareBtnObj.transform, false);
+        Text shareText = shareTextObj.AddComponent<Text>();
+        shareText.text = "Compartir";
+        shareText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        shareText.fontSize = 24;
+        shareText.color = Color.white;
+        shareText.alignment = TextAnchor.MiddleCenter;
+        
+        RectTransform shareTextRect = shareTextObj.GetComponent<RectTransform>();
+        shareTextRect.anchorMin = Vector2.zero;
+        shareTextRect.anchorMax = Vector2.one;
+        shareTextRect.sizeDelta = Vector2.zero;
+        
+        shareButton.onClick.AddListener(() => {
+            int currentScore = PlayerPrefs.GetInt("LastScore", 0);
+            int highScore = PlayerPrefs.GetInt("HighScore", 0);
+            bool isNewRecord = currentScore == highScore && currentScore > 0;
+            
+            if (SocialShareManager.Instance != null)
+            {
+                SocialShareManager.Instance.ShareScore(currentScore, highScore, isNewRecord);
+                
+                // Mostrar mensaje visual en editor/desktop
+                #if !UNITY_ANDROID && !UNITY_IOS
+                ShowCopyMessage();
+                #endif
+            }
+            else
+            {
+                LogWarning("[GameOverController] SocialShareManager.Instance es null");
+            }
+        });
     }
 
     private void Update()
@@ -242,6 +308,51 @@ public class GameOverController : MonoBehaviour
     public void RestartGame()
     {
         GoToMainMenu();
+    }
+    
+    private void ShowCopyMessage()
+    {
+        GameObject canvas = GameObject.Find("Canvas");
+        if (canvas == null) return;
+        
+        // Eliminar mensaje anterior si existe
+        if (copyMessageObj != null)
+        {
+            Destroy(copyMessageObj);
+        }
+        
+        // Crear mensaje temporal
+        copyMessageObj = new GameObject("CopyMessage");
+        copyMessageObj.transform.SetParent(canvas.transform, false);
+        
+        RectTransform messageRect = copyMessageObj.AddComponent<RectTransform>();
+        messageRect.anchorMin = new Vector2(0.5f, 0.5f);
+        messageRect.anchorMax = new Vector2(0.5f, 0.5f);
+        messageRect.pivot = new Vector2(0.5f, 0.5f);
+        messageRect.sizeDelta = new Vector2(400, 50);
+        messageRect.anchoredPosition = new Vector2(0, 150);
+        
+        // Añadir fondo semi-transparente
+        Image bgImage = copyMessageObj.AddComponent<Image>();
+        bgImage.color = new Color(0, 0, 0, 0.7f);
+        
+        // Crear texto como hijo
+        GameObject textObj = new GameObject("Text");
+        textObj.transform.SetParent(copyMessageObj.transform, false);
+        Text messageText = textObj.AddComponent<Text>();
+        messageText.text = "✓ Texto copiado al portapapeles";
+        messageText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        messageText.fontSize = 24;
+        messageText.color = CosmicTheme.NeonCyan;
+        messageText.alignment = TextAnchor.MiddleCenter;
+        
+        RectTransform textRect = textObj.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.sizeDelta = Vector2.zero;
+        
+        // Destruir después de 2 segundos
+        Destroy(copyMessageObj, 2f);
     }
 }
 

@@ -141,7 +141,7 @@ public class LeaderboardSection : BaseMenuSection
         rightLayoutElement.flexibleWidth = 0;
     }
     
-    private void RefreshLeaderboard()
+    public void RefreshLeaderboard()
     {
         if (contentPanel == null || leftColumn == null || rightColumn == null)
         {

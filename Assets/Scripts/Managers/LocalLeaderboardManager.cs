@@ -97,6 +97,72 @@ public class LocalLeaderboardManager : MonoBehaviour
         return rank <= MAX_ENTRIES ? rank : -1;
     }
     
+    /// <summary>
+    /// Actualiza todas las entradas del leaderboard del jugador actual con el nuevo nombre
+    /// Identifica las entradas del jugador por su high score o por el nombre anterior
+    /// </summary>
+    public void UpdatePlayerName(string oldName, string newName)
+    {
+        if (string.IsNullOrEmpty(newName) || oldName == newName)
+        {
+            return;
+        }
+        
+        // Obtener el high score del jugador actual
+        int playerHighScore = PlayerPrefs.GetInt("HighScore", 0);
+        
+        // Log para debug: mostrar todas las entradas y sus nombres
+        Log($"[LocalLeaderboardManager] Intentando actualizar nombre de '{oldName}' a '{newName}' (highScore: {playerHighScore})");
+        Log($"[LocalLeaderboardManager] Total entradas en leaderboard: {entries.Count}");
+        foreach (var entry in entries)
+        {
+            Log($"[LocalLeaderboardManager] Entrada: score={entry.score}, name='{entry.playerName}'");
+        }
+        
+        bool updated = false;
+        int updatedCount = 0;
+        
+        // Actualizar todas las entradas que:
+        // 1. Tienen el nombre anterior (para cubrir casos donde el usuario cambió el nombre varias veces)
+        // 2. O tienen el high score del jugador (para asegurar que se actualicen todas las entradas del jugador)
+        foreach (var entry in entries)
+        {
+            bool shouldUpdate = false;
+            
+            // Actualizar si tiene el nombre anterior
+            if (entry.playerName == oldName)
+            {
+                shouldUpdate = true;
+                Log($"[LocalLeaderboardManager] Coincidencia por nombre anterior: score={entry.score}, name='{entry.playerName}'");
+            }
+            // O si tiene el high score del jugador (y no es el nuevo nombre)
+            else if (playerHighScore > 0 && entry.score == playerHighScore && entry.playerName != newName)
+            {
+                shouldUpdate = true;
+                Log($"[LocalLeaderboardManager] Coincidencia por high score: score={entry.score}, name='{entry.playerName}'");
+            }
+            
+            if (shouldUpdate)
+            {
+                string previousName = entry.playerName;
+                entry.playerName = newName;
+                updated = true;
+                updatedCount++;
+                Log($"[LocalLeaderboardManager] Actualizando entrada (score: {entry.score}) de '{previousName}' a '{newName}'");
+            }
+        }
+        
+        if (updated)
+        {
+            SaveLeaderboard();
+            Log($"[LocalLeaderboardManager] Nombre actualizado de '{oldName}' a '{newName}' en {updatedCount} entradas");
+        }
+        else
+        {
+            LogWarning($"[LocalLeaderboardManager] No se encontraron entradas para actualizar (oldName: '{oldName}', highScore: {playerHighScore})");
+        }
+    }
+    
     private void SaveLeaderboard()
     {
         string json = JsonUtility.ToJson(new LeaderboardData { entries = entries });

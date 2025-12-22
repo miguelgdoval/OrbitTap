@@ -69,8 +69,10 @@ public class ScoreManager : MonoBehaviour
         // Añadir siempre la puntuación actual al leaderboard local
         if (LocalLeaderboardManager.Instance != null)
         {
-            Log($"[ScoreManager] Añadiendo puntuación {currentScore} al leaderboard local");
-            LocalLeaderboardManager.Instance.AddScore(currentScore);
+            // Obtener nombre del jugador desde PlayerPrefs
+            string playerName = PlayerPrefs.GetString("PlayerName", "Jugador");
+            Log($"[ScoreManager] Añadiendo puntuación {currentScore} al leaderboard local con nombre: {playerName}");
+            LocalLeaderboardManager.Instance.AddScore(currentScore, playerName);
         }
         
         if (currentScore > highScore)

@@ -532,25 +532,137 @@ public class SettingsPanel : MonoBehaviour
         yPos = CreateSectionTitle(section.transform, "Controles", yPos);
         yPos -= 30f;
         
-        // Placeholder para controles futuros
-        GameObject placeholder = new GameObject("Placeholder");
-        placeholder.transform.SetParent(section.transform, false);
-        Text placeholderText = placeholder.AddComponent<Text>();
-        placeholderText.text = "Opciones de controles próximamente...";
-        placeholderText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        placeholderText.fontSize = 20;
-        placeholderText.color = CosmicTheme.SpaceWhite;
-        placeholderText.alignment = TextAnchor.MiddleCenter;
-        
-        RectTransform placeholderRect = placeholder.GetComponent<RectTransform>();
-        placeholderRect.anchorMin = new Vector2(0.5f, 0.5f);
-        placeholderRect.anchorMax = new Vector2(0.5f, 0.5f);
-        placeholderRect.pivot = new Vector2(0.5f, 0.5f);
-        placeholderRect.anchoredPosition = new Vector2(0, 0);
-        placeholderRect.sizeDelta = new Vector2(400, 40);
+        // Nombre de Perfil
+        yPos = CreatePlayerNameInput(section.transform, yPos);
+        yPos -= 20f;
         
         sectionContent[SettingsSection.Controls] = section;
         section.SetActive(false);
+    }
+    
+    private float CreatePlayerNameInput(Transform parent, float yPos)
+    {
+        // Label
+        GameObject labelObj = new GameObject("NameLabel");
+        labelObj.transform.SetParent(parent, false);
+        Text labelText = labelObj.AddComponent<Text>();
+        labelText.text = "Nombre de Perfil";
+        labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        labelText.fontSize = 22;
+        labelText.color = CosmicTheme.SpaceWhite;
+        labelText.alignment = TextAnchor.MiddleLeft;
+        
+        RectTransform labelRect = labelObj.GetComponent<RectTransform>();
+        labelRect.anchorMin = new Vector2(0f, 1f);
+        labelRect.anchorMax = new Vector2(1f, 1f);
+        labelRect.pivot = new Vector2(0f, 1f);
+        labelRect.anchoredPosition = new Vector2(20, yPos);
+        labelRect.sizeDelta = new Vector2(-40, 30);
+        
+        yPos -= 40f;
+        
+        // Input Field Container
+        GameObject inputContainer = new GameObject("NameInputContainer");
+        inputContainer.transform.SetParent(parent, false);
+        RectTransform containerRect = inputContainer.AddComponent<RectTransform>();
+        containerRect.anchorMin = new Vector2(0f, 1f);
+        containerRect.anchorMax = new Vector2(1f, 1f);
+        containerRect.pivot = new Vector2(0f, 1f);
+        containerRect.anchoredPosition = new Vector2(20, yPos);
+        containerRect.sizeDelta = new Vector2(-40, 50);
+        
+        // Background
+        Image bgImage = inputContainer.AddComponent<Image>();
+        bgImage.color = new Color(0.1f, 0.1f, 0.15f, 1f);
+        
+        // Input Field
+        InputField inputField = inputContainer.AddComponent<InputField>();
+        inputField.characterLimit = 20;
+        inputField.contentType = InputField.ContentType.Name;
+        inputField.lineType = InputField.LineType.SingleLine;
+        
+        // Text Component (what user sees)
+        GameObject textObj = new GameObject("Text");
+        textObj.transform.SetParent(inputContainer.transform, false);
+        Text textComponent = textObj.AddComponent<Text>();
+        textComponent.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        textComponent.fontSize = 22;
+        textComponent.color = CosmicTheme.SpaceWhite;
+        textComponent.alignment = TextAnchor.MiddleLeft;
+        
+        RectTransform textRect = textObj.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.sizeDelta = new Vector2(-20, 0);
+        textRect.anchoredPosition = new Vector2(10, 0);
+        
+        inputField.textComponent = textComponent;
+        
+        // Placeholder
+        GameObject placeholderObj = new GameObject("Placeholder");
+        placeholderObj.transform.SetParent(inputContainer.transform, false);
+        Text placeholderText = placeholderObj.AddComponent<Text>();
+        placeholderText.text = "Escribe tu nombre...";
+        placeholderText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        placeholderText.fontSize = 22;
+        placeholderText.color = new Color(0.5f, 0.5f, 0.5f, 1f);
+        placeholderText.alignment = TextAnchor.MiddleLeft;
+        
+        RectTransform placeholderRect = placeholderObj.GetComponent<RectTransform>();
+        placeholderRect.anchorMin = Vector2.zero;
+        placeholderRect.anchorMax = Vector2.one;
+        placeholderRect.sizeDelta = new Vector2(-20, 0);
+        placeholderRect.anchoredPosition = new Vector2(10, 0);
+        
+        inputField.placeholder = placeholderText;
+        
+        // Cargar nombre actual
+        string currentName = PlayerPrefs.GetString("PlayerName", "Jugador");
+        inputField.text = currentName;
+        
+        // Guardar cuando se termine de editar
+        inputField.onEndEdit.AddListener((value) => {
+            string trimmedValue = value.Trim();
+            if (string.IsNullOrEmpty(trimmedValue))
+            {
+                trimmedValue = "Jugador";
+            }
+            // Limitar longitud
+            if (trimmedValue.Length > 20)
+            {
+                trimmedValue = trimmedValue.Substring(0, 20);
+            }
+            
+            // Guardar nombre anterior ANTES de actualizar PlayerPrefs
+            string oldName = PlayerPrefs.GetString("PlayerName", "Jugador");
+            
+            // Actualizar PlayerPrefs
+            PlayerPrefs.SetString("PlayerName", trimmedValue);
+            PlayerPrefs.Save();
+            inputField.text = trimmedValue;
+            
+            // Actualizar todas las entradas del leaderboard del jugador actual
+            if (LocalLeaderboardManager.Instance != null && oldName != trimmedValue)
+            {
+                LocalLeaderboardManager.Instance.UpdatePlayerName(oldName, trimmedValue);
+                
+                // Refrescar el leaderboard si está visible (buscar en la escena, incluso si está desactivado)
+                LeaderboardSection leaderboardSection = FindObjectOfType<LeaderboardSection>(true);
+                if (leaderboardSection != null)
+                {
+                    Log($"[SettingsPanel] Refrescando leaderboard después de cambiar nombre");
+                    leaderboardSection.RefreshLeaderboard();
+                }
+                else
+                {
+                    LogWarning("[SettingsPanel] No se encontró LeaderboardSection para refrescar");
+                }
+            }
+            
+            Log($"[SettingsPanel] Nombre de perfil guardado: {trimmedValue} (anterior: {oldName})");
+        });
+        
+        return yPos - 60f;
     }
     
     private void CreateLegalSection()

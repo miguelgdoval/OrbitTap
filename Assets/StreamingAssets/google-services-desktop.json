@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "463727642488",
+    "project_id": "starbound-orbit",
+    "storage_bucket": "starbound-orbit.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:463727642488:android:d4111273733897ce102a8d",
+        "android_client_info": {
+          "package_name": "com.miguelgdoval.starboundorbit"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmbrjkFMrJD9AGN0GEYa0I5-GRyjYsCdk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

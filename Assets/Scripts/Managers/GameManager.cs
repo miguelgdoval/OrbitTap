@@ -89,9 +89,16 @@ public class GameManager : MonoBehaviour
         
         // Detener la puntuación y guardar
         ScoreManager scoreManager = FindObjectOfType<ScoreManager>();
+        float playTime = 0f;
+        int score = 0;
+        int highScore = 0;
+        
         if (scoreManager != null)
         {
             Log("GameManager: Deteniendo puntuación...");
+            score = scoreManager.GetCurrentScore();
+            highScore = scoreManager.GetHighScore();
+            playTime = Time.timeSinceLevelLoad; // Tiempo de juego aproximado
             scoreManager.StopScoring();
             Log("GameManager: Guardando puntuación...");
             scoreManager.SaveHighScore();
@@ -99,6 +106,12 @@ public class GameManager : MonoBehaviour
         else
         {
             Debug.LogWarning("GameManager: ScoreManager no encontrado!");
+        }
+        
+        // Analytics: Registrar fin de partida
+        if (AnalyticsManager.Instance != null)
+        {
+            AnalyticsManager.Instance.TrackGameOver(score, highScore, playTime);
         }
 
         // Esperar un poco para que la animación de destrucción se complete antes de cargar la escena
@@ -114,6 +127,12 @@ public class GameManager : MonoBehaviour
         if (MissionManager.Instance != null)
         {
             MissionManager.Instance.ReportProgress(MissionObjectiveType.PlayGames);
+        }
+        
+        // Analytics: Registrar inicio de partida
+        if (AnalyticsManager.Instance != null)
+        {
+            AnalyticsManager.Instance.TrackGameStart();
         }
     }
     

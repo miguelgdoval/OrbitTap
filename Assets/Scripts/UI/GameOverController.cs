@@ -244,6 +244,12 @@ public class GameOverController : MonoBehaviour
             {
                 SocialShareManager.Instance.ShareScore(currentScore, highScore, isNewRecord);
                 
+                // Analytics: Registrar compartir
+                if (AnalyticsManager.Instance != null)
+                {
+                    AnalyticsManager.Instance.TrackShare(currentScore);
+                }
+                
                 // Mostrar mensaje visual en editor/desktop
                 #if !UNITY_ANDROID && !UNITY_IOS
                 ShowCopyMessage();

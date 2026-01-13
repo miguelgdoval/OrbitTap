@@ -399,6 +399,14 @@ public class AdManager : MonoBehaviour
     {
         Log($"[AdManager] Anuncio mostrado: {adUnitId}");
         
+        // Analytics: Registrar anuncio mostrado
+        if (AnalyticsManager.Instance != null)
+        {
+            bool isRewarded = adUnitId == REWARDED_AD_ID;
+            string adType = isRewarded ? "rewarded" : "interstitial";
+            AnalyticsManager.Instance.TrackAdShown(adType, isRewarded);
+        }
+        
         // Resetear contadores cuando el anuncio realmente se muestra
         if (adUnitId == INTERSTITIAL_AD_ID)
         {

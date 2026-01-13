@@ -645,6 +645,16 @@ public class MissionManager : MonoBehaviour
                 
                 if (mission.isCompleted && !wasCompleted)
                 {
+                    // Analytics: Registrar misión completada
+                    if (AnalyticsManager.Instance != null)
+                    {
+                        AnalyticsManager.Instance.TrackMissionCompleted(
+                            mission.id, 
+                            mission.title, 
+                            mission.reward.amount
+                        );
+                    }
+                    
                     OnMissionCompleted?.Invoke(mission);
                 }
             }
@@ -681,6 +691,16 @@ public class MissionManager : MonoBehaviour
                     
                     if (mission.isCompleted && !wasCompleted)
                     {
+                        // Analytics: Registrar misión completada
+                        if (AnalyticsManager.Instance != null)
+                        {
+                            AnalyticsManager.Instance.TrackMissionCompleted(
+                                mission.id, 
+                                mission.title, 
+                                mission.reward.amount
+                            );
+                        }
+                        
                         OnMissionCompleted?.Invoke(mission);
                     }
                 }

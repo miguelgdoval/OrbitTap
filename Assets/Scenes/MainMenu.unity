@@ -337,7 +337,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   androidGameId: 6006026
   iosGameId: 6006027
-  testMode: 1
+  testMode: 0
   gamesBetweenAds: 3
   minTimeBetweenAds: 180
   minGameScore: 15

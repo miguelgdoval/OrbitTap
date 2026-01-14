@@ -7,20 +7,22 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:463727642488:android:d4111273733897ce102a8d",
+        "mobilesdk_app_id": "1:463727642488:ios:8a494f5db7fb9c75102a8d",
         "android_client_info": {
           "package_name": "com.miguelgdoval.starboundorbit"
         }
       },
-      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBmbrjkFMrJD9AGN0GEYa0I5-GRyjYsCdk"
+          "current_key": "AIzaSyCxrMUoimiGJbv2tW7cDBnH4tZ1IGQbLHQ"
         }
       ],
       "services": {
+        "analytics_service": {
+          "status": 0
+        },
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "status": 1
         }
       }
     }

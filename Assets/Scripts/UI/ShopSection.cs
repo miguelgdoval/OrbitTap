@@ -72,7 +72,7 @@ public class ShopSection : BaseMenuSection
         float yPos = -20;
         
         // Starter Bundle
-        yPos = CreateShopItem(content.transform, "STARTER BUNDLE", "Exclusive Skin + 500 ⭐", "€1.49", 
+        yPos = CreateShopItem(content.transform, "STARTER BUNDLE", "100 💎 + 500 ⭐", "€1.49", 
             "70% OFF", yPos, Color.cyan, () => OnStarterBundleClicked());
         
         // Remove Ads (solo mostrar si no está comprado)
@@ -82,22 +82,31 @@ public class ShopSection : BaseMenuSection
                 "", yPos, CosmicTheme.SoftGold, () => OnRemoveAdsClicked());
         }
         
-        // Paquetes de monedas
+        // Paquetes de Cosmic Crystals (Premium) - Principal
+        yPos = CreateShopItem(content.transform, "100 💎", "Cosmic Crystals", "€0.99", 
+            "", yPos, CosmicTheme.SoftGold, () => OnCosmicCrystalsPackClicked(100, 0, 0.99f));
+        
+        yPos = CreateShopItem(content.transform, "250 💎", "Cosmic Crystals + 500 ⭐", "€1.99", 
+            "BEST VALUE", yPos, CosmicTheme.SoftGold, () => OnCosmicCrystalsPackClicked(250, 500, 1.99f));
+        
+        yPos = CreateShopItem(content.transform, "500 💎", "Cosmic Crystals + 1500 ⭐", "€3.99", 
+            "", yPos, CosmicTheme.SoftGold, () => OnCosmicCrystalsPackClicked(500, 1500, 3.99f));
+        
+        yPos = CreateShopItem(content.transform, "1000 💎", "Cosmic Crystals + 3000 ⭐", "€7.99", 
+            "MEGA PACK", yPos, CosmicTheme.SoftGold, () => OnCosmicCrystalsPackClicked(1000, 3000, 7.99f));
+        
+        // Paquetes de Stellar Shards (Gratuita) - Opcional
         yPos = CreateShopItem(content.transform, "500 ⭐", "Stellar Shards", "€0.99", 
             "", yPos, Color.white, () => OnCurrencyPackClicked(500, 0.99f));
         
         yPos = CreateShopItem(content.transform, "1500 ⭐", "Stellar Shards", "€1.99", 
-            "BEST VALUE", yPos, Color.white, () => OnCurrencyPackClicked(1500, 1.99f));
+            "", yPos, Color.white, () => OnCurrencyPackClicked(1500, 1.99f));
         
         yPos = CreateShopItem(content.transform, "3000 ⭐", "Stellar Shards", "€3.99", 
             "", yPos, Color.white, () => OnCurrencyPackClicked(3000, 3.99f));
         
         yPos = CreateShopItem(content.transform, "7000 ⭐", "Stellar Shards", "€7.99", 
-            "MEGA PACK", yPos, Color.white, () => OnCurrencyPackClicked(7000, 7.99f));
-        
-        // Skins Premium
-        yPos = CreateShopItem(content.transform, "PREMIUM SKIN", "Exclusive visual + particles", "€1.99", 
-            "", yPos, Color.cyan, () => OnPremiumSkinClicked());
+            "", yPos, Color.white, () => OnCurrencyPackClicked(7000, 7.99f));
     }
     
     private float CreateShopItem(Transform parent, string title, string description, string price, 
@@ -229,11 +238,13 @@ public class ShopSection : BaseMenuSection
     
     private void OnStarterBundleClicked()
     {
-        Log("Starter Bundle clicked - TODO: Implement purchase");
+        Log("Starter Bundle clicked - TODO: Implement IAP purchase");
         // TODO: Implementar compra IAP
+        // Por ahora, simular compra para testing
         if (CurrencyManager.Instance != null)
         {
-            CurrencyManager.Instance.AddCurrency(500);
+            CurrencyManager.Instance.AddCosmicCrystals(100); // 100 💎
+            CurrencyManager.Instance.AddStellarShards(500); // 500 ⭐ bonus
         }
     }
     
@@ -267,19 +278,27 @@ public class ShopSection : BaseMenuSection
     
     private void OnCurrencyPackClicked(int amount, float price)
     {
-        Log($"Currency pack clicked: {amount} for {price} - TODO: Implement purchase");
+        Log($"Currency pack clicked: {amount} ⭐ for {price} - TODO: Implement IAP purchase");
         // TODO: Implementar compra IAP
-        // Por ahora, añadir monedas directamente para testing
+        // Por ahora, simular compra para testing
         if (CurrencyManager.Instance != null)
         {
-            CurrencyManager.Instance.AddCurrency(amount);
+            CurrencyManager.Instance.AddStellarShards(amount);
         }
     }
     
-    private void OnPremiumSkinClicked()
+    private void OnCosmicCrystalsPackClicked(int crystals, int shardsBonus, float price)
     {
-        Log("Premium Skin clicked - TODO: Implement purchase");
+        Log($"Cosmic Crystals pack clicked: {crystals} 💎 (+ {shardsBonus} ⭐) for {price} - TODO: Implement IAP purchase");
         // TODO: Implementar compra IAP
+        if (CurrencyManager.Instance != null)
+        {
+            CurrencyManager.Instance.AddCosmicCrystals(crystals);
+            if (shardsBonus > 0)
+            {
+                CurrencyManager.Instance.AddStellarShards(shardsBonus);
+            }
+        }
     }
 }
 

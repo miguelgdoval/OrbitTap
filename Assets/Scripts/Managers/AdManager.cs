@@ -457,10 +457,10 @@ public class AdManager : MonoBehaviour
     private void OnRewardedAdCompleted()
     {
         Log("[AdManager] Recompensa otorgada por ver anuncio");
-        // Aquí puedes dar monedas, vidas extra, etc.
+        // Dar Stellar Shards (moneda gratuita)
         if (CurrencyManager.Instance != null)
         {
-            CurrencyManager.Instance.AddCurrency(50); // Ejemplo: 50 monedas por ver anuncio
+            CurrencyManager.Instance.AddStellarShards(50); // 50 ⭐ por ver anuncio
         }
     }
 }

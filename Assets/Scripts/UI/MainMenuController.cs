@@ -32,7 +32,6 @@ public class MainMenuController : MonoBehaviour
     private Text playButtonText;
     
     [Header("Top Panel")]
-    private Text currencyText;
     private Button currencyButton;
     private Button settingsButton;
     
@@ -395,66 +394,83 @@ public class MainMenuController : MonoBehaviour
         
         settingsButton.onClick.AddListener(ShowSettings);
         
-        // Monedas (esquina superior derecha) - Estilo del juego
-        GameObject currencyObj = new GameObject("CurrencyDisplay");
-        currencyObj.transform.SetParent(canvas.transform, false); // Directamente en el canvas, no en topPanel
+        // Contenedor para ambas monedas (esquina superior derecha) - Estilo del juego
+        GameObject currencyContainer = new GameObject("CurrencyContainer");
+        currencyContainer.transform.SetParent(canvas.transform, false);
         
-        // Añadir RectTransform explícitamente antes de usarlo
-        RectTransform currencyRect = currencyObj.AddComponent<RectTransform>();
-        currencyRect.anchorMin = new Vector2(1f, 1f); // Esquina superior derecha
-        currencyRect.anchorMax = new Vector2(1f, 1f);
-        currencyRect.pivot = new Vector2(1f, 1f);
-        currencyRect.anchoredPosition = new Vector2(-40, -40); // Margen desde la esquina
-        currencyRect.sizeDelta = new Vector2(300, 100);
+        RectTransform containerRect = currencyContainer.AddComponent<RectTransform>();
+        containerRect.anchorMin = new Vector2(1f, 1f);
+        containerRect.anchorMax = new Vector2(1f, 1f);
+        containerRect.pivot = new Vector2(1f, 1f);
+        containerRect.anchoredPosition = new Vector2(-40, -40);
+        containerRect.sizeDelta = new Vector2(450, 100);
         
-        currencyButton = currencyObj.AddComponent<Button>();
+        currencyButton = currencyContainer.AddComponent<Button>();
         
         // Fondo oscuro semitransparente (estilo del juego)
-        Image currencyImg = currencyObj.AddComponent<Image>();
+        Image currencyImg = currencyContainer.AddComponent<Image>();
         currencyImg.color = new Color(CosmicTheme.SpaceBlack.r, CosmicTheme.SpaceBlack.g, CosmicTheme.SpaceBlack.b, 0.7f);
         currencyImg.raycastTarget = false;
         
         // Glow suave en el panel
-        Outline currencyOutline = currencyObj.AddComponent<Outline>();
+        Outline currencyOutline = currencyContainer.AddComponent<Outline>();
         currencyOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.4f);
         currencyOutline.effectDistance = new Vector2(3, 3);
         
-        // Crear objeto hijo para el texto
-        GameObject currencyTextObj = new GameObject("Text");
-        currencyTextObj.transform.SetParent(currencyObj.transform, false);
-        currencyText = currencyTextObj.AddComponent<Text>();
-        if (currencyText != null)
-        {
-            currencyText.text = "0 ⭐";
-            Font defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (defaultFont != null)
-            {
-                currencyText.font = defaultFont;
-            }
-            currencyText.fontSize = 48;
-            currencyText.fontStyle = FontStyle.Normal;
-            currencyText.alignment = TextAnchor.MiddleCenter;
-            currencyText.color = CosmicTheme.NeonCyan; // Color neon cian como el resto del juego
-            
-            RectTransform textRect = currencyTextObj.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.sizeDelta = Vector2.zero;
-            textRect.anchoredPosition = Vector2.zero;
-            
-            // Glow en el texto
-            Outline textOutline = currencyTextObj.AddComponent<Outline>();
-            textOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.8f);
-            textOutline.effectDistance = new Vector2(2, 2);
-        }
+        Font defaultFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        
+        // Stellar Shards (⭐) - Moneda Gratuita (izquierda)
+        GameObject shardsObj = new GameObject("StellarShards");
+        shardsObj.transform.SetParent(currencyContainer.transform, false);
+        Text shardsText = shardsObj.AddComponent<Text>();
+        shardsText.text = "0 ⭐";
+        if (defaultFont != null) shardsText.font = defaultFont;
+        shardsText.fontSize = 40;
+        shardsText.fontStyle = FontStyle.Bold;
+        shardsText.color = CosmicTheme.NeonCyan;
+        shardsText.alignment = TextAnchor.MiddleRight;
+        shardsText.raycastTarget = false;
+        
+        RectTransform shardsRect = shardsObj.GetComponent<RectTransform>();
+        shardsRect.anchorMin = new Vector2(0f, 0f);
+        shardsRect.anchorMax = new Vector2(0.5f, 1f);
+        shardsRect.sizeDelta = Vector2.zero;
+        shardsRect.anchoredPosition = Vector2.zero;
+        
+        Outline shardsOutline = shardsObj.AddComponent<Outline>();
+        shardsOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.8f);
+        shardsOutline.effectDistance = new Vector2(2, 2);
+        
+        // Cosmic Crystals (💎) - Moneda Premium (derecha)
+        GameObject crystalsObj = new GameObject("CosmicCrystals");
+        crystalsObj.transform.SetParent(currencyContainer.transform, false);
+        Text crystalsText = crystalsObj.AddComponent<Text>();
+        crystalsText.text = "0 💎";
+        if (defaultFont != null) crystalsText.font = defaultFont;
+        crystalsText.fontSize = 40;
+        crystalsText.fontStyle = FontStyle.Bold;
+        crystalsText.color = CosmicTheme.SoftGold; // Dorado para premium
+        crystalsText.alignment = TextAnchor.MiddleLeft;
+        crystalsText.raycastTarget = false;
+        
+        RectTransform crystalsRect = crystalsObj.GetComponent<RectTransform>();
+        crystalsRect.anchorMin = new Vector2(0.5f, 0f);
+        crystalsRect.anchorMax = new Vector2(1f, 1f);
+        crystalsRect.sizeDelta = Vector2.zero;
+        crystalsRect.anchoredPosition = Vector2.zero;
+        
+        Outline crystalsOutline = crystalsObj.AddComponent<Outline>();
+        crystalsOutline.effectColor = new Color(CosmicTheme.SoftGold.r, CosmicTheme.SoftGold.g, CosmicTheme.SoftGold.b, 0.8f);
+        crystalsOutline.effectDistance = new Vector2(2, 2);
         
         currencyButton.onClick.AddListener(() => NavigateTo(MenuSection.Shop));
         
         // Actualizar monedas
         if (currencyManager != null)
         {
-            UpdateCurrencyDisplay();
-            currencyManager.OnCurrencyChanged += (amount) => UpdateCurrencyDisplay();
+            UpdateCurrencyDisplay(shardsText, crystalsText);
+            currencyManager.OnStellarShardsChanged += (amount) => UpdateCurrencyDisplay(shardsText, crystalsText);
+            currencyManager.OnCosmicCrystalsChanged += (amount) => UpdateCurrencyDisplay(shardsText, crystalsText);
         }
     }
     
@@ -1373,11 +1389,14 @@ public class MainMenuController : MonoBehaviour
         iconRect.localScale = targetScale;
     }
     
-    private void UpdateCurrencyDisplay()
+    private void UpdateCurrencyDisplay(Text shardsText, Text crystalsText)
     {
-        if (currencyText != null && currencyManager != null)
+        if (currencyManager != null)
         {
-            currencyText.text = $"{currencyManager.CurrentCurrency} ⭐";
+            if (shardsText != null)
+                shardsText.text = $"{currencyManager.StellarShards} ⭐";
+            if (crystalsText != null)
+                crystalsText.text = $"{currencyManager.CosmicCrystals} 💎";
         }
     }
     

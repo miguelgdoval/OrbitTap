@@ -25,6 +25,9 @@ public class SkinsSection : BaseMenuSection
     private PlanetData currentEquippedPlanet;
     private const string SELECTED_PLANET_KEY = "SelectedPlanet";
     
+    [Header("Skin Pricing")]
+    private Dictionary<string, SkinPriceData> skinPrices = new Dictionary<string, SkinPriceData>();
+    
     private bool isInitialized = false;
     
     private void Start()
@@ -67,11 +70,36 @@ public class SkinsSection : BaseMenuSection
         if (isInitialized) return;
         
         menuController = FindObjectOfType<MainMenuController>();
+        InitializeSkinPrices();
         InitializePlanets();
         CreateUI();
         isInitialized = true;
         
         Log($"[SkinsSection] Inicialización completada. UI creada: {contentPanel != null}");
+    }
+    
+    private void InitializeSkinPrices()
+    {
+        // Definir precios de skins
+        // Skins comunes (⭐) - desbloqueables con Stellar Shards
+        skinPrices["AsteroideErrante"] = new SkinPriceData { isUnlocked = true, price = 0, currencyType = CurrencyType.StellarShards }; // Gratis por defecto
+        skinPrices["CristalCosmico"] = new SkinPriceData { isUnlocked = false, price = 100, currencyType = CurrencyType.StellarShards };
+        skinPrices["PlanetaDeGas"] = new SkinPriceData { isUnlocked = false, price = 150, currencyType = CurrencyType.StellarShards };
+        skinPrices["PlanetaDeLava"] = new SkinPriceData { isUnlocked = false, price = 200, currencyType = CurrencyType.StellarShards };
+        skinPrices["PlanetaHelado"] = new SkinPriceData { isUnlocked = false, price = 250, currencyType = CurrencyType.StellarShards };
+        
+        // Skins premium (💎) - desbloqueables con Cosmic Crystals
+        skinPrices["PlanetaOceanico"] = new SkinPriceData { isUnlocked = false, price = 50, currencyType = CurrencyType.CosmicCrystals };
+        
+        // Cargar estado de desbloqueo guardado
+        foreach (var kvp in skinPrices)
+        {
+            string unlockKey = $"Skin_{kvp.Key}_Unlocked";
+            if (PlayerPrefs.HasKey(unlockKey))
+            {
+                skinPrices[kvp.Key].isUnlocked = PlayerPrefs.GetInt(unlockKey) == 1;
+            }
+        }
     }
     
     private void InitializePlanets()
@@ -509,11 +537,24 @@ public class SkinsSection : BaseMenuSection
         btnObj.transform.SetParent(planetObj.transform, false);
         Button btn = btnObj.AddComponent<Button>();
         
+        // Verificar si el skin está desbloqueado
+        bool isUnlocked = IsSkinUnlocked(planet.name);
+        bool isEquipped = planet.isEquipped;
+        
         // Fondo del botón
         Image btnImg = btnObj.AddComponent<Image>();
-        btnImg.color = planet.isEquipped 
-            ? new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.3f)
-            : new Color(CosmicTheme.SpaceBlack.r, CosmicTheme.SpaceBlack.g, CosmicTheme.SpaceBlack.b, 0.5f);
+        if (isEquipped)
+        {
+            btnImg.color = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.3f);
+        }
+        else if (isUnlocked)
+        {
+            btnImg.color = new Color(CosmicTheme.SpaceBlack.r, CosmicTheme.SpaceBlack.g, CosmicTheme.SpaceBlack.b, 0.5f);
+        }
+        else
+        {
+            btnImg.color = new Color(0.5f, 0.5f, 0.5f, 0.5f); // Gris para bloqueado
+        }
         
         // Glow en el botón
         Outline btnOutline = btnObj.AddComponent<Outline>();
@@ -531,11 +572,34 @@ public class SkinsSection : BaseMenuSection
         GameObject btnTextObj = new GameObject("Text");
         btnTextObj.transform.SetParent(btnObj.transform, false);
         Text btnText = btnTextObj.AddComponent<Text>();
-        btnText.text = planet.isEquipped ? "EQUIPADO" : "EQUIPAR";
+        
+        if (isEquipped)
+        {
+            btnText.text = "EQUIPADO";
+        }
+        else if (isUnlocked)
+        {
+            btnText.text = "EQUIPAR";
+        }
+        else
+        {
+            // Mostrar precio
+            SkinPriceData priceData = GetSkinPrice(planet.name);
+            if (priceData != null)
+            {
+                string currencyIcon = priceData.currencyType == CurrencyType.StellarShards ? "⭐" : "💎";
+                btnText.text = $"{priceData.price} {currencyIcon}";
+            }
+            else
+            {
+                btnText.text = "BLOQUEADO";
+            }
+        }
+        
         btnText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         btnText.fontSize = 28;
         btnText.fontStyle = FontStyle.Bold;
-        btnText.color = CosmicTheme.NeonCyan;
+        btnText.color = isUnlocked ? CosmicTheme.NeonCyan : (GetSkinPrice(planet.name)?.currencyType == CurrencyType.CosmicCrystals ? CosmicTheme.SoftGold : CosmicTheme.NeonCyan);
         btnText.alignment = TextAnchor.MiddleCenter;
         btnText.raycastTarget = false;
         
@@ -595,6 +659,43 @@ public class SkinsSection : BaseMenuSection
     {
         PlanetData planet = availablePlanets[index];
         
+        // Si no está desbloqueado, intentar comprar
+        if (!IsSkinUnlocked(planet.name))
+        {
+            SkinPriceData priceData = GetSkinPrice(planet.name);
+            if (priceData != null && CurrencyManager.Instance != null)
+            {
+                bool purchased = false;
+                
+                if (priceData.currencyType == CurrencyType.StellarShards)
+                {
+                    purchased = CurrencyManager.Instance.SpendStellarShards(priceData.price);
+                }
+                else if (priceData.currencyType == CurrencyType.CosmicCrystals)
+                {
+                    purchased = CurrencyManager.Instance.SpendCosmicCrystals(priceData.price);
+                }
+                
+                if (purchased)
+                {
+                    // Desbloquear skin
+                    UnlockSkin(planet.name);
+                    Log($"Skin desbloqueado: {planet.name}");
+                }
+                else
+                {
+                    LogWarning($"No tienes suficientes {(priceData.currencyType == CurrencyType.StellarShards ? "⭐" : "💎")}");
+                    // Aquí podrías mostrar un mensaje al usuario
+                    return;
+                }
+            }
+            else
+            {
+                LogWarning($"Skin {planet.name} no tiene precio configurado");
+                return;
+            }
+        }
+        
         // Desequipar el planeta actual
         if (currentEquippedPlanet != null)
         {
@@ -616,6 +717,34 @@ public class SkinsSection : BaseMenuSection
         
         // Refrescar UI
         RefreshPlanetButtons();
+    }
+    
+    private bool IsSkinUnlocked(string skinName)
+    {
+        if (skinPrices.ContainsKey(skinName))
+        {
+            return skinPrices[skinName].isUnlocked;
+        }
+        return false; // Por defecto bloqueado
+    }
+    
+    private SkinPriceData GetSkinPrice(string skinName)
+    {
+        if (skinPrices.ContainsKey(skinName))
+        {
+            return skinPrices[skinName];
+        }
+        return null;
+    }
+    
+    private void UnlockSkin(string skinName)
+    {
+        if (skinPrices.ContainsKey(skinName))
+        {
+            skinPrices[skinName].isUnlocked = true;
+            PlayerPrefs.SetInt($"Skin_{skinName}_Unlocked", 1);
+            PlayerPrefs.Save();
+        }
     }
     
     private void RefreshPlanetButtons()
@@ -992,6 +1121,26 @@ public class SkinData
         this.color = color;
         this.isPremium = isPremium;
     }
+}
+
+/// <summary>
+/// Tipo de moneda
+/// </summary>
+public enum CurrencyType
+{
+    StellarShards,  // ⭐ Moneda gratuita
+    CosmicCrystals  // 💎 Moneda premium
+}
+
+/// <summary>
+/// Datos de precio de un skin
+/// </summary>
+[System.Serializable]
+public class SkinPriceData
+{
+    public bool isUnlocked;
+    public int price;
+    public CurrencyType currencyType;
 }
 
 /// <summary>

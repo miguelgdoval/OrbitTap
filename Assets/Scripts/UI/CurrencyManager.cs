@@ -1,18 +1,27 @@
 using UnityEngine;
 
 /// <summary>
-/// Gestiona la moneda del juego (Stellar Shards)
+/// Gestiona las dos monedas del juego: Stellar Shards (⭐) y Cosmic Crystals (💎)
 /// </summary>
 public class CurrencyManager : MonoBehaviour
 {
     public static CurrencyManager Instance { get; private set; }
     
-    private const string CURRENCY_KEY = "StellarShards";
-    private int currentCurrency = 0;
+    // Keys para PlayerPrefs
+    private const string STELLAR_SHARDS_KEY = "StellarShards";
+    private const string COSMIC_CRYSTALS_KEY = "CosmicCrystals";
     
-    public int CurrentCurrency => currentCurrency;
+    // Monedas
+    private int stellarShards = 0;      // Moneda gratuita (⭐)
+    private int cosmicCrystals = 0;     // Moneda premium (💎)
     
-    public System.Action<int> OnCurrencyChanged;
+    // Propiedades públicas
+    public int StellarShards => stellarShards;
+    public int CosmicCrystals => cosmicCrystals;
+    
+    // Eventos
+    public System.Action<int> OnStellarShardsChanged;
+    public System.Action<int> OnCosmicCrystalsChanged;
     
     private void Awake()
     {
@@ -20,7 +29,7 @@ public class CurrencyManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            LoadCurrency();
+            LoadCurrencies();
         }
         else
         {
@@ -28,34 +37,98 @@ public class CurrencyManager : MonoBehaviour
         }
     }
     
-    private void LoadCurrency()
+    private void LoadCurrencies()
     {
-        currentCurrency = PlayerPrefs.GetInt(CURRENCY_KEY, 0);
+        stellarShards = PlayerPrefs.GetInt(STELLAR_SHARDS_KEY, 0);
+        cosmicCrystals = PlayerPrefs.GetInt(COSMIC_CRYSTALS_KEY, 0);
     }
     
+    // ========== STELLAR SHARDS (⭐) - Moneda Gratuita ==========
+    
+    public void AddStellarShards(int amount)
+    {
+        if (amount <= 0) return;
+        
+        stellarShards += amount;
+        SaveStellarShards();
+        OnStellarShardsChanged?.Invoke(stellarShards);
+    }
+    
+    public bool SpendStellarShards(int amount)
+    {
+        if (amount <= 0) return false;
+        if (stellarShards < amount) return false;
+        
+        stellarShards -= amount;
+        SaveStellarShards();
+        OnStellarShardsChanged?.Invoke(stellarShards);
+        return true;
+    }
+    
+    private void SaveStellarShards()
+    {
+        PlayerPrefs.SetInt(STELLAR_SHARDS_KEY, stellarShards);
+        PlayerPrefs.Save();
+    }
+    
+    // ========== COSMIC CRYSTALS (💎) - Moneda Premium ==========
+    
+    public void AddCosmicCrystals(int amount)
+    {
+        if (amount <= 0) return;
+        
+        cosmicCrystals += amount;
+        SaveCosmicCrystals();
+        OnCosmicCrystalsChanged?.Invoke(cosmicCrystals);
+    }
+    
+    public bool SpendCosmicCrystals(int amount)
+    {
+        if (amount <= 0) return false;
+        if (cosmicCrystals < amount) return false;
+        
+        cosmicCrystals -= amount;
+        SaveCosmicCrystals();
+        OnCosmicCrystalsChanged?.Invoke(cosmicCrystals);
+        return true;
+    }
+    
+    private void SaveCosmicCrystals()
+    {
+        PlayerPrefs.SetInt(COSMIC_CRYSTALS_KEY, cosmicCrystals);
+        PlayerPrefs.Save();
+    }
+    
+    // ========== MÉTODOS DE COMPATIBILIDAD (para código existente) ==========
+    
+    /// <summary>
+    /// Método legacy - añade Stellar Shards (para compatibilidad con código existente)
+    /// </summary>
     public void AddCurrency(int amount)
     {
-        currentCurrency += amount;
-        SaveCurrency();
-        OnCurrencyChanged?.Invoke(currentCurrency);
+        AddStellarShards(amount);
     }
     
+    /// <summary>
+    /// Método legacy - gasta Stellar Shards (para compatibilidad con código existente)
+    /// </summary>
     public bool SpendCurrency(int amount)
     {
-        if (currentCurrency >= amount)
-        {
-            currentCurrency -= amount;
-            SaveCurrency();
-            OnCurrencyChanged?.Invoke(currentCurrency);
-            return true;
-        }
-        return false;
+        return SpendStellarShards(amount);
     }
     
-    private void SaveCurrency()
+    /// <summary>
+    /// Propiedad legacy - retorna Stellar Shards (para compatibilidad)
+    /// </summary>
+    public int CurrentCurrency => stellarShards;
+    
+    /// <summary>
+    /// Evento legacy - se dispara cuando cambian Stellar Shards (para compatibilidad)
+    /// </summary>
+    public System.Action<int> OnCurrencyChanged
     {
-        PlayerPrefs.SetInt(CURRENCY_KEY, currentCurrency);
-        PlayerPrefs.Save();
+        get => OnStellarShardsChanged;
+        set => OnStellarShardsChanged = value;
     }
 }
 

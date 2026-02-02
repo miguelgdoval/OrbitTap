@@ -70,3 +70,4 @@ crashlytics-build.properties
 # Windows
 Thumbs.db
 
+/Assets/Firebase/Plugins/x86_64/

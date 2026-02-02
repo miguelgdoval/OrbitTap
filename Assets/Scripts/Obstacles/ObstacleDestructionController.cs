@@ -102,7 +102,7 @@ public class ObstacleDestructionController : MonoBehaviour
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            rb.velocity = Vector2.zero;
+            rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
             rb.isKinematic = true; // Hacerlo kinematic para que no se mueva
         }
@@ -609,8 +609,8 @@ public class ObstacleDestructionController : MonoBehaviour
             }
             
             rb.gravityScale = 0f;
-            rb.drag = 0f;
-            rb.angularDrag = 0f;
+            rb.linearDamping = 0f;
+            rb.angularDamping = 0f;
             rb.isKinematic = false;
             
             // Calcular dirección radial desde el centro
@@ -628,7 +628,7 @@ public class ObstacleDestructionController : MonoBehaviour
             
             // Velocidad en dirección radial
             float speed = fragmentSpeed * Random.Range(0.8f, 1.4f);
-            rb.velocity = direction * speed;
+            rb.linearVelocity = direction * speed;
             
             // Agregar rotación aleatoria
             rb.angularVelocity = Random.Range(-360f, 360f);
@@ -640,7 +640,7 @@ public class ObstacleDestructionController : MonoBehaviour
             // Activar fragmento
             fragment.SetActive(true);
             
-            Log($"ObstacleDestructionController: Fragmento {fragmentsCreated + 1} creado en posición {fragment.transform.position}, escala {fragment.transform.localScale}, velocidad {rb.velocity}, sortingOrder {fragRenderer.sortingOrder}");
+            Log($"ObstacleDestructionController: Fragmento {fragmentsCreated + 1} creado en posición {fragment.transform.position}, escala {fragment.transform.localScale}, velocidad {rb.linearVelocity}, sortingOrder {fragRenderer.sortingOrder}");
             
             // Animar fragmento: hacerlo más pequeño hasta desaparecer
             StartCoroutine(AnimateFragmentScale(fragment, initialScale, Random.Range(0.4f, 0.6f)));
@@ -684,7 +684,7 @@ public class ObstacleDestructionController : MonoBehaviour
                 Rigidbody2D rb = fragment.GetComponent<Rigidbody2D>();
                 if (rb != null)
                 {
-                    rb.velocity = Vector2.zero;
+                    rb.linearVelocity = Vector2.zero;
                     rb.angularVelocity = 0f;
                 }
                 

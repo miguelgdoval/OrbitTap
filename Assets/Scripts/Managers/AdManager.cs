@@ -19,7 +19,7 @@ public class AdManager : MonoBehaviour
 #pragma warning disable 0414 // Campo asignado pero nunca usado (reservado para iOS)
     [SerializeField] private string iosGameId = "YOUR_IOS_GAME_ID"; // Reservado para futura implementación iOS
 #pragma warning restore 0414
-    [SerializeField] private bool testMode = true; // Cambiar a false en producción
+    [SerializeField] private bool testMode = false; // Cambiar a false en producción
     
     [Header("Ad Frequency Settings")]
     [SerializeField] private int gamesBetweenAds = 3; // Mostrar cada 3 partidas

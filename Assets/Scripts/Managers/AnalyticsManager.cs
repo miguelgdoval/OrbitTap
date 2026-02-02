@@ -19,7 +19,6 @@ public class AnalyticsManager : MonoBehaviour
     
     [Header("Analytics Settings")]
     [SerializeField] private bool enableAnalytics = true;
-    [SerializeField] private bool enableCrashReporting = true;
     [SerializeField] private AnalyticsProvider preferredProvider = AnalyticsProvider.Firebase;
     
     private bool isFirebaseInitialized = false;
@@ -94,9 +93,7 @@ public class AnalyticsManager : MonoBehaviour
 #if UNITY_EDITOR
         LogWarning("[AnalyticsManager] ⚠️ Firebase Analytics está deshabilitado en el Editor (no funciona en macOS Editor)");
         LogWarning("[AnalyticsManager] Firebase funcionará correctamente en builds reales (Android/iOS)");
-        return;
-#endif
-        
+#else
         Log("[AnalyticsManager] ✅ Símbolo FIREBASE_ANALYTICS detectado. Inicializando Firebase...");
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task => {
             var dependencyStatus = task.Result;
@@ -114,6 +111,7 @@ public class AnalyticsManager : MonoBehaviour
                 LogWarning($"[AnalyticsManager] ❌ Firebase no está disponible: {dependencyStatus}");
             }
         });
+#endif
 #else
         LogWarning("[AnalyticsManager] ❌ Símbolo FIREBASE_ANALYTICS NO detectado. Firebase Analytics no está disponible.");
         LogWarning("[AnalyticsManager] Verifica que el símbolo esté definido en Project Settings > Player > Other Settings > Scripting Define Symbols");

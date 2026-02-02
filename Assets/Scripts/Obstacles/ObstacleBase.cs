@@ -119,7 +119,7 @@ public class ObstacleBase : MonoBehaviour
             Rigidbody2D obstacleRb = GetComponent<Rigidbody2D>();
             if (obstacleRb != null)
             {
-                obstacleRb.velocity = Vector2.zero;
+                obstacleRb.linearVelocity = Vector2.zero;
                 obstacleRb.angularVelocity = 0f;
                 obstacleRb.isKinematic = true;
             }
@@ -197,7 +197,7 @@ public class ObstacleBase : MonoBehaviour
             Rigidbody2D obstacleRb = GetComponent<Rigidbody2D>();
             if (obstacleRb != null)
             {
-                obstacleRb.velocity = Vector2.zero;
+                obstacleRb.linearVelocity = Vector2.zero;
                 obstacleRb.angularVelocity = 0f;
                 obstacleRb.isKinematic = true;
             }

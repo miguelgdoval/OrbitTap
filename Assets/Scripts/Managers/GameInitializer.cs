@@ -233,6 +233,13 @@ public class GameInitializer : MonoBehaviour
             analyticsManager.AddComponent<AnalyticsManager>();
         }
         
+        // Crear IAPManager
+        if (IAPManager.Instance == null)
+        {
+            GameObject iapManager = new GameObject("IAPManager");
+            iapManager.AddComponent<IAPManager>();
+        }
+        
         // Notificar que el juego ha iniciado (para misiones)
         StartCoroutine(NotifyGameStartDelayed());
     }

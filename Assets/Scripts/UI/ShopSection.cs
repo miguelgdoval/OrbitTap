@@ -238,13 +238,14 @@ public class ShopSection : BaseMenuSection
     
     private void OnStarterBundleClicked()
     {
-        Log("Starter Bundle clicked - TODO: Implement IAP purchase");
-        // TODO: Implementar compra IAP
-        // Por ahora, simular compra para testing
-        if (CurrencyManager.Instance != null)
+        Log("Starter Bundle clicked");
+        if (IAPManager.Instance != null)
         {
-            CurrencyManager.Instance.AddCosmicCrystals(100); // 100 💎
-            CurrencyManager.Instance.AddStellarShards(500); // 500 ⭐ bonus
+            IAPManager.Instance.BuyProduct("starter_bundle");
+        }
+        else
+        {
+            LogError("IAPManager no encontrado");
         }
     }
     
@@ -260,44 +261,55 @@ public class ShopSection : BaseMenuSection
             return;
         }
         
-        // TODO: Aquí irá la lógica de IAP cuando la implementes
-        // Por ahora, simulamos la compra para testing
-        if (AdManager.Instance != null)
+        if (IAPManager.Instance != null)
         {
-            AdManager.Instance.SetRemoveAdsPurchased();
-            Log("Remove Ads activado (modo test - implementar IAP real)");
-            
-            // Mostrar mensaje al usuario (puedes crear un sistema de notificaciones o popup)
-            // Por ahora solo un log
+            IAPManager.Instance.BuyProduct("remove_ads");
         }
         else
         {
-            LogWarning("AdManager no encontrado");
+            LogError("IAPManager no encontrado");
         }
     }
     
     private void OnCurrencyPackClicked(int amount, float price)
     {
-        Log($"Currency pack clicked: {amount} ⭐ for {price} - TODO: Implement IAP purchase");
-        // TODO: Implementar compra IAP
-        // Por ahora, simular compra para testing
-        if (CurrencyManager.Instance != null)
+        string productId = "";
+        switch (amount)
         {
-            CurrencyManager.Instance.AddStellarShards(amount);
+            case 500: productId = "shards_500"; break;
+            case 1500: productId = "shards_1500"; break;
+            case 3000: productId = "shards_3000"; break;
+            case 7000: productId = "shards_7000"; break;
+        }
+        
+        if (IAPManager.Instance != null && !string.IsNullOrEmpty(productId))
+        {
+            IAPManager.Instance.BuyProduct(productId);
+        }
+        else
+        {
+            LogError($"IAPManager no encontrado o producto inválido: {amount} ⭐");
         }
     }
     
     private void OnCosmicCrystalsPackClicked(int crystals, int shardsBonus, float price)
     {
-        Log($"Cosmic Crystals pack clicked: {crystals} 💎 (+ {shardsBonus} ⭐) for {price} - TODO: Implement IAP purchase");
-        // TODO: Implementar compra IAP
-        if (CurrencyManager.Instance != null)
+        string productId = "";
+        switch (crystals)
         {
-            CurrencyManager.Instance.AddCosmicCrystals(crystals);
-            if (shardsBonus > 0)
-            {
-                CurrencyManager.Instance.AddStellarShards(shardsBonus);
-            }
+            case 100: productId = "crystals_100"; break;
+            case 250: productId = "crystals_250"; break;
+            case 500: productId = "crystals_500"; break;
+            case 1000: productId = "crystals_1000"; break;
+        }
+        
+        if (IAPManager.Instance != null && !string.IsNullOrEmpty(productId))
+        {
+            IAPManager.Instance.BuyProduct(productId);
+        }
+        else
+        {
+            LogError($"IAPManager no encontrado o producto inválido: {crystals} 💎");
         }
     }
 }

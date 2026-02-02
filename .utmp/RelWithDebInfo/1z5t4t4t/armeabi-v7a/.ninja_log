@@ -1,0 +1,5 @@
+# ninja log v5
+145	291	1769105168975805844	/Users/miguelgdoval/ORBIT TAP/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/1z5t4t4t/obj/armeabi-v7a/libswappywrapper.so	768f9aa565c57e66
+1	145	1769105168848491980	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	16ea58694baa8907
+1	147	1769106101054861378	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	16ea58694baa8907
+147	300	1769106101182462405	/Users/miguelgdoval/ORBIT TAP/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/1z5t4t4t/obj/armeabi-v7a/libswappywrapper.so	768f9aa565c57e66

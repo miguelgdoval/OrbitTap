@@ -727,7 +727,15 @@ public class SettingsPanel : MonoBehaviour
         
         // Botón Restore Purchases
         CreateNeonButton(section.transform, "Restore Purchases", yPos, () => {
-            Log("Restore Purchases clicked - TODO: Implement");
+            Log("Restore Purchases clicked");
+            if (IAPManager.Instance != null)
+            {
+                IAPManager.Instance.RestorePurchases();
+            }
+            else
+            {
+                LogError("IAPManager no encontrado");
+            }
         });
         
         sectionContent[SettingsSection.Legal] = section;

@@ -80,16 +80,20 @@ public class SkinsSection : BaseMenuSection
     
     private void InitializeSkinPrices()
     {
-        // Definir precios de skins
-        // Skins comunes (⭐) - desbloqueables con Stellar Shards
+        // Definir precios de skins según el diseño balanceado
+        // Tier 1: Starter (gratis)
         skinPrices["AsteroideErrante"] = new SkinPriceData { isUnlocked = true, price = 0, currencyType = CurrencyType.StellarShards }; // Gratis por defecto
-        skinPrices["CristalCosmico"] = new SkinPriceData { isUnlocked = false, price = 100, currencyType = CurrencyType.StellarShards };
-        skinPrices["PlanetaDeGas"] = new SkinPriceData { isUnlocked = false, price = 150, currencyType = CurrencyType.StellarShards };
-        skinPrices["PlanetaDeLava"] = new SkinPriceData { isUnlocked = false, price = 200, currencyType = CurrencyType.StellarShards };
-        skinPrices["PlanetaHelado"] = new SkinPriceData { isUnlocked = false, price = 250, currencyType = CurrencyType.StellarShards };
         
-        // Skins premium (💎) - desbloqueables con Cosmic Crystals
+        // Tier 2-3: Comunes (⭐) - desbloqueables con Stellar Shards
+        skinPrices["CristalCosmico"] = new SkinPriceData { isUnlocked = false, price = 100, currencyType = CurrencyType.StellarShards };
+        skinPrices["PlanetaDeGas"] = new SkinPriceData { isUnlocked = false, price = 200, currencyType = CurrencyType.StellarShards };
+        skinPrices["PlanetaDeLava"] = new SkinPriceData { isUnlocked = false, price = 350, currencyType = CurrencyType.StellarShards };
+        skinPrices["PlanetaHelado"] = new SkinPriceData { isUnlocked = false, price = 500, currencyType = CurrencyType.StellarShards };
+        
+        // Tier 4: Premium (💎) - desbloqueables con Cosmic Crystals
         skinPrices["PlanetaOceanico"] = new SkinPriceData { isUnlocked = false, price = 50, currencyType = CurrencyType.CosmicCrystals };
+        skinPrices["PlanetaEstelar"] = new SkinPriceData { isUnlocked = false, price = 100, currencyType = CurrencyType.CosmicCrystals };
+        skinPrices["PlanetaNebulosa"] = new SkinPriceData { isUnlocked = false, price = 200, currencyType = CurrencyType.CosmicCrystals };
         
         // Cargar estado de desbloqueo guardado
         foreach (var kvp in skinPrices)
@@ -115,7 +119,9 @@ public class SkinsSection : BaseMenuSection
             "PlanetaDeGas",
             "PlanetaDeLava",
             "PlanetaHelado",
-            "PlanetaOceanico"  // Sin acento en el código, pero el archivo tiene "PlanetaOceánico"
+            "PlanetaOceanico",  // Sin acento en el código, pero el archivo tiene "PlanetaOceánico"
+            "PlanetaEstelar",   // Nueva skin premium (sprite por defecto si no existe)
+            "PlanetaNebulosa"   // Nueva skin premium (sprite por defecto si no existe)
         };
         
         // Mapeo de nombres de código a nombres reales de archivos (para caracteres especiales)
@@ -129,6 +135,9 @@ public class SkinsSection : BaseMenuSection
         
         Log($"[SkinsSection] Inicializando planetas. Planeta guardado: {savedPlanet}");
         
+        // Cargar sprite por defecto para usar como placeholder
+        Sprite defaultSprite = LoadPlanetSprite("AsteroideErrante");
+        
         // Primero intentar cargar desde la lista de nombres
         foreach (string planetName in planetNames)
         {
@@ -140,6 +149,16 @@ public class SkinsSection : BaseMenuSection
             {
                 // Si falla con el nombre mapeado, intentar con el nombre original
                 planetSprite = LoadPlanetSprite(planetName);
+            }
+            
+            // Si no se encontró el sprite y es una de las nuevas skins premium, usar sprite por defecto
+            if (planetSprite == null && (planetName == "PlanetaEstelar" || planetName == "PlanetaNebulosa"))
+            {
+                planetSprite = defaultSprite;
+                if (planetSprite != null)
+                {
+                    LogWarning($"[SkinsSection] Sprite no encontrado para {planetName}, usando sprite por defecto (temporal)");
+                }
             }
             
             if (planetSprite != null)

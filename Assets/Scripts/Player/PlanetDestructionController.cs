@@ -685,8 +685,8 @@ public class PlanetDestructionController : MonoBehaviour
                 
                 // CRÍTICO: Configurar física ANTES de calcular velocidad
                 rb.gravityScale = 0f; // Sin gravedad
-                rb.drag = 0f; // Sin resistencia al aire
-                rb.angularDrag = 0f; // Sin resistencia angular
+                rb.linearDamping = 0f; // Sin resistencia al aire
+                rb.angularDamping = 0f; // Sin resistencia angular
                 rb.isKinematic = false; // Debe ser no-kinematic para que la velocidad funcione
                 
                 // Calcular dirección radial desde el centro del planeta
@@ -707,7 +707,7 @@ public class PlanetDestructionController : MonoBehaviour
                 
                 // Velocidad en dirección radial
                 float speed = fragmentSpeed * Random.Range(0.8f, 1.4f);
-                rb.velocity = direction * speed;
+                rb.linearVelocity = direction * speed;
                 
                 // Agregar rotación aleatoria
                 rb.angularVelocity = Random.Range(-360f, 360f);
@@ -763,7 +763,7 @@ public class PlanetDestructionController : MonoBehaviour
                 Rigidbody2D rb = fragment.GetComponent<Rigidbody2D>();
                 if (rb != null)
                 {
-                    rb.velocity = Vector2.zero;
+                    rb.linearVelocity = Vector2.zero;
                     rb.angularVelocity = 0f;
                 }
                 

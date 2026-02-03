@@ -47,7 +47,7 @@ public class OrbitSafetySystem : MonoBehaviour
         }
 
         // Obtener el radio de la órbita
-        PlayerOrbit player = FindObjectOfType<PlayerOrbit>();
+        PlayerOrbit player = FindFirstObjectByType<PlayerOrbit>();
         if (player != null)
         {
             orbitRadius = player.radius;

@@ -34,7 +34,7 @@ public class SacredOrbitRing : MonoBehaviour
         }
 
         // Obtener el radio del jugador si existe
-        PlayerOrbit player = FindObjectOfType<PlayerOrbit>();
+        PlayerOrbit player = FindFirstObjectByType<PlayerOrbit>();
         if (player != null)
         {
             radius = player.radius;

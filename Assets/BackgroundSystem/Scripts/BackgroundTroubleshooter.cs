@@ -80,7 +80,7 @@ public class BackgroundTroubleshooter : MonoBehaviour
         }
         
         // 5. Buscar todos los BackgroundLayers en la escena
-        BackgroundLayer[] allLayers = FindObjectsOfType<BackgroundLayer>();
+        BackgroundLayer[] allLayers = FindObjectsByType<BackgroundLayer>(FindObjectsSortMode.None);
         Debug.Log($"🔍 BackgroundLayers encontrados en escena: {allLayers.Length}");
         foreach (BackgroundLayer layer in allLayers)
         {

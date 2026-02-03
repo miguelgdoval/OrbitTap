@@ -11,6 +11,7 @@ public class GameManager : MonoBehaviour
     public float speedMultiplier = 1.05f;
 
     private PlayerOrbit player;
+    private ScoreManager scoreManager; // Cacheado para evitar FindObjectOfType
     private float timeSinceLastIncrease = 0f;
     private bool isGameOver = false;
 
@@ -41,17 +42,24 @@ public class GameManager : MonoBehaviour
         // Esperar un frame para que GameInitializer termine de crear todo
         yield return null;
         
-        player = FindObjectOfType<PlayerOrbit>();
+        player = FindFirstObjectByType<PlayerOrbit>();
         if (player == null)
         {
             Debug.LogWarning("GameManager: PlayerOrbit not found! Retrying...");
             // Intentar de nuevo después de otro frame
             yield return null;
-            player = FindObjectOfType<PlayerOrbit>();
+            player = FindFirstObjectByType<PlayerOrbit>();
             if (player == null)
             {
                 Debug.LogError("GameManager: PlayerOrbit still not found after retry!");
             }
+        }
+        
+        // Cachear ScoreManager también
+        scoreManager = FindFirstObjectByType<ScoreManager>();
+        if (scoreManager == null)
+        {
+            LogWarning("GameManager: ScoreManager not found! Will try to find it in GameOver()");
         }
     }
 
@@ -87,11 +95,16 @@ public class GameManager : MonoBehaviour
         Log("GameManager: GameOver() llamado");
         isGameOver = true;
         
-        // Detener la puntuación y guardar
-        ScoreManager scoreManager = FindObjectOfType<ScoreManager>();
+        // Detener la puntuación y guardar (usar referencia cacheada)
         float playTime = 0f;
         int score = 0;
         int highScore = 0;
+        
+        // Si no está cacheado, intentar encontrarlo una vez
+        if (scoreManager == null)
+        {
+            scoreManager = FindFirstObjectByType<ScoreManager>();
+        }
         
         if (scoreManager != null)
         {
@@ -167,7 +180,7 @@ public class GameManager : MonoBehaviour
         }
         
         // Limpiar BackgroundManager y sus capas
-        BackgroundManager bgManager = FindObjectOfType<BackgroundManager>();
+        BackgroundManager bgManager = FindFirstObjectByType<BackgroundManager>();
         if (bgManager != null)
         {
             Log("GameManager: Limpiando BackgroundManager...");

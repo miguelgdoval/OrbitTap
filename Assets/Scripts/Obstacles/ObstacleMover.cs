@@ -20,7 +20,7 @@ public class ObstacleMover : MonoBehaviour
         mainCamera = Camera.main;
         if (mainCamera == null)
         {
-            mainCamera = FindObjectOfType<Camera>();
+            mainCamera = FindFirstObjectByType<Camera>();
         }
         
         Log($"ObstacleMover: {gameObject.name} started at {transform.position}, direction: {direction}, speed: {speed}");
@@ -55,7 +55,7 @@ public class ObstacleMover : MonoBehaviour
             Log($"ObstacleMover: {gameObject.name} entered screen at {transform.position}");
         }
 
-        // Solo destruir si ya entró a la pantalla y ahora está fuera
+        // Solo devolver al pool si ya entró a la pantalla y ahora está fuera
         // O si han pasado más de 10 segundos (por si acaso)
         // NOTA: Usar la variable destructionController ya declarada arriba
         if (hasEnteredScreen && IsOutOfScreen())
@@ -63,8 +63,8 @@ public class ObstacleMover : MonoBehaviour
             // Verificar si hay un ObstacleDestructionController en proceso de destrucción
             if (destructionController == null || !destructionController.IsDestroying())
             {
-                Log($"ObstacleMover: Destroying {gameObject.name} - out of screen after entering");
-                Destroy(gameObject);
+                Log($"ObstacleMover: Returning {gameObject.name} to pool - out of screen after entering");
+                ReturnToPool();
             }
         }
         else if (Time.time - spawnTime > 10f)
@@ -72,9 +72,9 @@ public class ObstacleMover : MonoBehaviour
             // Verificar si hay un ObstacleDestructionController en proceso de destrucción
             if (destructionController == null || !destructionController.IsDestroying())
             {
-                // Destruir después de 10 segundos por seguridad
-                Debug.Log($"ObstacleMover: Destroying {gameObject.name} - timeout");
-                Destroy(gameObject);
+                // Devolver al pool después de 10 segundos por seguridad
+                Debug.Log($"ObstacleMover: Returning {gameObject.name} to pool - timeout");
+                ReturnToPool();
             }
         }
     }
@@ -117,6 +117,22 @@ public class ObstacleMover : MonoBehaviour
     public void SetSpeed(float newSpeed)
     {
         speed = newSpeed;
+    }
+    
+    /// <summary>
+    /// Devuelve el obstáculo al pool en lugar de destruirlo
+    /// </summary>
+    private void ReturnToPool()
+    {
+        if (ObstacleManager.Instance != null)
+        {
+            ObstacleManager.Instance.ReturnToPool(gameObject);
+        }
+        else
+        {
+            // Fallback: destruir normalmente si no hay pool
+            Destroy(gameObject);
+        }
     }
 }
 

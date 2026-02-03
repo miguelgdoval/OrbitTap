@@ -121,7 +121,7 @@ public class ObstacleBase : MonoBehaviour
             {
                 obstacleRb.linearVelocity = Vector2.zero;
                 obstacleRb.angularVelocity = 0f;
-                obstacleRb.isKinematic = true;
+                obstacleRb.bodyType = RigidbodyType2D.Kinematic;
             }
             
             // CRÍTICO: Capturar la posición ACTUAL del obstáculo DESPUÉS de detener el movimiento
@@ -199,7 +199,7 @@ public class ObstacleBase : MonoBehaviour
             {
                 obstacleRb.linearVelocity = Vector2.zero;
                 obstacleRb.angularVelocity = 0f;
-                obstacleRb.isKinematic = true;
+                obstacleRb.bodyType = RigidbodyType2D.Kinematic;
             }
             
             // DEBUG: Verificar posición

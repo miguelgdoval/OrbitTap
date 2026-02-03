@@ -87,7 +87,7 @@ public class GameInitializer : MonoBehaviour
 
             // Rigidbody2D - necesario para que las colisiones con triggers funcionen
             Rigidbody2D rb = player.AddComponent<Rigidbody2D>();
-            rb.isKinematic = true; // No afectado por física, solo para colisiones
+            rb.bodyType = RigidbodyType2D.Kinematic; // No afectado por física, solo para colisiones
             rb.gravityScale = 0f;
 
             // CircleCollider2D - debe ser trigger para detectar colisiones con obstáculos

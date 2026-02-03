@@ -647,7 +647,7 @@ public class SettingsPanel : MonoBehaviour
                 LocalLeaderboardManager.Instance.UpdatePlayerName(oldName, trimmedValue);
                 
                 // Refrescar el leaderboard si está visible (buscar en la escena, incluso si está desactivado)
-                LeaderboardSection leaderboardSection = FindObjectOfType<LeaderboardSection>(true);
+                LeaderboardSection leaderboardSection = FindFirstObjectByType<LeaderboardSection>(FindObjectsInactive.Include);
                 if (leaderboardSection != null)
                 {
                     Log($"[SettingsPanel] Refrescando leaderboard después de cambiar nombre");

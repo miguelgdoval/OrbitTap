@@ -104,7 +104,7 @@ public class ObstacleDestructionController : MonoBehaviour
         {
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
-            rb.isKinematic = true; // Hacerlo kinematic para que no se mueva
+            rb.bodyType = RigidbodyType2D.Kinematic; // Hacerlo kinematic para que no se mueva
         }
         
         // CRÍTICO: Si se pasó un punto de colisión, SIEMPRE usarlo (es la posición del padre/obstáculo completo)
@@ -192,10 +192,19 @@ public class ObstacleDestructionController : MonoBehaviour
         // Los fragmentos y partículas ya se crearon en DestroyObstacle() para ser instantáneos
         // Esta coroutine solo espera y destruye el GameObject
         
-        // Esperar a que termine la animación antes de destruir
+        // Esperar a que termine la animación antes de devolver al pool
         yield return new WaitForSeconds(destroyDelay);
         
-        Destroy(gameObject);
+        // Devolver al pool en lugar de destruir
+        if (ObstacleManager.Instance != null)
+        {
+            ObstacleManager.Instance.ReturnToPool(gameObject);
+        }
+        else
+        {
+            // Fallback: destruir normalmente si no hay pool
+            Destroy(gameObject);
+        }
     }
     
     /// <summary>
@@ -611,7 +620,7 @@ public class ObstacleDestructionController : MonoBehaviour
             rb.gravityScale = 0f;
             rb.linearDamping = 0f;
             rb.angularDamping = 0f;
-            rb.isKinematic = false;
+            rb.bodyType = RigidbodyType2D.Dynamic;
             
             // Calcular dirección radial desde el centro
             Vector2 direction = new Vector2(fragmentOffset.x, fragmentOffset.y);

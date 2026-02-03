@@ -4,6 +4,7 @@ using static LogHelper;
 
 public class ObstacleManager : MonoBehaviour
 {
+    public static ObstacleManager Instance { get; private set; }
     [Header("Spawn Settings")]
     public float minSpawnInterval = 2f;
     public float maxSpawnInterval = 4f;
@@ -76,15 +77,50 @@ public class ObstacleManager : MonoBehaviour
     private float breathingRoomTimer = 0f; // Timer para el sistema de breathing room
     private float lastNearMissTime = -10f; // Tiempo del último near miss
     private PlayerOrbit playerOrbitRef; // Referencia al jugador para detectar near misses
+    
+    // Lista de obstáculos activos para optimización (evitar FindObjectsOfType en cada frame)
+    private System.Collections.Generic.List<ObstacleDestructionController> activeObstacles = new System.Collections.Generic.List<ObstacleDestructionController>();
+    
+    // Object Pooling para obstáculos (reduce Instantiate/Destroy)
+    [Header("Object Pooling")]
+    [Tooltip("Tamaño inicial del pool para cada tipo de obstáculo")]
+    public int poolInitialSize = 5;
+    [Tooltip("Tamaño máximo del pool (0 = ilimitado)")]
+    public int poolMaxSize = 20;
+    
+    private System.Collections.Generic.Dictionary<GameObject, System.Collections.Generic.Queue<GameObject>> obstaclePools = 
+        new System.Collections.Generic.Dictionary<GameObject, System.Collections.Generic.Queue<GameObject>>();
+    private Transform poolParent; // Parent para mantener los pools organizados
 
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+    
     private void Start()
     {
         Log("ObstacleManager: Start() called");
         
+        // Crear parent para pools
+        GameObject poolParentObj = new GameObject("ObstaclePools");
+        poolParent = poolParentObj.transform;
+        poolParent.SetParent(transform);
+        poolParentObj.SetActive(false); // Ocultar el parent de pools
+        
+        // Inicializar pools para todos los prefabs
+        InitializePools();
+        
         mainCamera = Camera.main;
         if (mainCamera == null)
         {
-            mainCamera = FindObjectOfType<Camera>();
+            mainCamera = FindFirstObjectByType<Camera>();
         }
 
         if (mainCamera == null)
@@ -111,7 +147,7 @@ public class ObstacleManager : MonoBehaviour
         }
 
         // Obtener el radio del jugador para usar la misma órbita
-        playerOrbit = FindObjectOfType<PlayerOrbit>();
+        playerOrbit = FindFirstObjectByType<PlayerOrbit>();
         playerOrbitRef = playerOrbit; // Guardar referencia para near miss detection
         if (playerOrbit != null)
         {
@@ -119,7 +155,7 @@ public class ObstacleManager : MonoBehaviour
         }
 
         // Obtener o crear el sistema de seguridad
-        safetySystem = FindObjectOfType<OrbitSafetySystem>();
+        safetySystem = FindFirstObjectByType<OrbitSafetySystem>();
         if (safetySystem == null && Application.isPlaying)
         {
             GameObject safetyObj = new GameObject("OrbitSafetySystem");
@@ -150,14 +186,14 @@ public class ObstacleManager : MonoBehaviour
         currentMaxSpawnInterval = maxSpawnInterval;
         
         // Buscar ScoreManager para obtener el score actual
-        scoreManager = FindObjectOfType<ScoreManager>();
+        scoreManager = FindFirstObjectByType<ScoreManager>();
         if (scoreManager == null)
         {
             Debug.LogWarning("ObstacleManager: ScoreManager no encontrado. La dificultad basada en score no funcionará.");
         }
         
         // Buscar BackgroundManager para cambiar fondos según dificultad
-        backgroundManager = FindObjectOfType<BackgroundManager>();
+        backgroundManager = FindFirstObjectByType<BackgroundManager>();
         if (backgroundManager == null)
         {
             Debug.LogWarning("ObstacleManager: BackgroundManager no encontrado. Los fondos no cambiarán automáticamente.");
@@ -175,6 +211,239 @@ public class ObstacleManager : MonoBehaviour
         nextSpawnTime = 0f;
         timeSinceLastSpawn = 0f;
         Log($"ObstacleManager: First obstacle will spawn immediately");
+    }
+    
+    /// <summary>
+    /// Inicializa los pools de objetos para cada tipo de prefab
+    /// </summary>
+    private void InitializePools()
+    {
+        GameObject[] allPrefabs = { 
+            doorFixedPrefab, doorRandomPrefab, oscillatingBarrierPrefab, 
+            rotatingArcPrefab, staticArcPrefab,
+            pulsatingRingPrefab, spiralFragmentPrefab, zigzagBarrierPrefab
+        };
+        
+        foreach (GameObject prefab in allPrefabs)
+        {
+            if (prefab != null && !obstaclePools.ContainsKey(prefab))
+            {
+                System.Collections.Generic.Queue<GameObject> pool = new System.Collections.Generic.Queue<GameObject>();
+                
+                // Pre-instanciar objetos para el pool
+                for (int i = 0; i < poolInitialSize; i++)
+                {
+                    GameObject pooledObj = Instantiate(prefab, poolParent);
+                    pooledObj.SetActive(false);
+                    pooledObj.name = prefab.name + "_Pooled_" + i;
+                    
+                    // Guardar referencia al prefab original
+                    PooledObjectInfo poolInfo = pooledObj.GetComponent<PooledObjectInfo>();
+                    if (poolInfo == null)
+                    {
+                        poolInfo = pooledObj.AddComponent<PooledObjectInfo>();
+                    }
+                    poolInfo.originalPrefab = prefab;
+                    
+                    pool.Enqueue(pooledObj);
+                }
+                
+                obstaclePools[prefab] = pool;
+                Log($"ObstacleManager: Pool inicializado para {prefab.name} con {poolInitialSize} objetos");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Obtiene un obstáculo del pool o crea uno nuevo si el pool está vacío
+    /// </summary>
+    private GameObject GetFromPool(GameObject prefab)
+    {
+        if (prefab == null) return null;
+        
+        // Si no existe pool para este prefab, crearlo
+        if (!obstaclePools.ContainsKey(prefab))
+        {
+            obstaclePools[prefab] = new System.Collections.Generic.Queue<GameObject>();
+        }
+        
+        System.Collections.Generic.Queue<GameObject> pool = obstaclePools[prefab];
+        GameObject obstacle = null;
+        
+        // Intentar obtener del pool
+        while (pool.Count > 0)
+        {
+            obstacle = pool.Dequeue();
+            if (obstacle != null)
+            {
+                break;
+            }
+        }
+        
+        // Si no hay objetos disponibles en el pool, crear uno nuevo
+        if (obstacle == null)
+        {
+            obstacle = Instantiate(prefab, poolParent);
+            obstacle.name = prefab.name + "_Pooled";
+            Log($"ObstacleManager: Nuevo objeto creado para pool de {prefab.name} (pool vacío)");
+        }
+        
+        // Asegurar que tiene PooledObjectInfo con referencia al prefab
+        PooledObjectInfo poolInfo = obstacle.GetComponent<PooledObjectInfo>();
+        if (poolInfo == null)
+        {
+            poolInfo = obstacle.AddComponent<PooledObjectInfo>();
+        }
+        if (poolInfo.originalPrefab == null)
+        {
+            poolInfo.originalPrefab = prefab;
+        }
+        
+        // Resetear el objeto antes de usarlo
+        obstacle.transform.SetParent(null); // Sacar del pool parent
+        obstacle.SetActive(true);
+        
+        // Resetear componentes
+        ObstacleMover mover = obstacle.GetComponent<ObstacleMover>();
+        if (mover != null)
+        {
+            mover.enabled = false; // Se habilitará después en SpawnObstacle
+        }
+        
+        ObstacleDestructionController destruction = obstacle.GetComponent<ObstacleDestructionController>();
+        if (destruction != null)
+        {
+            // El componente se reseteará automáticamente al activarse
+        }
+        
+        // Resetear transform
+        obstacle.transform.localScale = Vector3.one;
+        
+        return obstacle;
+    }
+    
+    /// <summary>
+    /// Devuelve un obstáculo al pool en lugar de destruirlo
+    /// </summary>
+    public void ReturnToPool(GameObject obstacle)
+    {
+        if (obstacle == null) return;
+        
+        // Obtener el prefab original desde el componente PooledObjectInfo (más eficiente)
+        GameObject originalPrefab = null;
+        PooledObjectInfo poolInfo = obstacle.GetComponent<PooledObjectInfo>();
+        if (poolInfo != null && poolInfo.originalPrefab != null)
+        {
+            originalPrefab = poolInfo.originalPrefab;
+        }
+        
+        // Fallback: buscar por nombre si no hay PooledObjectInfo
+        if (originalPrefab == null)
+        {
+            string baseName = obstacle.name.Replace("_Pooled", "").Replace("(Clone)", "").Trim();
+            GameObject[] allPrefabs = { 
+                doorFixedPrefab, doorRandomPrefab, oscillatingBarrierPrefab, 
+                rotatingArcPrefab, staticArcPrefab,
+                pulsatingRingPrefab, spiralFragmentPrefab, zigzagBarrierPrefab
+            };
+            
+            foreach (GameObject prefab in allPrefabs)
+            {
+                if (prefab != null && prefab.name == baseName)
+                {
+                    originalPrefab = prefab;
+                    // Guardar referencia para la próxima vez
+                    if (poolInfo == null)
+                    {
+                        poolInfo = obstacle.AddComponent<PooledObjectInfo>();
+                    }
+                    poolInfo.originalPrefab = prefab;
+                    break;
+                }
+            }
+        }
+        
+        if (originalPrefab == null)
+        {
+            // Si no encontramos el prefab, destruir el objeto normalmente
+            LogWarning($"ObstacleManager: No se encontró prefab para {obstacle.name}, destruyendo normalmente");
+            Destroy(obstacle);
+            return;
+        }
+        
+        // Limpiar el obstáculo antes de devolverlo al pool
+        CleanupObstacle(obstacle);
+        
+        // Desactivar y mover al pool parent
+        obstacle.SetActive(false);
+        obstacle.transform.SetParent(poolParent);
+        obstacle.transform.position = Vector3.zero;
+        obstacle.transform.rotation = Quaternion.identity;
+        obstacle.transform.localScale = Vector3.one;
+        
+        // Remover de la lista de activos
+        ObstacleDestructionController destructionController = obstacle.GetComponent<ObstacleDestructionController>();
+        if (destructionController != null)
+        {
+            activeObstacles.Remove(destructionController);
+        }
+        
+        // Añadir al pool (solo si no excede el máximo)
+        if (!obstaclePools.ContainsKey(originalPrefab))
+        {
+            obstaclePools[originalPrefab] = new System.Collections.Generic.Queue<GameObject>();
+        }
+        
+        System.Collections.Generic.Queue<GameObject> pool = obstaclePools[originalPrefab];
+        if (poolMaxSize <= 0 || pool.Count < poolMaxSize)
+        {
+            pool.Enqueue(obstacle);
+        }
+        else
+        {
+            // Si el pool está lleno, destruir el objeto
+            Destroy(obstacle);
+        }
+    }
+    
+    /// <summary>
+    /// Limpia un obstáculo antes de devolverlo al pool
+    /// </summary>
+    private void CleanupObstacle(GameObject obstacle)
+    {
+        if (obstacle == null) return;
+        
+        // Detener todos los componentes MonoBehaviour
+        ObstacleMover mover = obstacle.GetComponent<ObstacleMover>();
+        if (mover != null)
+        {
+            mover.enabled = false;
+        }
+        
+        ObstacleDestructionController destruction = obstacle.GetComponent<ObstacleDestructionController>();
+        if (destruction != null)
+        {
+            // Resetear el estado de destrucción si es posible
+            // Nota: IsDestroying() es solo lectura, pero el objeto se reseteará al reactivarse
+        }
+        
+        // Resetear Rigidbody2D si existe
+        Rigidbody2D rb = obstacle.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
+        
+        // Cancelar cualquier coroutine en el obstáculo
+        MonoBehaviour[] components = obstacle.GetComponents<MonoBehaviour>();
+        foreach (MonoBehaviour comp in components)
+        {
+            if (comp != null)
+            {
+                StopAllCoroutines();
+            }
+        }
     }
 
     private void LoadPrefabsIfNeeded()
@@ -317,6 +586,7 @@ public class ObstacleManager : MonoBehaviour
     
     /// <summary>
     /// Detecta si el jugador pasa muy cerca de un obstáculo (near miss)
+    /// Optimizado: usa lista de obstáculos activos en lugar de FindObjectsOfType
     /// </summary>
     private void CheckForNearMisses()
     {
@@ -328,10 +598,11 @@ public class ObstacleManager : MonoBehaviour
         Vector3 playerPos = player.transform.position;
         float orbitRadius = playerOrbitRef.radius;
         
-        // Buscar todos los obstáculos activos
-        ObstacleDestructionController[] allObstacles = FindObjectsOfType<ObstacleDestructionController>();
+        // Limpiar obstáculos nulos o destruidos de la lista
+        activeObstacles.RemoveAll(obs => obs == null || obs.IsDestroying() || !obs.gameObject.activeInHierarchy);
         
-        foreach (ObstacleDestructionController obstacle in allObstacles)
+        // Usar lista cacheada en lugar de FindObjectsOfType (mucho más eficiente)
+        foreach (ObstacleDestructionController obstacle in activeObstacles)
         {
             if (obstacle == null || obstacle.IsDestroying()) continue;
             
@@ -360,6 +631,7 @@ public class ObstacleManager : MonoBehaviour
     
     /// <summary>
     /// Verifica si el jugador está en peligro (muchos obstáculos cerca)
+    /// Optimizado: usa lista de obstáculos activos en lugar de FindObjectsOfType
     /// </summary>
     private bool IsPlayerInDanger()
     {
@@ -371,11 +643,12 @@ public class ObstacleManager : MonoBehaviour
         Vector3 playerPos = player.transform.position;
         float dangerRadius = nearMissDistance * 2f; // Radio de peligro
         
-        // Contar obstáculos cerca del jugador
-        ObstacleDestructionController[] allObstacles = FindObjectsOfType<ObstacleDestructionController>();
-        int nearbyObstacles = 0;
+        // Limpiar obstáculos nulos o destruidos de la lista
+        activeObstacles.RemoveAll(obs => obs == null || obs.IsDestroying() || !obs.gameObject.activeInHierarchy);
         
-        foreach (ObstacleDestructionController obstacle in allObstacles)
+        // Contar obstáculos cerca del jugador usando lista cacheada
+        int nearbyObstacles = 0;
+        foreach (ObstacleDestructionController obstacle in activeObstacles)
         {
             if (obstacle == null || obstacle.IsDestroying()) continue;
             
@@ -637,7 +910,7 @@ public class ObstacleManager : MonoBehaviour
             mainCamera = Camera.main;
             if (mainCamera == null)
             {
-                mainCamera = FindObjectOfType<Camera>();
+                mainCamera = FindFirstObjectByType<Camera>();
             }
         }
         
@@ -801,7 +1074,7 @@ public class ObstacleManager : MonoBehaviour
             mainCamera = Camera.main;
             if (mainCamera == null)
             {
-                mainCamera = FindObjectOfType<Camera>();
+                mainCamera = FindFirstObjectByType<Camera>();
             }
             if (mainCamera == null)
             {
@@ -899,19 +1172,23 @@ public class ObstacleManager : MonoBehaviour
         }
         
         Quaternion rotation = Quaternion.Euler(0, 0, rotationAngle);
-        GameObject obstacle = Instantiate(selectedPrefab, spawnPosition, rotation);
         
+        // Usar pool en lugar de Instantiate
+        GameObject obstacle = GetFromPool(selectedPrefab);
         if (obstacle == null)
         {
-            Debug.LogError("ObstacleManager: Failed to instantiate obstacle!");
+            Debug.LogError("ObstacleManager: Failed to get obstacle from pool!");
             return;
         }
         
-        // Forzar la posición Z del obstáculo a 0 después de instanciarlo
-        Vector3 pos = obstacle.transform.position;
-        obstacle.transform.position = new Vector3(pos.x, pos.y, 0f);
+        // Configurar posición y rotación
+        obstacle.transform.position = new Vector3(spawnPosition.x, spawnPosition.y, 0f);
+        obstacle.transform.rotation = rotation;
         
-        // Agregar componente de movimiento al obstáculo
+        // Asegurar que el obstáculo esté activo
+        obstacle.SetActive(true);
+        
+        // Agregar o obtener componente de movimiento al obstáculo
         ObstacleMover mover = obstacle.GetComponent<ObstacleMover>();
         if (mover == null)
         {
@@ -921,8 +1198,12 @@ public class ObstacleManager : MonoBehaviour
         if (mover == null)
         {
             Debug.LogError("ObstacleManager: Failed to add ObstacleMover component!");
+            ReturnToPool(obstacle);
             return;
         }
+        
+        // Asegurar que el mover esté habilitado
+        mover.enabled = true;
         
         // Asignar velocidad aleatoria (entre 1.0x y speedVariation)
         float randomSpeedMultiplier = Random.Range(1.0f, speedVariation);
@@ -960,7 +1241,14 @@ public class ObstacleManager : MonoBehaviour
             tracker = obstacle.AddComponent<ObstacleSafetyTracker>();
         }
         
-        Debug.Log($"ObstacleManager: Spawned {selectedPrefab.name} at {obstacle.transform.position} moving {movementDirection} (speed: {randomSpeed:F2}x, size: {randomSizeMultiplier:F2}x)");
+        // Añadir a la lista de obstáculos activos para optimización
+        ObstacleDestructionController destructionController = obstacle.GetComponent<ObstacleDestructionController>();
+        if (destructionController != null && !activeObstacles.Contains(destructionController))
+        {
+            activeObstacles.Add(destructionController);
+        }
+        
+        Debug.Log($"ObstacleManager: Spawned {selectedPrefab.name} from pool at {obstacle.transform.position} moving {movementDirection} (speed: {randomSpeed:F2}x, size: {randomSizeMultiplier:F2}x)");
     }
 
     /// <summary>
@@ -983,6 +1271,7 @@ public class ObstacleManager : MonoBehaviour
 
     /// <summary>
     /// Cuenta cuántos obstáculos hay actualmente en pantalla
+    /// Optimizado: usa lista de obstáculos activos en lugar de FindObjectsOfType
     /// </summary>
     private int CountObstaclesOnScreen()
     {
@@ -991,23 +1280,24 @@ public class ObstacleManager : MonoBehaviour
             mainCamera = Camera.main;
             if (mainCamera == null)
             {
-                mainCamera = FindObjectOfType<Camera>();
+                mainCamera = FindFirstObjectByType<Camera>();
             }
         }
 
         if (mainCamera == null) return 0;
 
+        // Limpiar obstáculos nulos o destruidos de la lista
+        activeObstacles.RemoveAll(obs => obs == null || obs.IsDestroying() || !obs.gameObject.activeInHierarchy);
+
         int count = 0;
         
-        // Buscar todos los objetos con ObstacleMover (todos los obstáculos activos tienen este componente)
-        ObstacleMover[] allObstacles = FindObjectsOfType<ObstacleMover>();
-        
-        foreach (ObstacleMover mover in allObstacles)
+        // Usar lista cacheada en lugar de FindObjectsOfType (mucho más eficiente)
+        foreach (ObstacleDestructionController obstacle in activeObstacles)
         {
-            if (mover == null || mover.gameObject == null) continue;
+            if (obstacle == null || obstacle.gameObject == null || obstacle.IsDestroying()) continue;
             
             // Verificar si el obstáculo está en pantalla o cerca de ella
-            Vector3 viewportPos = mainCamera.WorldToViewportPoint(mover.transform.position);
+            Vector3 viewportPos = mainCamera.WorldToViewportPoint(obstacle.transform.position);
             
             // Considerar que está "en pantalla" si está dentro o cerca de los límites de la pantalla
             if (viewportPos.x > -0.5f && viewportPos.x < 1.5f &&

@@ -67,6 +67,7 @@
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundManager.cs" />
     <Compile Include="Assets/Scripts/Managers/SocialShareManager.cs" />
     <Compile Include="Assets/Scripts/Managers/GameInitializer.cs" />
+    <Compile Include="Assets/Scripts/Obstacles/PooledObjectInfo.cs" />
     <Compile Include="Assets/Scripts/Visual/BackgroundSetupHelper.cs" />
     <Compile Include="Assets/Scripts/UI/SettingsPanel.cs" />
     <Compile Include="Assets/Scripts/UI/MissionsSection.cs" />

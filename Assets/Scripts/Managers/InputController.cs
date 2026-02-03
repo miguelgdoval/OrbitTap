@@ -7,7 +7,7 @@ public class InputController : MonoBehaviour
 
     private void Start()
     {
-        player = FindObjectOfType<PlayerOrbit>();
+        player = FindFirstObjectByType<PlayerOrbit>();
         if (player == null)
         {
             LogError("InputController: PlayerOrbit not found!");

@@ -687,7 +687,7 @@ public class PlanetDestructionController : MonoBehaviour
                 rb.gravityScale = 0f; // Sin gravedad
                 rb.linearDamping = 0f; // Sin resistencia al aire
                 rb.angularDamping = 0f; // Sin resistencia angular
-                rb.isKinematic = false; // Debe ser no-kinematic para que la velocidad funcione
+                rb.bodyType = RigidbodyType2D.Dynamic; // Debe ser dynamic para que la velocidad funcione
                 
                 // Calcular dirección radial desde el centro del planeta
                 // Usar el offset del fragmento para calcular la dirección

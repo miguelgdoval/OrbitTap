@@ -29,29 +29,36 @@ public class GameOverController : MonoBehaviour
         }
         
         // Forzar creación de UI si no existe
-        if (createUIAtRuntime || GameObject.Find("Canvas") == null)
+        GameObject canvas = GameObject.Find("Canvas");
+        if (createUIAtRuntime || canvas == null)
         {
             Log("GameOverController: Creando UI...");
             CreateUI();
+            // Cachear referencias después de crear
+            canvas = GameObject.Find("Canvas");
+            if (canvas != null)
+            {
+                scoreText = canvas.transform.Find("ScoreText")?.GetComponent<Text>();
+                highScoreText = canvas.transform.Find("HighScoreText")?.GetComponent<Text>();
+                shareButton = canvas.transform.Find("ShareButton")?.GetComponent<Button>();
+            }
         }
         else
         {
             Log("GameOverController: Canvas ya existe, buscando componentes...");
-            GameObject canvas = GameObject.Find("Canvas");
-            if (canvas != null)
+            // Usar Transform.Find en lugar de GameObject.Find (más eficiente)
+            scoreText = canvas.transform.Find("ScoreText")?.GetComponent<Text>();
+            highScoreText = canvas.transform.Find("HighScoreText")?.GetComponent<Text>();
+            
+            // Asegurar que existe el botón de compartir
+            Transform shareButtonTransform = canvas.transform.Find("ShareButton");
+            if (shareButtonTransform == null)
             {
-                scoreText = GameObject.Find("ScoreText")?.GetComponent<Text>();
-                highScoreText = GameObject.Find("HighScoreText")?.GetComponent<Text>();
-                
-                // Asegurar que existe el botón de compartir
-                if (GameObject.Find("ShareButton") == null)
-                {
-                    CreateShareButton(canvas);
-                }
-                else
-                {
-                    shareButton = GameObject.Find("ShareButton")?.GetComponent<Button>();
-                }
+                CreateShareButton(canvas);
+            }
+            else
+            {
+                shareButton = shareButtonTransform.GetComponent<Button>();
             }
         }
         

@@ -69,7 +69,7 @@ public class SkinsSection : BaseMenuSection
     {
         if (isInitialized) return;
         
-        menuController = FindObjectOfType<MainMenuController>();
+        menuController = FindFirstObjectByType<MainMenuController>();
         InitializeSkinPrices();
         InitializePlanets();
         CreateUI();

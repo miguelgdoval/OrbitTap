@@ -68,7 +68,7 @@ public class BackgroundLayer : MonoBehaviour
         mainCamera = Camera.main;
         if (mainCamera == null)
         {
-            mainCamera = FindObjectOfType<Camera>();
+            mainCamera = FindFirstObjectByType<Camera>();
         }
         
         // Crear instancia del material para no afectar el material compartido

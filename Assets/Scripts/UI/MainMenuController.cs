@@ -285,7 +285,7 @@ public class MainMenuController : MonoBehaviour
             canvas.layer = 5; // UI layer
             
             // Asegurar que existe un EventSystem para los botones
-            if (FindObjectOfType<EventSystem>() == null)
+            if (FindFirstObjectByType<EventSystem>() == null)
             {
                 GameObject eventSystemObj = new GameObject("EventSystem");
                 eventSystemObj.AddComponent<EventSystem>();

@@ -130,6 +130,16 @@ public class MainMenuController : MonoBehaviour
             accessibilityObj.AddComponent<AccessibilityManager>();
         }
         
+        // Crear PauseManager
+        if (PauseManager.Instance == null)
+        {
+            GameObject pauseObj = new GameObject("PauseManager");
+            pauseObj.AddComponent<PauseManager>();
+        }
+        
+        // Cargar configuración del juego
+        GameConfig.LoadConfig();
+        
         CreateUI();
         CreatePlayerDemo();
         
@@ -1562,7 +1572,7 @@ public class MainMenuController : MonoBehaviour
         if (!Application.isPlaying) return null;
         
         // Cargar desde Resources/Art/Icons/LetterO
-        Sprite sprite = Resources.Load<Sprite>("Art/Icons/LetterO");
+        Sprite sprite = ResourceLoader.LoadSprite("Art/Icons/LetterO", "LetterO");
         if (sprite != null) return sprite;
         
         // Intentar cargar como Texture2D
@@ -1750,12 +1760,12 @@ public class MainMenuController : MonoBehaviour
     {
         if (!Application.isPlaying) return null;
         
-        // Primero intentar cargar desde Resources (funciona en editor y builds si están en carpeta Resources)
-        Sprite sprite = Resources.Load<Sprite>(resourcePath);
-        if (sprite != null) return sprite;
+        // Usar ResourceLoader para carga segura
+        Sprite sprite = ResourceLoader.LoadSprite(resourcePath, assetName);
+        if (sprite != null && sprite.name != "DefaultSprite") return sprite;
         
         // Intentar cargar como Texture2D desde Resources
-        Texture2D texture = Resources.Load<Texture2D>(resourcePath);
+        Texture2D texture = ResourceLoader.LoadTexture(resourcePath);
         if (texture != null)
         {
             return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
@@ -1900,7 +1910,7 @@ public class MainMenuController : MonoBehaviour
         }
         
         // Si aún falla, intentar cargar todos los sprites y buscar por nombre normalizado
-        Object[] allSprites = Resources.LoadAll("Art/Protagonist", typeof(Sprite));
+        Sprite[] allSprites = ResourceLoader.LoadAll<Sprite>("Art/Protagonist");
         System.Func<string, string> normalizeName = (name) => {
             if (string.IsNullOrEmpty(name)) return "";
             string lower = name.ToLowerInvariant();

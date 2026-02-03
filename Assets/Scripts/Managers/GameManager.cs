@@ -7,8 +7,10 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("Difficulty")]
-    public float difficultyIncreaseInterval = 7f;
-    public float speedMultiplier = 1.05f;
+    [Tooltip("Si está vacío, se usará GameConfig. Si está asignado, se usará este valor.")]
+    public float difficultyIncreaseInterval = 0f; // 0 = usar GameConfig
+    [Tooltip("Si está vacío, se usará GameConfig. Si está asignado, se usará este valor.")]
+    public float speedMultiplier = 0f; // 0 = usar GameConfig
 
     private PlayerOrbit player;
     private ScoreManager scoreManager; // Cacheado para evitar FindObjectOfType
@@ -68,19 +70,26 @@ public class GameManager : MonoBehaviour
         if (isGameOver) return;
 
         timeSinceLastIncrease += Time.deltaTime;
+        
+        // Usar GameConfig si el valor local es 0
+        float interval = difficultyIncreaseInterval > 0 ? difficultyIncreaseInterval : 
+                        (GameConfig.Instance != null ? GameConfig.Instance.difficultyIncreaseInterval : 7f);
 
-        if (timeSinceLastIncrease >= difficultyIncreaseInterval)
+        if (timeSinceLastIncrease >= interval)
         {
             IncreaseDifficulty();
             timeSinceLastIncrease = 0f;
         }
     }
-
+    
     private void IncreaseDifficulty()
     {
         if (player != null)
         {
-            player.angularSpeed *= speedMultiplier;
+            // Usar GameConfig si el valor local es 0
+            float multiplier = speedMultiplier > 0 ? speedMultiplier : 
+                              (GameConfig.Instance != null ? GameConfig.Instance.speedMultiplier : 1.05f);
+            player.angularSpeed *= multiplier;
         }
     }
 

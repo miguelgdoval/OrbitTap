@@ -254,6 +254,16 @@ public class GameInitializer : MonoBehaviour
             accessibilityManager.AddComponent<AccessibilityManager>();
         }
         
+        // Crear PauseManager
+        if (PauseManager.Instance == null)
+        {
+            GameObject pauseManager = new GameObject("PauseManager");
+            pauseManager.AddComponent<PauseManager>();
+        }
+        
+        // Cargar configuración del juego
+        GameConfig.LoadConfig();
+        
         // Notificar que el juego ha iniciado (para misiones)
         StartCoroutine(NotifyGameStartDelayed());
     }
@@ -319,7 +329,7 @@ public class GameInitializer : MonoBehaviour
     private float GetReferencePlanetSize()
     {
         // Cargar el sprite del Asteroide Errante como referencia
-        Sprite referenceSprite = Resources.Load<Sprite>("Art/Protagonist/AsteroideErrante");
+        Sprite referenceSprite = ResourceLoader.LoadSprite("Art/Protagonist/AsteroideErrante", "AsteroideErrante");
         if (referenceSprite != null)
         {
             // Usar bounds.size que da el tamaño real en unidades del mundo (considera el rect visible del sprite)
@@ -413,29 +423,27 @@ public class GameInitializer : MonoBehaviour
         // Si hay un mapeo, intentar primero con el nombre mapeado
         string actualFileName = planetNameMapping.ContainsKey(selectedPlanet) ? planetNameMapping[selectedPlanet] : selectedPlanet;
         
-        // Primero intentar cargar desde Resources (funciona en editor y builds si están en carpeta Resources)
-        Sprite sprite = Resources.Load<Sprite>($"Art/Protagonist/{actualFileName}");
-        if (sprite != null)
+        // Usar ResourceLoader para carga segura
+        Sprite sprite = ResourceLoader.LoadSprite($"Art/Protagonist/{actualFileName}", actualFileName);
+        if (sprite != null && sprite.name != "DefaultSprite")
         {
             Log($"[GameInitializer] Sprite cargado: {actualFileName} (PPU: {sprite.pixelsPerUnit})");
-            // No normalizar - usar el sprite tal como está configurado en Unity
             return sprite;
         }
         
         // Si falla, intentar con el nombre original
         if (actualFileName != selectedPlanet)
         {
-            sprite = Resources.Load<Sprite>($"Art/Protagonist/{selectedPlanet}");
-            if (sprite != null)
+            sprite = ResourceLoader.LoadSprite($"Art/Protagonist/{selectedPlanet}", selectedPlanet);
+            if (sprite != null && sprite.name != "DefaultSprite")
             {
                 Log($"[GameInitializer] Sprite cargado: {selectedPlanet} (PPU: {sprite.pixelsPerUnit})");
-                // No normalizar - usar el sprite tal como está configurado en Unity
                 return sprite;
             }
         }
         
         // Intentar cargar como Texture2D desde Resources
-        Texture2D texture = Resources.Load<Texture2D>($"Art/Protagonist/{actualFileName}");
+        Texture2D texture = ResourceLoader.LoadTexture($"Art/Protagonist/{actualFileName}");
         if (texture != null)
         {
             // Usar un pixelsPerUnit por defecto razonable (100 es común en Unity)
@@ -445,7 +453,7 @@ public class GameInitializer : MonoBehaviour
         
         if (actualFileName != selectedPlanet)
         {
-            texture = Resources.Load<Texture2D>($"Art/Protagonist/{selectedPlanet}");
+            texture = ResourceLoader.LoadTexture($"Art/Protagonist/{selectedPlanet}");
             if (texture != null)
             {
                 // Usar un pixelsPerUnit por defecto razonable (100 es común en Unity)
@@ -455,7 +463,7 @@ public class GameInitializer : MonoBehaviour
         }
         
         // Si falla, intentar cargar todos los sprites y buscar por nombre normalizado
-        Object[] allSprites = Resources.LoadAll("Art/Protagonist", typeof(Sprite));
+        Sprite[] allSprites = ResourceLoader.LoadAll<Sprite>("Art/Protagonist");
         System.Func<string, string> normalizeName = (name) => {
             if (string.IsNullOrEmpty(name)) return "";
             string lower = name.ToLowerInvariant();

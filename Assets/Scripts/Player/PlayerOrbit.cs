@@ -287,7 +287,7 @@ public class PlayerOrbit : MonoBehaviour
         }
         
         // Si aún falla, intentar cargar todos los sprites y buscar por nombre normalizado
-        Object[] allSprites = Resources.LoadAll("Art/Protagonist", typeof(Sprite));
+        Sprite[] allSprites = ResourceLoader.LoadAll<Sprite>("Art/Protagonist");
         System.Func<string, string> normalizeName = (name) => {
             if (string.IsNullOrEmpty(name)) return "";
             string lower = name.ToLowerInvariant();

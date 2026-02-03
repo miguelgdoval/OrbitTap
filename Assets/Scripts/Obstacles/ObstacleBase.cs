@@ -25,12 +25,12 @@ public class ObstacleBase : MonoBehaviour
     {
         if (!Application.isPlaying) return null;
         
-        // Primero intentar cargar desde Resources (funciona en editor y builds si están en carpeta Resources)
-        Texture2D texture = Resources.Load<Texture2D>($"Art/Obstacles/{spriteName}");
+        // Usar ResourceLoader para carga segura
+        Texture2D texture = ResourceLoader.LoadTexture($"Art/Obstacles/{spriteName}");
         if (texture == null)
         {
             // Intentar como Sprite desde Resources
-            Sprite loadedSprite = Resources.Load<Sprite>($"Art/Obstacles/{spriteName}");
+            Sprite loadedSprite = ResourceLoader.LoadSprite($"Art/Obstacles/{spriteName}", spriteName);
             if (loadedSprite != null)
             {
                 // Normalizar el tamaño si es necesario

@@ -231,7 +231,7 @@ public class SkinsSection : BaseMenuSection
         try
         {
             // Intentar cargar todos los sprites de la carpeta Resources/Art/Protagonist
-            Object[] allSprites = Resources.LoadAll("Art/Protagonist", typeof(Sprite));
+            Sprite[] allSprites = ResourceLoader.LoadAll<Sprite>("Art/Protagonist");
             Log($"[SkinsSection] Encontrados {allSprites.Length} sprites en Resources/Art/Protagonist");
             
             // Crear un HashSet con los nombres de planetas ya cargados para evitar duplicados
@@ -923,29 +923,18 @@ public class SkinsSection : BaseMenuSection
         // Obtener el tamaño de referencia del Asteroide Errante
         float referenceSize = GetReferencePlanetSize();
         
-        // Intentar cargar desde Resources (sin extensión)
+        // Usar ResourceLoader para carga segura
         string resourcePath = $"Art/Protagonist/{planetName}";
-        Sprite sprite = Resources.Load<Sprite>(resourcePath);
-        if (sprite != null)
+        Sprite sprite = ResourceLoader.LoadSprite(resourcePath, planetName);
+        if (sprite != null && sprite.name != "DefaultSprite")
         {
             Log($"[SkinsSection] Sprite cargado desde Resources: {resourcePath} (PPU: {sprite.pixelsPerUnit})");
-            // No normalizar - usar el sprite tal como está configurado en Unity
             return sprite;
-        }
-        
-        // Intentar cargar como Texture2D
-        Texture2D texture = Resources.Load<Texture2D>(resourcePath);
-        if (texture != null)
-        {
-            Log($"[SkinsSection] Texture2D cargado desde Resources, creando sprite: {resourcePath}");
-            // Usar un pixelsPerUnit por defecto razonable (100 es común en Unity)
-            float pixelsPerUnit = 100f;
-            return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
         }
         
         // Si falla, intentar cargar todos los sprites y buscar por nombre normalizado
         // (útil para caracteres especiales como "í" en "PlanetaOceánico")
-        Object[] allSprites = Resources.LoadAll("Art/Protagonist", typeof(Sprite));
+        Sprite[] allSprites = ResourceLoader.LoadAll<Sprite>("Art/Protagonist");
         Log($"[SkinsSection] Cargados {allSprites.Length} sprites desde Resources/Art/Protagonist para búsqueda normalizada");
         
         System.Func<string, string> normalizeName = (name) => {
@@ -1095,7 +1084,7 @@ public class SkinsSection : BaseMenuSection
                     return sprite;
                 }
                 
-                texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                Texture2D texture = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(path);
                 if (texture != null)
                 {
                     Log($"[SkinsSection] Texture2D cargado desde AssetDatabase, creando sprite: {path}");

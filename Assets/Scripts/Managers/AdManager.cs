@@ -22,10 +22,14 @@ public class AdManager : MonoBehaviour
     [SerializeField] private bool testMode = false; // Cambiar a false en producción
     
     [Header("Ad Frequency Settings")]
-    [SerializeField] private int gamesBetweenAds = 3; // Mostrar cada 3 partidas
-    [SerializeField] private float minTimeBetweenAds = 180f; // 3 minutos en segundos
-    [SerializeField] private int minGameScore = 15; // Puntuación mínima para mostrar anuncio
-    [SerializeField] private int gamesToForceAd = 5; // Después de X partidas, mostrar anuncio sí o sí (ignora minGameScore)
+    [Tooltip("Si es 0, se usará GameConfig. Si está asignado, se usará este valor.")]
+    [SerializeField] private int gamesBetweenAds = 0; // 0 = usar GameConfig
+    [Tooltip("Si es 0, se usará GameConfig. Si está asignado, se usará este valor.")]
+    [SerializeField] private float minTimeBetweenAds = 0f; // 0 = usar GameConfig
+    [Tooltip("Si es 0, se usará GameConfig. Si está asignado, se usará este valor.")]
+    [SerializeField] private int minGameScore = 0; // 0 = usar GameConfig
+    [Tooltip("Si es 0, se usará GameConfig. Si está asignado, se usará este valor.")]
+    [SerializeField] private int gamesToForceAd = 0; // 0 = usar GameConfig
     
     private const string REMOVE_ADS_KEY = "RemoveAdsPurchased";
     private const string GAMES_SINCE_AD_KEY = "GamesSinceLastAd";
@@ -164,18 +168,28 @@ public class AdManager : MonoBehaviour
             return false;
         }
         
+        // Obtener valores de configuración (GameConfig o valores locales)
+        int gamesBetween = gamesBetweenAds > 0 ? gamesBetweenAds : 
+                          (GameConfig.Instance != null ? GameConfig.Instance.gamesBetweenAds : 3);
+        int gamesToForce = gamesToForceAd > 0 ? gamesToForceAd : 
+                          (GameConfig.Instance != null ? GameConfig.Instance.gamesToForceAd : 5);
+        int minScore = minGameScore > 0 ? minGameScore : 
+                      (GameConfig.Instance != null ? GameConfig.Instance.minGameScore : 15);
+        float minTime = minTimeBetweenAds > 0 ? minTimeBetweenAds : 
+                       (GameConfig.Instance != null ? GameConfig.Instance.minTimeBetweenAds : 180f);
+        
         // Verificar frecuencia de partidas
         int gamesPlayedSinceLastAd = PlayerPrefs.GetInt(GAMES_SINCE_AD_KEY, 0) + 1;
         
         // Si ha jugado suficientes partidas para forzar anuncio, ignorar puntuación mínima
-        bool forceAd = gamesPlayedSinceLastAd >= gamesToForceAd;
+        bool forceAd = gamesPlayedSinceLastAd >= gamesToForce;
         
         if (!forceAd)
         {
             // Verificar puntuación mínima solo si no se fuerza el anuncio
-            if (gameScore > 0 && gameScore < minGameScore)
+            if (gameScore > 0 && gameScore < minScore)
             {
-                Log($"[AdManager] Puntuación muy baja ({gameScore}), no se muestra anuncio (partidas: {gamesPlayedSinceLastAd}/{gamesBetweenAds})");
+                Log($"[AdManager] Puntuación muy baja ({gameScore}), no se muestra anuncio (partidas: {gamesPlayedSinceLastAd}/{gamesBetween})");
                 // Incrementar contador aunque no se muestre anuncio
                 PlayerPrefs.SetInt(GAMES_SINCE_AD_KEY, gamesPlayedSinceLastAd);
                 PlayerPrefs.Save();
@@ -183,11 +197,11 @@ public class AdManager : MonoBehaviour
             }
             
             // Verificar si ha jugado suficientes partidas para el ciclo normal
-            if (gamesPlayedSinceLastAd < gamesBetweenAds)
+            if (gamesPlayedSinceLastAd < gamesBetween)
             {
                 PlayerPrefs.SetInt(GAMES_SINCE_AD_KEY, gamesPlayedSinceLastAd);
                 PlayerPrefs.Save();
-                Log($"[AdManager] Partidas desde último anuncio: {gamesPlayedSinceLastAd}/{gamesBetweenAds}");
+                Log($"[AdManager] Partidas desde último anuncio: {gamesPlayedSinceLastAd}/{gamesBetween}");
                 return false;
             }
         }
@@ -201,9 +215,9 @@ public class AdManager : MonoBehaviour
         double currentTime = System.DateTime.UtcNow.Subtract(new System.DateTime(1970, 1, 1)).TotalSeconds;
         double timeSinceLastAd = currentTime - lastAdTimestamp;
         
-        if (timeSinceLastAd < minTimeBetweenAds && lastAdTimestamp > 0 && !forceAd)
+        if (timeSinceLastAd < minTime && lastAdTimestamp > 0 && !forceAd)
         {
-            float timeRemaining = (float)(minTimeBetweenAds - timeSinceLastAd);
+            float timeRemaining = (float)(minTime - timeSinceLastAd);
             Log($"[AdManager] Cooldown activo. Tiempo restante: {timeRemaining:F1}s");
             // No incrementar contador si está en cooldown, para que cuente cuando pase el tiempo
             return false;
@@ -438,8 +452,15 @@ public class AdManager : MonoBehaviour
             ResetAdCounters();
         }
         
-        // Pausar el juego si es necesario
-        Time.timeScale = 0f;
+        // Pausar el juego usando PauseManager
+        if (PauseManager.Instance != null)
+        {
+            PauseManager.Instance.PauseGame(true); // true = pausa por anuncio
+        }
+        else
+        {
+            Time.timeScale = 0f;
+        }
     }
     
     public void OnUnityAdsShowClick(string adUnitId)
@@ -451,8 +472,15 @@ public class AdManager : MonoBehaviour
     {
         Log($"[AdManager] Anuncio completado: {adUnitId}, Estado: {showCompletionState}");
         
-        // Reanudar el juego
-        Time.timeScale = 1f;
+        // Reanudar el juego usando PauseManager
+        if (PauseManager.Instance != null)
+        {
+            PauseManager.Instance.ResumeGame(true); // true = reanudación por anuncio
+        }
+        else
+        {
+            Time.timeScale = 1f;
+        }
         
         // Si es un anuncio con recompensa y se completó correctamente
         if (adUnitId == REWARDED_AD_ID && showCompletionState == UnityAdsShowCompletionState.COMPLETED)

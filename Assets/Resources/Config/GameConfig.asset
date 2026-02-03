@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e0053947b6bf4b7c97e65f189145731, type: 3}
+  m_Name: GameConfig
+  m_EditorClassIdentifier: Assembly-CSharp::GameConfig
+  difficultyIncreaseInterval: 7
+  speedMultiplier: 1.05
+  minSpawnInterval: 2
+  maxSpawnInterval: 4
+  minSpawnIntervalMin: 0.5
+  maxSpawnIntervalMin: 1
+  difficultyIncreaseRate: 0.02
+  difficultyUpdateInterval: 1
+  maxDifficultyTime: 120
+  obstacleSpeed: 3
+  spawnDistanceFromScreen: 12
+  speedVariation: 1.2
+  sizeVariation: 2
+  maxObstaclesOnScreen: 3
+  breathingRoomDuration: 1.5
+  nearMissDistance: 0.8
+  dangerSpawnMultiplier: 1.5
+  poolInitialSize: 5
+  poolMaxSize: 20
+  scoreToUnlockMedium: 15
+  scoreToUnlockHard: 30
+  scoreToUnlockVeryHard: 60
+  timeToUnlockMedium: 20
+  timeToUnlockHard: 50
+  timeToUnlockVeryHard: 90
+  gamesBetweenAds: 3
+  minTimeBetweenAds: 180
+  minGameScore: 15
+  gamesToForceAd: 5
+  autoPauseOnBackground: 1
+  autoSaveOnPause: 1

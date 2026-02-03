@@ -54,6 +54,7 @@
     <Compile Include="Assets/Scripts/Obstacles/ObstacleDestructionController.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundPreset.cs" />
     <Compile Include="Assets/Scripts/UI/MissionSystem.cs" />
+    <Compile Include="Assets/Scripts/Config/GameConfig.cs" />
     <Compile Include="Assets/Scripts/Managers/AccessibilityManager.cs" />
     <Compile Include="Assets/Scripts/Player/PlanetDamageEffect.cs" />
     <Compile Include="Assets/Scripts/Obstacles/OscillatingBarrier.cs" />
@@ -64,6 +65,7 @@
     <Compile Include="Assets/Scripts/Obstacles/DoorRandom.cs" />
     <Compile Include="Assets/Scripts/UI/SettingsParticleBackground.cs" />
     <Compile Include="Assets/Scripts/Obstacles/StaticArc.cs" />
+    <Compile Include="Assets/Scripts/Utils/ResourceLoader.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundDiagnostics.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundManager.cs" />
     <Compile Include="Assets/Scripts/Managers/AccessibilityHelper.cs" />
@@ -80,6 +82,7 @@
     <Compile Include="Assets/Scripts/Obstacles/Complex/SpiralFragment.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundLayer.cs" />
     <Compile Include="Assets/Scripts/Player/PlanetDestructionController.cs" />
+    <Compile Include="Assets/Scripts/Managers/PauseManager.cs" />
     <Compile Include="Assets/Scripts/UI/MainMenuController.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/TestBackgroundSystem.cs" />
     <Compile Include="Assets/Scripts/UI/LeaderboardSection.cs" />

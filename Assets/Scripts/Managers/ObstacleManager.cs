@@ -472,21 +472,21 @@ public class ObstacleManager : MonoBehaviour
         // En builds, intentar cargar desde Resources (si están en una carpeta Resources)
         // Si no están, se crearán dinámicamente cuando sea necesario
         if (doorFixedPrefab == null)
-            doorFixedPrefab = Resources.Load<GameObject>("Prefabs/Obstacles/DoorFixed");
+            doorFixedPrefab = ResourceLoader.LoadPrefab("Prefabs/Obstacles/DoorFixed");
         if (doorRandomPrefab == null)
-            doorRandomPrefab = Resources.Load<GameObject>("Prefabs/Obstacles/DoorRandom");
+            doorRandomPrefab = ResourceLoader.LoadPrefab("Prefabs/Obstacles/DoorRandom");
         if (oscillatingBarrierPrefab == null)
-            oscillatingBarrierPrefab = Resources.Load<GameObject>("Prefabs/Obstacles/OscillatingBarrier");
+            oscillatingBarrierPrefab = ResourceLoader.LoadPrefab("Prefabs/Obstacles/OscillatingBarrier");
         if (rotatingArcPrefab == null)
-            rotatingArcPrefab = Resources.Load<GameObject>("Prefabs/Obstacles/RotatingArc");
+            rotatingArcPrefab = ResourceLoader.LoadPrefab("Prefabs/Obstacles/RotatingArc");
         if (staticArcPrefab == null)
-            staticArcPrefab = Resources.Load<GameObject>("Prefabs/Obstacles/StaticArc");
+            staticArcPrefab = ResourceLoader.LoadPrefab("Prefabs/Obstacles/StaticArc");
         if (pulsatingRingPrefab == null)
-            pulsatingRingPrefab = Resources.Load<GameObject>("Prefabs/Obstacles/PulsatingRing");
+            pulsatingRingPrefab = ResourceLoader.LoadPrefab("Prefabs/Obstacles/PulsatingRing");
         if (spiralFragmentPrefab == null)
-            spiralFragmentPrefab = Resources.Load<GameObject>("Prefabs/Obstacles/SpiralFragment");
+            spiralFragmentPrefab = ResourceLoader.LoadPrefab("Prefabs/Obstacles/SpiralFragment");
         if (zigzagBarrierPrefab == null)
-            zigzagBarrierPrefab = Resources.Load<GameObject>("Prefabs/Obstacles/ZigzagBarrier");
+            zigzagBarrierPrefab = ResourceLoader.LoadPrefab("Prefabs/Obstacles/ZigzagBarrier");
         #endif
     }
 

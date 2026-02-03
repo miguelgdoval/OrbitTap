@@ -334,6 +334,15 @@ public class AdManager : MonoBehaviour
     public void OnInitializationFailed(UnityAdsInitializationError error, string message)
     {
         Debug.LogError($"[AdManager] Error al inicializar Unity Ads: {error} - {message}");
+        
+        // Mostrar notificación al usuario solo si es un error crítico
+        if (error == UnityAdsInitializationError.INTERNAL_ERROR)
+        {
+            if (NotificationManager.Instance != null)
+            {
+                NotificationManager.Instance.ShowWarning("Error al inicializar anuncios. Pueden no estar disponibles.");
+            }
+        }
     }
     
     // ========== IUnityAdsLoadListener ==========
@@ -366,6 +375,15 @@ public class AdManager : MonoBehaviour
     {
         Debug.LogError($"[AdManager] Error al cargar anuncio {adUnitId}: {error} - {message}");
         
+        // Mostrar notificación solo si es un error crítico (no para errores temporales)
+        if (error == UnityAdsLoadError.INITIALIZE_FAILED || error == UnityAdsLoadError.INTERNAL_ERROR)
+        {
+            if (NotificationManager.Instance != null)
+            {
+                NotificationManager.Instance.ShowWarning("No se pudo cargar el anuncio. Intenta más tarde.");
+            }
+        }
+        
         if (adUnitId == INTERSTITIAL_AD_ID)
         {
             isInterstitialReady = false;
@@ -381,6 +399,12 @@ public class AdManager : MonoBehaviour
     public void OnUnityAdsShowFailure(string adUnitId, UnityAdsShowError error, string message)
     {
         Debug.LogError($"[AdManager] Error al mostrar anuncio {adUnitId}: {error} - {message}");
+        
+        // Mostrar notificación al usuario
+        if (NotificationManager.Instance != null)
+        {
+            NotificationManager.Instance.ShowWarning("No se pudo mostrar el anuncio. Intenta más tarde.");
+        }
         
         // Recargar el anuncio después de un error
         if (adUnitId == INTERSTITIAL_AD_ID)

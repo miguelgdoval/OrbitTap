@@ -87,11 +87,23 @@ public class IAPManager : MonoBehaviour, IStoreListener
     public void OnInitializeFailed(InitializationFailureReason error)
     {
         LogError($"[IAPManager] Error al inicializar Unity IAP: {error}");
+        
+        // Mostrar notificación al usuario
+        if (NotificationManager.Instance != null)
+        {
+            NotificationManager.Instance.ShowError("Error al inicializar la tienda. Las compras pueden no estar disponibles.");
+        }
     }
     
     public void OnInitializeFailed(InitializationFailureReason error, string message)
     {
         LogError($"[IAPManager] Error al inicializar Unity IAP: {error} - {message}");
+        
+        // Mostrar notificación al usuario
+        if (NotificationManager.Instance != null)
+        {
+            NotificationManager.Instance.ShowError("Error al inicializar la tienda. Las compras pueden no estar disponibles.");
+        }
     }
     
     public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs args)
@@ -116,6 +128,14 @@ public class IAPManager : MonoBehaviour, IStoreListener
             }
         }
         
+        // Mostrar notificación de éxito
+        if (NotificationManager.Instance != null)
+        {
+            Product product = storeController.products.WithID(productId);
+            string productName = product != null ? product.metadata.localizedTitle : productId;
+            NotificationManager.Instance.ShowSuccess($"¡Compra exitosa! {productName}");
+        }
+        
         OnPurchaseCompleted?.Invoke(productId);
         
         return PurchaseProcessingResult.Complete;
@@ -124,7 +144,41 @@ public class IAPManager : MonoBehaviour, IStoreListener
     public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)
     {
         LogError($"[IAPManager] Error al comprar {product.definition.id}: {failureReason}");
+        
+        // Mostrar notificación de error al usuario
+        if (NotificationManager.Instance != null)
+        {
+            string errorMessage = GetPurchaseErrorMessage(failureReason);
+            NotificationManager.Instance.ShowError($"Error en la compra: {errorMessage}");
+        }
+        
         OnPurchaseFailedEvent?.Invoke(product.definition.id, failureReason.ToString());
+    }
+    
+    /// <summary>
+    /// Obtiene un mensaje de error amigable para el usuario
+    /// </summary>
+    private string GetPurchaseErrorMessage(PurchaseFailureReason reason)
+    {
+        switch (reason)
+        {
+            case PurchaseFailureReason.PurchasingUnavailable:
+                return "Las compras no están disponibles en este momento";
+            case PurchaseFailureReason.ExistingPurchasePending:
+                return "Ya hay una compra en proceso";
+            case PurchaseFailureReason.ProductUnavailable:
+                return "El producto no está disponible";
+            case PurchaseFailureReason.SignatureInvalid:
+                return "Error de verificación de compra";
+            case PurchaseFailureReason.UserCancelled:
+                return "Compra cancelada";
+            case PurchaseFailureReason.PaymentDeclined:
+                return "Pago rechazado";
+            case PurchaseFailureReason.DuplicateTransaction:
+                return "Transacción duplicada";
+            default:
+                return "Error desconocido";
+        }
     }
     
     // ========== Métodos públicos ==========
@@ -149,6 +203,12 @@ public class IAPManager : MonoBehaviour, IStoreListener
         else
         {
             LogError($"[IAPManager] Producto {productId} no está disponible");
+            
+            // Mostrar notificación al usuario
+            if (NotificationManager.Instance != null)
+            {
+                NotificationManager.Instance.ShowWarning("Este producto no está disponible en este momento");
+            }
         }
     }
     

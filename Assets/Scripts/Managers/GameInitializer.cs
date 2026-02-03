@@ -240,6 +240,20 @@ public class GameInitializer : MonoBehaviour
             iapManager.AddComponent<IAPManager>();
         }
         
+        // Crear NotificationManager
+        if (NotificationManager.Instance == null)
+        {
+            GameObject notificationManager = new GameObject("NotificationManager");
+            notificationManager.AddComponent<NotificationManager>();
+        }
+        
+        // Crear AccessibilityManager
+        if (AccessibilityManager.Instance == null)
+        {
+            GameObject accessibilityManager = new GameObject("AccessibilityManager");
+            accessibilityManager.AddComponent<AccessibilityManager>();
+        }
+        
         // Notificar que el juego ha iniciado (para misiones)
         StartCoroutine(NotifyGameStartDelayed());
     }

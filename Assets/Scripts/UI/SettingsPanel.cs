@@ -60,6 +60,9 @@ public class SettingsPanel : MonoBehaviour
     
     public void Show()
     {
+        // Recargar valores desde AccessibilityManager antes de mostrar
+        LoadSettings();
+        
         if (panel == null)
         {
             CreatePanel();
@@ -78,6 +81,25 @@ public class SettingsPanel : MonoBehaviour
         }
         
         ShowSection(currentSection);
+    }
+    
+    /// <summary>
+    /// Actualiza los toggles de accesibilidad con los valores actuales
+    /// </summary>
+    private void UpdateAccessibilityToggles()
+    {
+        if (!sectionContent.ContainsKey(SettingsSection.Accessibility) || sectionContent[SettingsSection.Accessibility] == null)
+            return;
+        
+        GameObject section = sectionContent[SettingsSection.Accessibility];
+        Toggle[] toggles = section.GetComponentsInChildren<Toggle>();
+        
+        if (toggles.Length >= 3)
+        {
+            toggles[0].isOn = colorBlindMode;
+            toggles[1].isOn = highContrastUI;
+            toggles[2].isOn = reduceAnimations;
+        }
     }
     
     public void Hide()
@@ -497,6 +519,11 @@ public class SettingsPanel : MonoBehaviour
         yPos = CreateNeonToggle(section.transform, "Modo Daltónico", colorBlindMode, yPos, (value) => {
             colorBlindMode = value;
             SaveSettings();
+            // Aplicar configuración de accesibilidad
+            if (AccessibilityManager.Instance != null)
+            {
+                AccessibilityManager.Instance.SetColorBlindMode(value);
+            }
         });
         yPos -= 20f;
         
@@ -504,6 +531,11 @@ public class SettingsPanel : MonoBehaviour
         yPos = CreateNeonToggle(section.transform, "Alto Contraste UI", highContrastUI, yPos, (value) => {
             highContrastUI = value;
             SaveSettings();
+            // Aplicar configuración de accesibilidad
+            if (AccessibilityManager.Instance != null)
+            {
+                AccessibilityManager.Instance.SetHighContrastUI(value);
+            }
         });
         yPos -= 20f;
         
@@ -511,6 +543,11 @@ public class SettingsPanel : MonoBehaviour
         CreateNeonToggle(section.transform, "Reducir Animaciones", reduceAnimations, yPos, (value) => {
             reduceAnimations = value;
             SaveSettings();
+            // Aplicar configuración de accesibilidad
+            if (AccessibilityManager.Instance != null)
+            {
+                AccessibilityManager.Instance.SetReduceAnimations(value);
+            }
         });
         
         sectionContent[SettingsSection.Accessibility] = section;
@@ -1070,6 +1107,20 @@ public class SettingsPanel : MonoBehaviour
             return; // Ya está mostrada
         }
         
+        // Si se muestra la sección de accesibilidad, actualizar valores desde AccessibilityManager
+        if (section == SettingsSection.Accessibility && AccessibilityManager.Instance != null)
+        {
+            colorBlindMode = AccessibilityManager.Instance.IsColorBlindModeEnabled();
+            highContrastUI = AccessibilityManager.Instance.IsHighContrastUIEnabled();
+            reduceAnimations = AccessibilityManager.Instance.IsReduceAnimationsEnabled();
+            
+            // Actualizar los toggles si la sección ya existe
+            if (sectionContent.ContainsKey(section) && sectionContent[section] != null)
+            {
+                UpdateAccessibilityToggles();
+            }
+        }
+        
         // Guardar la sección anterior antes de actualizar
         SettingsSection previousSection = currentSection;
         
@@ -1317,9 +1368,20 @@ public class SettingsPanel : MonoBehaviour
         vibrationEnabled = PlayerPrefs.GetInt("VibrationEnabled", 1) == 1;
         currentLanguage = PlayerPrefs.GetString("Language", "ES");
         graphicsQuality = PlayerPrefs.GetInt("GraphicsQuality", 1);
-        colorBlindMode = PlayerPrefs.GetInt("ColorBlindMode", 0) == 1;
-        highContrastUI = PlayerPrefs.GetInt("HighContrastUI", 0) == 1;
-        reduceAnimations = PlayerPrefs.GetInt("ReduceAnimations", 0) == 1;
+        
+        // Cargar valores de accesibilidad desde AccessibilityManager si existe, sino desde PlayerPrefs
+        if (AccessibilityManager.Instance != null)
+        {
+            colorBlindMode = AccessibilityManager.Instance.IsColorBlindModeEnabled();
+            highContrastUI = AccessibilityManager.Instance.IsHighContrastUIEnabled();
+            reduceAnimations = AccessibilityManager.Instance.IsReduceAnimationsEnabled();
+        }
+        else
+        {
+            colorBlindMode = PlayerPrefs.GetInt("ColorBlindMode", 0) == 1;
+            highContrastUI = PlayerPrefs.GetInt("HighContrastUI", 0) == 1;
+            reduceAnimations = PlayerPrefs.GetInt("ReduceAnimations", 0) == 1;
+        }
     }
     
     private void SaveSettings()

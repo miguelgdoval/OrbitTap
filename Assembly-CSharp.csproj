@@ -54,6 +54,7 @@
     <Compile Include="Assets/Scripts/Obstacles/ObstacleDestructionController.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundPreset.cs" />
     <Compile Include="Assets/Scripts/UI/MissionSystem.cs" />
+    <Compile Include="Assets/Scripts/Managers/AccessibilityManager.cs" />
     <Compile Include="Assets/Scripts/Player/PlanetDamageEffect.cs" />
     <Compile Include="Assets/Scripts/Obstacles/OscillatingBarrier.cs" />
     <Compile Include="Assets/Scripts/Visual/PlanetIdleAnimator.cs" />
@@ -84,6 +85,7 @@
     <Compile Include="Assets/Scripts/Obstacles/ObstacleBase.cs" />
     <Compile Include="Assets/Scripts/UI/ShopSection.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleMover.cs" />
+    <Compile Include="Assets/Scripts/Managers/NotificationManager.cs" />
     <Compile Include="Assets/Scripts/Player/PlayerOrbit.cs" />
     <Compile Include="Assets/Scripts/Obstacles/DoorFixed.cs" />
     <Compile Include="Assets/Scripts/UI/PrivacyPolicyManager.cs" />

@@ -288,13 +288,9 @@ public class GameOverController : MonoBehaviour
 
     private void UpdateUI()
     {
-        // Get saved values
-        GameObject temp = new GameObject("TempScoreManager");
-        ScoreManager tempSM = temp.AddComponent<ScoreManager>();
-        tempSM.LoadHighScore();
-        
+        // Leer directamente de PlayerPrefs (más eficiente que crear GameObject temporal)
         int currentScore = PlayerPrefs.GetInt("LastScore", 0);
-        int highScore = tempSM.GetHighScore();
+        int highScore = PlayerPrefs.GetInt("HighScore", 0);
         
         if (scoreText != null)
         {
@@ -305,8 +301,6 @@ public class GameOverController : MonoBehaviour
         {
             highScoreText.text = "Mejor puntuación: " + highScore;
         }
-        
-        Destroy(temp);
     }
 
     public void GoToMainMenu()

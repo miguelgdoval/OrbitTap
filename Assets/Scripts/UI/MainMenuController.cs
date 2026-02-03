@@ -116,6 +116,20 @@ public class MainMenuController : MonoBehaviour
             socialObj.AddComponent<SocialShareManager>();
         }
         
+        // Crear NotificationManager
+        if (NotificationManager.Instance == null)
+        {
+            GameObject notificationObj = new GameObject("NotificationManager");
+            notificationObj.AddComponent<NotificationManager>();
+        }
+        
+        // Crear AccessibilityManager
+        if (AccessibilityManager.Instance == null)
+        {
+            GameObject accessibilityObj = new GameObject("AccessibilityManager");
+            accessibilityObj.AddComponent<AccessibilityManager>();
+        }
+        
         CreateUI();
         CreatePlayerDemo();
         

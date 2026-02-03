@@ -1248,7 +1248,31 @@ public class ObstacleManager : MonoBehaviour
             activeObstacles.Add(destructionController);
         }
         
+        // Aplicar modo daltónico si está habilitado
+        if (AccessibilityManager.Instance != null && AccessibilityManager.Instance.IsColorBlindModeEnabled())
+        {
+            ApplyColorBlindModeToObstacle(obstacle);
+        }
+        
         Debug.Log($"ObstacleManager: Spawned {selectedPrefab.name} from pool at {obstacle.transform.position} moving {movementDirection} (speed: {randomSpeed:F2}x, size: {randomSizeMultiplier:F2}x)");
+    }
+    
+    /// <summary>
+    /// Aplica el modo daltónico a un obstáculo específico
+    /// </summary>
+    private void ApplyColorBlindModeToObstacle(GameObject obstacle)
+    {
+        SpriteRenderer[] renderers = obstacle.GetComponentsInChildren<SpriteRenderer>();
+        foreach (var renderer in renderers)
+        {
+            // Cambiar a colores más distinguibles para daltónicos
+            if (renderer.color.r > 0.5f && renderer.color.g < 0.5f)
+            {
+                // Si es rojo/magenta, cambiar a azul
+                Color colorBlindColor = new Color(0.4f, 0.6f, 1f, 1f);
+                renderer.color = colorBlindColor;
+            }
+        }
     }
 
     /// <summary>

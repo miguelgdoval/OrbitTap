@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 
 /// <summary>
 /// Gestiona las dos monedas del juego: Stellar Shards (⭐) y Cosmic Crystals (💎)
@@ -39,8 +40,32 @@ public class CurrencyManager : MonoBehaviour
     
     private void LoadCurrencies()
     {
-        stellarShards = PlayerPrefs.GetInt(STELLAR_SHARDS_KEY, 0);
-        cosmicCrystals = PlayerPrefs.GetInt(COSMIC_CRYSTALS_KEY, 0);
+        // Cargar con validación de rangos
+        int loadedShards = PlayerPrefs.GetInt(STELLAR_SHARDS_KEY, 0);
+        int loadedCrystals = PlayerPrefs.GetInt(COSMIC_CRYSTALS_KEY, 0);
+        
+        // Validar rangos razonables (máximo 999,999,999 para evitar overflow)
+        const int MAX_CURRENCY = 999999999;
+        const int MIN_CURRENCY = 0;
+        
+        if (loadedShards < MIN_CURRENCY || loadedShards > MAX_CURRENCY)
+        {
+            LogWarning($"[CurrencyManager] Stellar Shards fuera de rango ({loadedShards}), reseteando a 0");
+            loadedShards = 0;
+            PlayerPrefs.SetInt(STELLAR_SHARDS_KEY, 0);
+        }
+        
+        if (loadedCrystals < MIN_CURRENCY || loadedCrystals > MAX_CURRENCY)
+        {
+            LogWarning($"[CurrencyManager] Cosmic Crystals fuera de rango ({loadedCrystals}), reseteando a 0");
+            loadedCrystals = 0;
+            PlayerPrefs.SetInt(COSMIC_CRYSTALS_KEY, 0);
+        }
+        
+        stellarShards = loadedShards;
+        cosmicCrystals = loadedCrystals;
+        
+        PlayerPrefs.Save();
     }
     
     // ========== STELLAR SHARDS (⭐) - Moneda Gratuita ==========

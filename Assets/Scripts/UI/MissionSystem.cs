@@ -769,48 +769,68 @@ public class MissionManager : MonoBehaviour
     private void LoadMissionsProgress()
     {
         // Cargar progreso de misiones totales
-        foreach (var mission in totalMissions)
-        {
-            string key = MISSION_PROGRESS_PREFIX + mission.id;
-            if (PlayerPrefs.HasKey(key))
-            {
-                string data = PlayerPrefs.GetString(key);
-                MissionProgressData progress = JsonUtility.FromJson<MissionProgressData>(data);
-                mission.currentProgress = progress.currentProgress;
-                mission.isCompleted = progress.isCompleted;
-                mission.isClaimed = progress.isClaimed;
-            }
-        }
+        LoadMissionsProgressForList(totalMissions);
         
         // Cargar progreso de misiones diarias y semanales (solo si no se han reseteado)
         // El reset se hace en CheckAndResetTimedMissions antes de cargar
-        foreach (var mission in dailyMissions)
-        {
-            string key = MISSION_PROGRESS_PREFIX + mission.id;
-            if (PlayerPrefs.HasKey(key))
-            {
-                string data = PlayerPrefs.GetString(key);
-                MissionProgressData progress = JsonUtility.FromJson<MissionProgressData>(data);
-                mission.currentProgress = progress.currentProgress;
-                mission.isCompleted = progress.isCompleted;
-                mission.isClaimed = progress.isClaimed;
-            }
-        }
-        
-        foreach (var mission in weeklyMissions)
-        {
-            string key = MISSION_PROGRESS_PREFIX + mission.id;
-            if (PlayerPrefs.HasKey(key))
-            {
-                string data = PlayerPrefs.GetString(key);
-                MissionProgressData progress = JsonUtility.FromJson<MissionProgressData>(data);
-                mission.currentProgress = progress.currentProgress;
-                mission.isCompleted = progress.isCompleted;
-                mission.isClaimed = progress.isClaimed;
-            }
-        }
+        LoadMissionsProgressForList(dailyMissions);
+        LoadMissionsProgressForList(weeklyMissions);
         
         RefreshActiveMissions();
+    }
+    
+    /// <summary>
+    /// Carga el progreso de una lista de misiones con validación
+    /// </summary>
+    private void LoadMissionsProgressForList(List<MissionData> missions)
+    {
+        foreach (var mission in missions)
+        {
+            string key = MISSION_PROGRESS_PREFIX + mission.id;
+            if (PlayerPrefs.HasKey(key))
+            {
+                try
+                {
+                    string data = PlayerPrefs.GetString(key);
+                    if (string.IsNullOrEmpty(data))
+                    {
+                        LogWarning($"[MissionManager] Datos vacíos para misión {mission.id}, usando valores por defecto");
+                        continue;
+                    }
+                    
+                    MissionProgressData progress = JsonUtility.FromJson<MissionProgressData>(data);
+                    if (progress != null)
+                    {
+                        // Validar valores
+                        if (progress.currentProgress < 0) 
+                        {
+                            LogWarning($"[MissionManager] Progreso negativo para misión {mission.id}, reseteando a 0");
+                            progress.currentProgress = 0;
+                        }
+                        
+                        if (progress.currentProgress > mission.targetValue) 
+                        {
+                            LogWarning($"[MissionManager] Progreso excede objetivo para misión {mission.id}, limitando a {mission.targetValue}");
+                            progress.currentProgress = mission.targetValue;
+                        }
+                        
+                        mission.currentProgress = progress.currentProgress;
+                        mission.isCompleted = progress.isCompleted;
+                        mission.isClaimed = progress.isClaimed;
+                    }
+                    else
+                    {
+                        LogWarning($"[MissionManager] Error al parsear datos de misión {mission.id}, usando valores por defecto");
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    LogError($"[MissionManager] Error al cargar misión {mission.id}: {e.Message}. Usando valores por defecto.");
+                    // Limpiar datos corruptos
+                    PlayerPrefs.DeleteKey(key);
+                }
+            }
+        }
     }
     
     public List<MissionData> GetActiveMissions()

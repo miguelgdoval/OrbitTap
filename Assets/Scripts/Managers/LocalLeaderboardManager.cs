@@ -174,12 +174,72 @@ public class LocalLeaderboardManager : MonoBehaviour
     {
         if (PlayerPrefs.HasKey(LEADERBOARD_KEY))
         {
-            string json = PlayerPrefs.GetString(LEADERBOARD_KEY);
-            LeaderboardData data = JsonUtility.FromJson<LeaderboardData>(json);
-            if (data != null && data.entries != null)
+            try
             {
-                entries = data.entries;
+                string json = PlayerPrefs.GetString(LEADERBOARD_KEY);
+                if (string.IsNullOrEmpty(json))
+                {
+                    LogWarning("[LocalLeaderboardManager] JSON vacío, inicializando leaderboard vacío");
+                    entries = new List<LeaderboardEntry>();
+                    return;
+                }
+                
+                LeaderboardData data = JsonUtility.FromJson<LeaderboardData>(json);
+                if (data != null && data.entries != null)
+                {
+                    // Validar cada entrada
+                    entries = new List<LeaderboardEntry>();
+                    foreach (var entry in data.entries)
+                    {
+                        if (entry != null && entry.score >= 0 && !string.IsNullOrEmpty(entry.playerName))
+                        {
+                            // Limitar nombre a 20 caracteres
+                            if (entry.playerName.Length > 20)
+                            {
+                                entry.playerName = entry.playerName.Substring(0, 20);
+                                LogWarning($"[LocalLeaderboardManager] Nombre truncado a 20 caracteres: {entry.playerName}");
+                            }
+                            
+                            // Validar score máximo razonable (999,999,999)
+                            if (entry.score > 999999999)
+                            {
+                                LogWarning($"[LocalLeaderboardManager] Score demasiado alto ({entry.score}), limitando a 999999999");
+                                entry.score = 999999999;
+                            }
+                            
+                            entries.Add(entry);
+                        }
+                        else
+                        {
+                            LogWarning($"[LocalLeaderboardManager] Entrada inválida ignorada: score={entry?.score}, name={entry?.playerName}");
+                        }
+                    }
+                    
+                    // Ordenar por score descendente y limitar a MAX_ENTRIES
+                    entries.Sort((a, b) => b.score.CompareTo(a.score));
+                    if (entries.Count > MAX_ENTRIES)
+                    {
+                        entries = entries.GetRange(0, MAX_ENTRIES);
+                    }
+                }
+                else
+                {
+                    LogWarning("[LocalLeaderboardManager] Error al parsear leaderboard, inicializando vacío");
+                    entries = new List<LeaderboardEntry>();
+                }
             }
+            catch (System.Exception e)
+            {
+                LogError($"[LocalLeaderboardManager] Error al cargar leaderboard: {e.Message}. Inicializando vacío.");
+                entries = new List<LeaderboardEntry>();
+                // Limpiar datos corruptos
+                PlayerPrefs.DeleteKey(LEADERBOARD_KEY);
+                PlayerPrefs.Save();
+            }
+        }
+        else
+        {
+            entries = new List<LeaderboardEntry>();
         }
     }
     

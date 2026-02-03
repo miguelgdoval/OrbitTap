@@ -95,13 +95,35 @@ public class SkinsSection : BaseMenuSection
         skinPrices["PlanetaEstelar"] = new SkinPriceData { isUnlocked = false, price = 100, currencyType = CurrencyType.CosmicCrystals };
         skinPrices["PlanetaNebulosa"] = new SkinPriceData { isUnlocked = false, price = 200, currencyType = CurrencyType.CosmicCrystals };
         
-        // Cargar estado de desbloqueo guardado
+        // Cargar estado de desbloqueo guardado con validación
         foreach (var kvp in skinPrices)
         {
             string unlockKey = $"Skin_{kvp.Key}_Unlocked";
             if (PlayerPrefs.HasKey(unlockKey))
             {
-                skinPrices[kvp.Key].isUnlocked = PlayerPrefs.GetInt(unlockKey) == 1;
+                try
+                {
+                    int unlockedValue = PlayerPrefs.GetInt(unlockKey, 0);
+                    // Validar que el valor sea 0 o 1 (solo valores booleanos válidos)
+                    if (unlockedValue == 0 || unlockedValue == 1)
+                    {
+                        skinPrices[kvp.Key].isUnlocked = unlockedValue == 1;
+                    }
+                    else
+                    {
+                        LogWarning($"[SkinsSection] Valor inválido para skin {kvp.Key} ({unlockedValue}), reseteando a bloqueado");
+                        skinPrices[kvp.Key].isUnlocked = false;
+                        PlayerPrefs.SetInt(unlockKey, 0);
+                        PlayerPrefs.Save();
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    LogError($"[SkinsSection] Error al cargar estado de desbloqueo para skin {kvp.Key}: {e.Message}. Reseteando a bloqueado.");
+                    skinPrices[kvp.Key].isUnlocked = false;
+                    PlayerPrefs.DeleteKey(unlockKey);
+                    PlayerPrefs.Save();
+                }
             }
         }
     }

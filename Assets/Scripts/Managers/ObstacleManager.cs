@@ -77,6 +77,7 @@ public class ObstacleManager : MonoBehaviour
     private float breathingRoomTimer = 0f; // Timer para el sistema de breathing room
     private float lastNearMissTime = -10f; // Tiempo del último near miss
     private PlayerOrbit playerOrbitRef; // Referencia al jugador para detectar near misses
+    private bool firstObstacleSpawned = false; // Flag para evitar spawns múltiples del primer obstáculo
     
     // Lista de obstáculos activos para optimización (evitar FindObjectsOfType en cada frame)
     private System.Collections.Generic.List<ObstacleDestructionController> activeObstacles = new System.Collections.Generic.List<ObstacleDestructionController>();
@@ -210,7 +211,41 @@ public class ObstacleManager : MonoBehaviour
         // Spawnear el primer obstáculo inmediatamente
         nextSpawnTime = 0f;
         timeSinceLastSpawn = 0f;
+        firstObstacleSpawned = false;
         Log($"ObstacleManager: First obstacle will spawn immediately");
+        
+        // Forzar el primer spawn inmediatamente usando una coroutine
+        StartCoroutine(SpawnFirstObstacleImmediately());
+    }
+    
+    /// <summary>
+    /// Spawnea el primer obstáculo inmediatamente al inicio del juego
+    /// </summary>
+    private System.Collections.IEnumerator SpawnFirstObstacleImmediately()
+    {
+        // Esperar un frame para asegurar que todo esté inicializado
+        yield return null;
+        
+        // Verificar que no haya obstáculos en pantalla y que no se haya spawneado ya
+        if (!firstObstacleSpawned)
+        {
+            int obstaclesOnScreen = CountObstaclesOnScreen();
+            if (obstaclesOnScreen < maxObstaclesOnScreen)
+            {
+                Log($"ObstacleManager: Spawning first obstacle immediately (obstacles on screen: {obstaclesOnScreen}/{maxObstaclesOnScreen})");
+                SpawnObstacle();
+                firstObstacleSpawned = true;
+                timeSinceLastSpawn = 0f;
+                // Usar un intervalo más corto para el segundo obstáculo (mitad del intervalo normal)
+                nextSpawnTime = Random.Range(currentMinSpawnInterval * 0.5f, currentMaxSpawnInterval * 0.5f);
+                Log($"ObstacleManager: First obstacle spawned. Next spawn in {nextSpawnTime} seconds");
+            }
+            else
+            {
+                Log($"ObstacleManager: Cannot spawn first obstacle - max obstacles reached ({obstaclesOnScreen}/{maxObstaclesOnScreen})");
+                firstObstacleSpawned = true; // Marcar como spawneado para evitar intentos repetidos
+            }
+        }
     }
     
     /// <summary>
@@ -551,6 +586,12 @@ public class ObstacleManager : MonoBehaviour
         if (breathingRoomTimer > 0f)
         {
             return; // Pausar spawns durante breathing room
+        }
+        
+        // No spawnean hasta que el primer obstáculo haya sido spawneado por la coroutine
+        if (!firstObstacleSpawned)
+        {
+            return; // Esperar a que la coroutine spawnee el primer obstáculo
         }
 
         if (timeSinceLastSpawn >= nextSpawnTime)

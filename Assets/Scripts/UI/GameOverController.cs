@@ -153,6 +153,9 @@ public class GameOverController : MonoBehaviour
             scoreText.fontSize = 40;
             scoreText.color = CosmicTheme.SoftGold; // Dorado suave
             scoreText.alignment = TextAnchor.MiddleCenter;
+            
+            // Aplicar alto contraste si está habilitado
+            AccessibilityHelper.ApplyAccessibilityToText(scoreText);
 
             RectTransform scoreRect = scoreObj.GetComponent<RectTransform>();
             scoreRect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -176,6 +179,9 @@ public class GameOverController : MonoBehaviour
             highScoreText.fontSize = 35;
             highScoreText.color = CosmicTheme.CelestialBlue; // Azul celeste
             highScoreText.alignment = TextAnchor.MiddleCenter;
+            
+            // Aplicar alto contraste si está habilitado
+            AccessibilityHelper.ApplyAccessibilityToText(highScoreText);
 
             RectTransform highScoreRect = highScoreObj.GetComponent<RectTransform>();
             highScoreRect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -200,6 +206,9 @@ public class GameOverController : MonoBehaviour
             tapText.fontSize = 30;
             tapText.color = CosmicTheme.EtherealLila; // Rosa-lila etéreo
             tapText.alignment = TextAnchor.MiddleCenter;
+            
+            // Aplicar alto contraste si está habilitado
+            AccessibilityHelper.ApplyAccessibilityToText(tapText);
 
             RectTransform tapRect = tapObj.GetComponent<RectTransform>();
             tapRect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -236,6 +245,9 @@ public class GameOverController : MonoBehaviour
         shareText.fontSize = 24;
         shareText.color = Color.white;
         shareText.alignment = TextAnchor.MiddleCenter;
+        
+        // Aplicar alto contraste si está habilitado
+        AccessibilityHelper.ApplyAccessibilityToText(shareText);
         
         RectTransform shareTextRect = shareTextObj.GetComponent<RectTransform>();
         shareTextRect.anchorMin = Vector2.zero;
@@ -352,6 +364,9 @@ public class GameOverController : MonoBehaviour
         messageText.fontSize = 24;
         messageText.color = CosmicTheme.NeonCyan;
         messageText.alignment = TextAnchor.MiddleCenter;
+        
+        // Aplicar alto contraste si está habilitado
+        AccessibilityHelper.ApplyAccessibilityToText(messageText);
         
         RectTransform textRect = textObj.GetComponent<RectTransform>();
         textRect.anchorMin = Vector2.zero;

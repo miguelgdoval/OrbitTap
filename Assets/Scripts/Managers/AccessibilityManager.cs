@@ -250,4 +250,65 @@ public class AccessibilityManager : MonoBehaviour
     public bool IsColorBlindModeEnabled() => colorBlindMode;
     public bool IsHighContrastUIEnabled() => highContrastUI;
     public bool IsReduceAnimationsEnabled() => reduceAnimations;
+    
+    // ========== Métodos públicos para aplicar a elementos nuevos ==========
+    
+    /// <summary>
+    /// Aplica alto contraste a un texto específico (llamar cuando se crea un nuevo Text)
+    /// </summary>
+    public void ApplyHighContrastToText(Text text)
+    {
+        if (!highContrastUI || text == null) return;
+        
+        text.color = highContrastTextColor;
+        
+        // Añadir o actualizar outline para mejor visibilidad
+        Outline outline = text.GetComponent<Outline>();
+        if (outline == null)
+        {
+            outline = text.gameObject.AddComponent<Outline>();
+        }
+        outline.effectColor = Color.black;
+        outline.effectDistance = new Vector2(2, 2);
+    }
+    
+    /// <summary>
+    /// Aplica reducción de animaciones a un ParticleSystem específico (llamar cuando se crea uno nuevo)
+    /// </summary>
+    public void ApplyReduceAnimationsToParticle(ParticleSystem particle)
+    {
+        if (!reduceAnimations || particle == null) return;
+        
+        var main = particle.main;
+        main.simulationSpeed = 0.5f; // Reducir a la mitad
+    }
+    
+    /// <summary>
+    /// Aplica reducción de animaciones a un Animator específico (llamar cuando se crea uno nuevo)
+    /// </summary>
+    public void ApplyReduceAnimationsToAnimator(Animator animator)
+    {
+        if (!reduceAnimations || animator == null) return;
+        
+        // Solo reducir velocidad de animadores de UI, no de gameplay
+        if (animator.gameObject.layer == 5) // UI layer
+        {
+            animator.speed = 0.5f; // Reducir velocidad
+        }
+    }
+    
+    /// <summary>
+    /// Aplica modo daltónico a un SpriteRenderer específico (llamar cuando se crea un obstáculo)
+    /// </summary>
+    public void ApplyColorBlindToRenderer(SpriteRenderer renderer)
+    {
+        if (!colorBlindMode || renderer == null) return;
+        
+        // Cambiar a colores más distinguibles para daltónicos
+        if (renderer.color.r > 0.5f && renderer.color.g < 0.5f)
+        {
+            // Si es rojo/magenta, cambiar a azul
+            renderer.color = colorBlindObstacleColor;
+        }
+    }
 }

@@ -301,6 +301,10 @@ public class ObstacleDestructionController : MonoBehaviour
         
         // Agregar ParticleSystem
         ParticleSystem ps = particleSystemObj.AddComponent<ParticleSystem>();
+        
+        // Aplicar reducción de animaciones si está habilitado
+        AccessibilityHelper.ApplyAccessibilityToParticle(ps);
+        
         ParticleSystem.MainModule main = ps.main;
         ParticleSystem.EmissionModule emission = ps.emission;
         ParticleSystem.ShapeModule shape = ps.shape;

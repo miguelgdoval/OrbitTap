@@ -596,6 +596,9 @@ public class GameInitializer : MonoBehaviour
             scoreText.fontStyle = FontStyle.Bold;
             scoreText.color = CosmicTheme.NeonCyan; // Color neon cian brillante
             scoreText.alignment = TextAnchor.MiddleCenter;
+            
+            // Aplicar alto contraste si está habilitado
+            AccessibilityHelper.ApplyAccessibilityToText(scoreText);
 
             RectTransform scoreRect = scoreTextObj.GetComponent<RectTransform>();
             scoreRect.anchorMin = Vector2.zero;

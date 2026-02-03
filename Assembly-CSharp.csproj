@@ -66,6 +66,7 @@
     <Compile Include="Assets/Scripts/Obstacles/StaticArc.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundDiagnostics.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundManager.cs" />
+    <Compile Include="Assets/Scripts/Managers/AccessibilityHelper.cs" />
     <Compile Include="Assets/Scripts/Managers/SocialShareManager.cs" />
     <Compile Include="Assets/Scripts/Managers/GameInitializer.cs" />
     <Compile Include="Assets/Scripts/Obstacles/PooledObjectInfo.cs" />

@@ -15,7 +15,7 @@ public class AdManager : MonoBehaviour
     public static AdManager Instance { get; private set; }
     
     [Header("Unity Ads Configuration")]
-    [SerializeField] private string androidGameId = "YOUR_ANDROID_GAME_ID";
+    [SerializeField] private string androidGameId = "6006026";
 #pragma warning disable 0414 // Campo asignado pero nunca usado (reservado para iOS)
     [SerializeField] private string iosGameId = "YOUR_IOS_GAME_ID"; // Reservado para futura implementación iOS
 #pragma warning restore 0414

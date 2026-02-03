@@ -17,14 +17,14 @@ public class IAPManager : MonoBehaviour, IStoreListener
     // IDs de productos (deben coincidir con Google Play Console / App Store Connect)
     private const string STARTER_BUNDLE = "starter_bundle";
     private const string REMOVE_ADS = "remove_ads";
-    private const string CRYSTALS_100 = "crystals_100";
-    private const string CRYSTALS_250 = "crystals_250";
-    private const string CRYSTALS_500 = "crystals_500";
-    private const string CRYSTALS_1000 = "crystals_1000";
-    private const string SHARDS_500 = "shards_500";
-    private const string SHARDS_1500 = "shards_1500";
-    private const string SHARDS_3000 = "shards_3000";
-    private const string SHARDS_7000 = "shards_7000";
+    private const string CRYSTALS_100 = "crystals100";
+    private const string CRYSTALS_250 = "crystals250";
+    private const string CRYSTALS_500 = "crystals500";
+    private const string CRYSTALS_1000 = "crystals1000";
+    private const string SHARDS_500 = "shards500";
+    private const string SHARDS_1500 = "shards1500";
+    private const string SHARDS_3000 = "shards3000";
+    private const string SHARDS_7000 = "shards7000";
     
     // Eventos
     public System.Action<string> OnPurchaseCompleted;

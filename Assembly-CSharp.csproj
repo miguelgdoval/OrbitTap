@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="Assets/Scripts/Managers/AudioManager.cs" />
     <Compile Include="Assets/Scripts/Visual/SacredOrbitRing.cs" />
+    <Compile Include="Assets/Scripts/Managers/TutorialManager.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleDestructionController.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundPreset.cs" />
     <Compile Include="Assets/Scripts/UI/MissionSystem.cs" />
@@ -65,6 +66,7 @@
     <Compile Include="Assets/Scripts/Obstacles/DoorRandom.cs" />
     <Compile Include="Assets/Scripts/UI/SettingsParticleBackground.cs" />
     <Compile Include="Assets/Scripts/Managers/SaveDataManager.cs" />
+    <Compile Include="Assets/Scripts/UI/TutorialUI.cs" />
     <Compile Include="Assets/Scripts/Obstacles/StaticArc.cs" />
     <Compile Include="Assets/Scripts/Utils/ResourceLoader.cs" />
     <Compile Include="Assets/Scripts/Managers/SaveData.cs" />

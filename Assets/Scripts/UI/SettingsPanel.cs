@@ -19,6 +19,7 @@ public class SettingsPanel : MonoBehaviour
     private bool colorBlindMode = false;
     private bool highContrastUI = false;
     private bool reduceAnimations = false;
+    private bool tutorialEnabled = true; // Habilitar tutorial por defecto
     
     [Header("UI References")]
     private GameObject panel;
@@ -568,6 +569,23 @@ public class SettingsPanel : MonoBehaviour
         // Título
         yPos = CreateSectionTitle(section.transform, "Controles", yPos);
         yPos -= 30f;
+        
+        // Tutorial Toggle
+        yPos = CreateNeonToggle(section.transform, "Mostrar Tutorial", tutorialEnabled, yPos, (value) => {
+            tutorialEnabled = value;
+            SaveSettings();
+            Log($"[SettingsPanel] Tutorial {(value ? "habilitado" : "deshabilitado")}");
+            
+            // Solo guardar la preferencia, NO iniciar el tutorial inmediatamente
+            // El tutorial se mostrará automáticamente cuando se inicie una partida si está habilitado
+            if (value && TutorialManager.Instance != null)
+            {
+                // Reiniciar el estado de completado para que se pueda ver de nuevo en la próxima partida
+                TutorialManager.Instance.ResetTutorial();
+                Log("[SettingsPanel] Tutorial habilitado. Se mostrará en la próxima partida.");
+            }
+        });
+        yPos -= 20f;
         
         // Nombre de Perfil
         yPos = CreatePlayerNameInput(section.transform, yPos);
@@ -1382,10 +1400,48 @@ public class SettingsPanel : MonoBehaviour
             highContrastUI = PlayerPrefs.GetInt("HighContrastUI", 0) == 1;
             reduceAnimations = PlayerPrefs.GetInt("ReduceAnimations", 0) == 1;
         }
+        
+        // Cargar tutorial enabled desde SaveDataManager o PlayerPrefs
+        if (SaveDataManager.Instance != null)
+        {
+            SaveData saveData = SaveDataManager.Instance.GetSaveData();
+            if (saveData != null)
+            {
+                tutorialEnabled = saveData.tutorialEnabled;
+            }
+            else
+            {
+                tutorialEnabled = PlayerPrefs.GetInt("TutorialEnabled", 1) == 1;
+            }
+        }
+        else
+        {
+            tutorialEnabled = PlayerPrefs.GetInt("TutorialEnabled", 1) == 1;
+        }
     }
     
     private void SaveSettings()
     {
+        // Guardar en SaveDataManager si está disponible
+        if (SaveDataManager.Instance != null)
+        {
+            SaveData saveData = SaveDataManager.Instance.GetSaveData();
+            if (saveData != null)
+            {
+                saveData.soundEnabled = soundEnabled;
+                saveData.vibrationEnabled = vibrationEnabled;
+                saveData.language = currentLanguage;
+                saveData.graphicsQuality = graphicsQuality;
+                saveData.colorBlindMode = colorBlindMode;
+                saveData.highContrastUI = highContrastUI;
+                saveData.reduceAnimations = reduceAnimations;
+                saveData.tutorialEnabled = tutorialEnabled;
+                SaveDataManager.Instance.MarkDirty();
+                return;
+            }
+        }
+        
+        // Fallback a PlayerPrefs
         PlayerPrefs.SetInt("SoundEnabled", soundEnabled ? 1 : 0);
         PlayerPrefs.SetInt("VibrationEnabled", vibrationEnabled ? 1 : 0);
         PlayerPrefs.SetString("Language", currentLanguage);
@@ -1393,6 +1449,7 @@ public class SettingsPanel : MonoBehaviour
         PlayerPrefs.SetInt("ColorBlindMode", colorBlindMode ? 1 : 0);
         PlayerPrefs.SetInt("HighContrastUI", highContrastUI ? 1 : 0);
         PlayerPrefs.SetInt("ReduceAnimations", reduceAnimations ? 1 : 0);
+        PlayerPrefs.SetInt("TutorialEnabled", tutorialEnabled ? 1 : 0);
         PlayerPrefs.Save();
     }
 }

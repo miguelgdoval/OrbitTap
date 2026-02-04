@@ -539,6 +539,13 @@ public class SaveDataManager : MonoBehaviour
             migrated = true;
         }
         
+        // Migrar tutorial enabled
+        if (PlayerPrefs.HasKey("TutorialEnabled"))
+        {
+            currentSaveData.tutorialEnabled = PlayerPrefs.GetInt("TutorialEnabled", 1) == 1;
+            migrated = true;
+        }
+        
         // Migrar ad tracking
         if (PlayerPrefs.HasKey("GamesSinceLastAd"))
         {

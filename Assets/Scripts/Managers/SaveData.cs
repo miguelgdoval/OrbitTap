@@ -38,6 +38,9 @@ public class SaveData
     public bool highContrastUI = false;
     public bool reduceAnimations = false;
     
+    [Header("Game Settings")]
+    public bool tutorialEnabled = true; // Habilitar tutorial por defecto
+    
     [Header("Ad Tracking")]
     public int gamesSinceLastAd = 0;
     public long lastAdTimestamp = 0;
@@ -76,6 +79,7 @@ public class SaveData
             colorBlindMode = this.colorBlindMode,
             highContrastUI = this.highContrastUI,
             reduceAnimations = this.reduceAnimations,
+            tutorialEnabled = this.tutorialEnabled,
             gamesSinceLastAd = this.gamesSinceLastAd,
             lastAdTimestamp = this.lastAdTimestamp,
             removeAdsPurchased = this.removeAdsPurchased

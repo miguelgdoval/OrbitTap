@@ -214,7 +214,50 @@ public class ObstacleManager : MonoBehaviour
         firstObstacleSpawned = false;
         Log($"ObstacleManager: First obstacle will spawn immediately");
         
-        // Forzar el primer spawn inmediatamente usando una coroutine
+        // Verificar si el tutorial está activo antes de spawnear
+        if (TutorialManager.Instance != null && TutorialManager.Instance.IsTutorialActive())
+        {
+            Log($"ObstacleManager: Tutorial activo, no se spawneará el primer obstáculo");
+            firstObstacleSpawned = true; // Marcar como spawneado para evitar spawns
+            enabled = false; // Deshabilitar completamente
+            return;
+        }
+        
+        // Esperar un poco para dar tiempo al tutorial de activarse si está habilitado
+        StartCoroutine(WaitForTutorialThenSpawn());
+    }
+    
+    /// <summary>
+    /// Espera a que el tutorial se active (si está habilitado) antes de spawnear
+    /// </summary>
+    private System.Collections.IEnumerator WaitForTutorialThenSpawn()
+    {
+        // Esperar varios frames para dar tiempo al tutorial de activarse
+        // Verificar en cada frame si el tutorial está activo
+        for (int i = 0; i < 10; i++) // Esperar hasta 10 frames
+        {
+            yield return null;
+            
+            // Verificar si el tutorial está activo en cada frame
+            if (TutorialManager.Instance != null && TutorialManager.Instance.IsTutorialActive())
+            {
+                Log($"ObstacleManager: Tutorial activo (frame {i}), cancelando spawn del primer obstáculo");
+                firstObstacleSpawned = true; // Marcar como spawneado para evitar spawns
+                enabled = false; // Deshabilitar completamente
+                yield break;
+            }
+        }
+        
+        // Verificar una vez más antes de spawnear
+        if (TutorialManager.Instance != null && TutorialManager.Instance.IsTutorialActive())
+        {
+            Log($"ObstacleManager: Tutorial activo después de esperar, cancelando spawn");
+            firstObstacleSpawned = true;
+            enabled = false;
+            yield break;
+        }
+        
+        // Si no hay tutorial, spawnear el primer obstáculo
         StartCoroutine(SpawnFirstObstacleImmediately());
     }
     
@@ -223,12 +266,17 @@ public class ObstacleManager : MonoBehaviour
     /// </summary>
     private System.Collections.IEnumerator SpawnFirstObstacleImmediately()
     {
-        // Esperar un frame para asegurar que todo esté inicializado
-        yield return null;
-        
         // Verificar que no haya obstáculos en pantalla y que no se haya spawneado ya
         if (!firstObstacleSpawned)
         {
+            // Verificar una vez más si el tutorial se activó
+            if (TutorialManager.Instance != null && TutorialManager.Instance.IsTutorialActive())
+            {
+                Log($"ObstacleManager: Tutorial activo durante spawn, cancelando");
+                firstObstacleSpawned = true;
+                yield break;
+            }
+            
             int obstaclesOnScreen = CountObstaclesOnScreen();
             if (obstaclesOnScreen < maxObstaclesOnScreen)
             {
@@ -551,6 +599,15 @@ public class ObstacleManager : MonoBehaviour
     {
         if (!Application.isPlaying) return;
         
+        // NO hacer nada si el tutorial está activo
+        if (TutorialManager.Instance != null && TutorialManager.Instance.IsTutorialActive())
+        {
+            return;
+        }
+        
+        // Si el tutorial terminó pero firstObstacleSpawned sigue en false, intentar spawnear
+        // (Esto se maneja ahora con ResetFirstObstacleSpawned() desde TutorialManager)
+        
         gameTime += Time.deltaTime;
         timeSinceLastSpawn += Time.deltaTime;
         timeSinceDifficultyUpdate += Time.deltaTime;
@@ -588,10 +645,24 @@ public class ObstacleManager : MonoBehaviour
             return; // Pausar spawns durante breathing room
         }
         
-        // No spawnean hasta que el primer obstáculo haya sido spawneado por la coroutine
+        // Si el primer obstáculo no ha sido spawneado, intentar spawnearlo
         if (!firstObstacleSpawned)
         {
-            return; // Esperar a que la coroutine spawnee el primer obstáculo
+            // Si ya pasó el tiempo suficiente, spawnear el primer obstáculo directamente
+            if (timeSinceLastSpawn >= nextSpawnTime)
+            {
+                int obstaclesOnScreen = CountObstaclesOnScreen();
+                if (obstaclesOnScreen < maxObstaclesOnScreen)
+                {
+                    Log($"ObstacleManager: Spawning first obstacle after tutorial (obstacles on screen: {obstaclesOnScreen}/{maxObstaclesOnScreen})");
+                    SpawnObstacle();
+                    firstObstacleSpawned = true;
+                    timeSinceLastSpawn = 0f;
+                    nextSpawnTime = Random.Range(currentMinSpawnInterval, currentMaxSpawnInterval);
+                    Log($"ObstacleManager: First obstacle spawned. Next spawn in {nextSpawnTime} seconds");
+                }
+            }
+            return; // Esperar hasta que se spawnee el primer obstáculo
         }
 
         if (timeSinceLastSpawn >= nextSpawnTime)
@@ -1334,6 +1405,18 @@ public class ObstacleManager : MonoBehaviour
         AdjustCollidersToScale(obstacle, scaleMultiplier);
     }
 
+    /// <summary>
+    /// Resetea el flag de primer obstáculo spawneado (útil cuando el tutorial termina)
+    /// </summary>
+    public void ResetFirstObstacleSpawned()
+    {
+        firstObstacleSpawned = false;
+        timeSinceLastSpawn = 0f;
+        // Usar un intervalo muy corto para que se spawnee casi inmediatamente en el próximo Update
+        nextSpawnTime = 0.1f;
+        Log("[ObstacleManager] Flag firstObstacleSpawned reseteado, el primer obstáculo se spawneará en el próximo Update");
+    }
+    
     /// <summary>
     /// Cuenta cuántos obstáculos hay actualmente en pantalla
     /// Optimizado: usa lista de obstáculos activos en lugar de FindObjectsOfType

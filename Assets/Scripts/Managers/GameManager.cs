@@ -70,6 +70,13 @@ public class GameManager : MonoBehaviour
         {
             LogWarning("GameManager: ScoreManager not found! Will try to find it in GameOver()");
         }
+        
+        // Iniciar tutorial si es necesario (INMEDIATAMENTE, antes de que ObstacleManager pueda spawnear)
+        // No esperar frames - iniciar inmediatamente
+        if (TutorialManager.Instance != null)
+        {
+            TutorialManager.Instance.StartTutorialIfNeeded();
+        }
     }
 
     private void Update()

@@ -247,6 +247,13 @@ public class GameInitializer : MonoBehaviour
             saveDataManager.AddComponent<SaveDataManager>();
         }
         
+        // Crear TutorialManager
+        if (TutorialManager.Instance == null)
+        {
+            GameObject tutorialManager = new GameObject("TutorialManager");
+            tutorialManager.AddComponent<TutorialManager>();
+        }
+        
         // Crear NotificationManager
         if (NotificationManager.Instance == null)
         {

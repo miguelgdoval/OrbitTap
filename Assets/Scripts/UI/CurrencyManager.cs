@@ -40,7 +40,20 @@ public class CurrencyManager : MonoBehaviour
     
     private void LoadCurrencies()
     {
-        // Cargar con validación de rangos
+        // Usar SaveDataManager si está disponible, sino usar PlayerPrefs (compatibilidad)
+        if (SaveDataManager.Instance != null)
+        {
+            SaveData saveData = SaveDataManager.Instance.GetSaveData();
+            if (saveData != null)
+            {
+                stellarShards = saveData.stellarShards;
+                cosmicCrystals = saveData.cosmicCrystals;
+                Log($"[CurrencyManager] Monedas cargadas desde SaveDataManager: Shards={stellarShards}, Crystals={cosmicCrystals}");
+                return;
+            }
+        }
+        
+        // Fallback a PlayerPrefs (compatibilidad con datos antiguos)
         int loadedShards = PlayerPrefs.GetInt(STELLAR_SHARDS_KEY, 0);
         int loadedCrystals = PlayerPrefs.GetInt(COSMIC_CRYSTALS_KEY, 0);
         
@@ -92,6 +105,19 @@ public class CurrencyManager : MonoBehaviour
     
     private void SaveStellarShards()
     {
+        // Usar SaveDataManager si está disponible
+        if (SaveDataManager.Instance != null)
+        {
+            SaveData saveData = SaveDataManager.Instance.GetSaveData();
+            if (saveData != null)
+            {
+                saveData.stellarShards = stellarShards;
+                SaveDataManager.Instance.MarkDirty();
+                return;
+            }
+        }
+        
+        // Fallback a PlayerPrefs
         PlayerPrefs.SetInt(STELLAR_SHARDS_KEY, stellarShards);
         PlayerPrefs.Save();
     }
@@ -120,6 +146,19 @@ public class CurrencyManager : MonoBehaviour
     
     private void SaveCosmicCrystals()
     {
+        // Usar SaveDataManager si está disponible
+        if (SaveDataManager.Instance != null)
+        {
+            SaveData saveData = SaveDataManager.Instance.GetSaveData();
+            if (saveData != null)
+            {
+                saveData.cosmicCrystals = cosmicCrystals;
+                SaveDataManager.Instance.MarkDirty();
+                return;
+            }
+        }
+        
+        // Fallback a PlayerPrefs
         PlayerPrefs.SetInt(COSMIC_CRYSTALS_KEY, cosmicCrystals);
         PlayerPrefs.Save();
     }

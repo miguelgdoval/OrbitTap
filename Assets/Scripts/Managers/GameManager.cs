@@ -35,6 +35,13 @@ public class GameManager : MonoBehaviour
     {
         if (!Application.isPlaying) return;
         
+        // Asegurar que Time.timeScale esté en 1 al inicio del juego
+        if (Time.timeScale == 0f)
+        {
+            LogWarning("GameManager: Time.timeScale estaba en 0, restaurando a 1");
+            Time.timeScale = 1f;
+        }
+        
         // Buscar el player después de que GameInitializer lo haya creado
         StartCoroutine(FindPlayerDelayed());
     }

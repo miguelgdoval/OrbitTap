@@ -56,8 +56,50 @@ public class ScoreManager : MonoBehaviour
     {
         int currentScore = Mathf.FloorToInt(score);
         
-        // Save last score
-        PlayerPrefs.SetInt("LastScore", currentScore);
+        // Usar SaveDataManager si está disponible
+        if (SaveDataManager.Instance != null)
+        {
+            SaveData saveData = SaveDataManager.Instance.GetSaveData();
+            if (saveData != null)
+            {
+                // Guardar last score
+                saveData.lastScore = currentScore;
+                
+                // Guardar high score si es nuevo récord
+                if (currentScore > highScore)
+                {
+                    highScore = currentScore;
+                    saveData.highScore = highScore;
+                    
+                    // Reportar nuevo récord a MissionManager
+                    if (MissionManager.Instance != null)
+                    {
+                        MissionManager.Instance.ReportValue(MissionObjectiveType.ReachHighScore, highScore);
+                    }
+                }
+                
+                SaveDataManager.Instance.MarkDirty();
+            }
+        }
+        else
+        {
+            // Fallback a PlayerPrefs
+            PlayerPrefs.SetInt("LastScore", currentScore);
+            
+            if (currentScore > highScore)
+            {
+                highScore = currentScore;
+                PlayerPrefs.SetInt(HIGH_SCORE_KEY, highScore);
+                
+                // Reportar nuevo récord a MissionManager
+                if (MissionManager.Instance != null)
+                {
+                    MissionManager.Instance.ReportValue(MissionObjectiveType.ReachHighScore, highScore);
+                }
+            }
+            
+            PlayerPrefs.Save();
+        }
 
         // Asegurar que existe LocalLeaderboardManager incluso si se entra directo a la escena de juego
         if (LocalLeaderboardManager.Instance == null)
@@ -69,29 +111,40 @@ public class ScoreManager : MonoBehaviour
         // Añadir siempre la puntuación actual al leaderboard local
         if (LocalLeaderboardManager.Instance != null)
         {
-            // Obtener nombre del jugador desde PlayerPrefs
-            string playerName = PlayerPrefs.GetString("PlayerName", "Jugador");
+            // Obtener nombre del jugador
+            string playerName = "Jugador";
+            if (SaveDataManager.Instance != null)
+            {
+                SaveData saveData = SaveDataManager.Instance.GetSaveData();
+                if (saveData != null)
+                {
+                    playerName = saveData.playerName;
+                }
+            }
+            else
+            {
+                playerName = PlayerPrefs.GetString("PlayerName", "Jugador");
+            }
+            
             Log($"[ScoreManager] Añadiendo puntuación {currentScore} al leaderboard local con nombre: {playerName}");
             LocalLeaderboardManager.Instance.AddScore(currentScore, playerName);
         }
-        
-        if (currentScore > highScore)
-        {
-            highScore = currentScore;
-            PlayerPrefs.SetInt(HIGH_SCORE_KEY, highScore);
-            
-            // Reportar nuevo récord a MissionManager
-            if (MissionManager.Instance != null)
-            {
-                MissionManager.Instance.ReportValue(MissionObjectiveType.ReachHighScore, highScore);
-            }
-        }
-        
-        PlayerPrefs.Save();
     }
 
     public void LoadHighScore()
     {
+        // Usar SaveDataManager si está disponible
+        if (SaveDataManager.Instance != null)
+        {
+            SaveData saveData = SaveDataManager.Instance.GetSaveData();
+            if (saveData != null)
+            {
+                highScore = saveData.highScore;
+                return;
+            }
+        }
+        
+        // Fallback a PlayerPrefs
         highScore = PlayerPrefs.GetInt(HIGH_SCORE_KEY, 0);
     }
 

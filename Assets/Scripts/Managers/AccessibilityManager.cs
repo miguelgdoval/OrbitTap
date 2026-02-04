@@ -45,6 +45,21 @@ public class AccessibilityManager : MonoBehaviour
     
     private void LoadSettings()
     {
+        // Usar SaveDataManager si está disponible
+        if (SaveDataManager.Instance != null)
+        {
+            SaveData saveData = SaveDataManager.Instance.GetSaveData();
+            if (saveData != null)
+            {
+                colorBlindMode = saveData.colorBlindMode;
+                highContrastUI = saveData.highContrastUI;
+                reduceAnimations = saveData.reduceAnimations;
+                ApplySettings();
+                return;
+            }
+        }
+        
+        // Fallback a PlayerPrefs
         colorBlindMode = PlayerPrefs.GetInt("ColorBlindMode", 0) == 1;
         highContrastUI = PlayerPrefs.GetInt("HighContrastUI", 0) == 1;
         reduceAnimations = PlayerPrefs.GetInt("ReduceAnimations", 0) == 1;
@@ -60,8 +75,24 @@ public class AccessibilityManager : MonoBehaviour
         if (colorBlindMode != enabled)
         {
             colorBlindMode = enabled;
-            PlayerPrefs.SetInt("ColorBlindMode", enabled ? 1 : 0);
-            PlayerPrefs.Save();
+            
+            // Usar SaveDataManager si está disponible
+            if (SaveDataManager.Instance != null)
+            {
+                SaveData saveData = SaveDataManager.Instance.GetSaveData();
+                if (saveData != null)
+                {
+                    saveData.colorBlindMode = enabled;
+                    SaveDataManager.Instance.MarkDirty();
+                }
+            }
+            else
+            {
+                // Fallback a PlayerPrefs
+                PlayerPrefs.SetInt("ColorBlindMode", enabled ? 1 : 0);
+                PlayerPrefs.Save();
+            }
+            
             ApplySettings();
             OnAccessibilitySettingsChanged?.Invoke();
         }
@@ -75,8 +106,24 @@ public class AccessibilityManager : MonoBehaviour
         if (highContrastUI != enabled)
         {
             highContrastUI = enabled;
-            PlayerPrefs.SetInt("HighContrastUI", enabled ? 1 : 0);
-            PlayerPrefs.Save();
+            
+            // Usar SaveDataManager si está disponible
+            if (SaveDataManager.Instance != null)
+            {
+                SaveData saveData = SaveDataManager.Instance.GetSaveData();
+                if (saveData != null)
+                {
+                    saveData.highContrastUI = enabled;
+                    SaveDataManager.Instance.MarkDirty();
+                }
+            }
+            else
+            {
+                // Fallback a PlayerPrefs
+                PlayerPrefs.SetInt("HighContrastUI", enabled ? 1 : 0);
+                PlayerPrefs.Save();
+            }
+            
             ApplySettings();
             OnAccessibilitySettingsChanged?.Invoke();
         }
@@ -90,8 +137,24 @@ public class AccessibilityManager : MonoBehaviour
         if (reduceAnimations != enabled)
         {
             reduceAnimations = enabled;
-            PlayerPrefs.SetInt("ReduceAnimations", enabled ? 1 : 0);
-            PlayerPrefs.Save();
+            
+            // Usar SaveDataManager si está disponible
+            if (SaveDataManager.Instance != null)
+            {
+                SaveData saveData = SaveDataManager.Instance.GetSaveData();
+                if (saveData != null)
+                {
+                    saveData.reduceAnimations = enabled;
+                    SaveDataManager.Instance.MarkDirty();
+                }
+            }
+            else
+            {
+                // Fallback a PlayerPrefs
+                PlayerPrefs.SetInt("ReduceAnimations", enabled ? 1 : 0);
+                PlayerPrefs.Save();
+            }
+            
             ApplySettings();
             OnAccessibilitySettingsChanged?.Invoke();
         }

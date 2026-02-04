@@ -22,6 +22,13 @@ public class PauseManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            
+            // Asegurar que Time.timeScale esté en 1 al inicio
+            if (Time.timeScale == 0f)
+            {
+                LogWarning("PauseManager: Time.timeScale estaba en 0, restaurando a 1");
+                Time.timeScale = 1f;
+            }
         }
         else
         {

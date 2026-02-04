@@ -47,8 +47,24 @@ public class AudioManager : MonoBehaviour
     public void SetMasterVolume(float volume)
     {
         masterVolume = Mathf.Clamp01(volume);
-        PlayerPrefs.SetFloat(MASTER_VOLUME_KEY, masterVolume);
-        PlayerPrefs.Save();
+        
+        // Usar SaveDataManager si está disponible
+        if (SaveDataManager.Instance != null)
+        {
+            SaveData saveData = SaveDataManager.Instance.GetSaveData();
+            if (saveData != null)
+            {
+                saveData.masterVolume = masterVolume;
+                SaveDataManager.Instance.MarkDirty();
+            }
+        }
+        else
+        {
+            // Fallback a PlayerPrefs
+            PlayerPrefs.SetFloat(MASTER_VOLUME_KEY, masterVolume);
+            PlayerPrefs.Save();
+        }
+        
         ApplyMasterVolume();
     }
     
@@ -58,8 +74,24 @@ public class AudioManager : MonoBehaviour
     public void SetMusicVolume(float volume)
     {
         musicVolume = Mathf.Clamp01(volume);
-        PlayerPrefs.SetFloat(MUSIC_VOLUME_KEY, musicVolume);
-        PlayerPrefs.Save();
+        
+        // Usar SaveDataManager si está disponible
+        if (SaveDataManager.Instance != null)
+        {
+            SaveData saveData = SaveDataManager.Instance.GetSaveData();
+            if (saveData != null)
+            {
+                saveData.musicVolume = musicVolume;
+                SaveDataManager.Instance.MarkDirty();
+            }
+        }
+        else
+        {
+            // Fallback a PlayerPrefs
+            PlayerPrefs.SetFloat(MUSIC_VOLUME_KEY, musicVolume);
+            PlayerPrefs.Save();
+        }
+        
         ApplyMusicVolume();
     }
     
@@ -69,8 +101,24 @@ public class AudioManager : MonoBehaviour
     public void SetSFXVolume(float volume)
     {
         sfxVolume = Mathf.Clamp01(volume);
-        PlayerPrefs.SetFloat(SFX_VOLUME_KEY, sfxVolume);
-        PlayerPrefs.Save();
+        
+        // Usar SaveDataManager si está disponible
+        if (SaveDataManager.Instance != null)
+        {
+            SaveData saveData = SaveDataManager.Instance.GetSaveData();
+            if (saveData != null)
+            {
+                saveData.sfxVolume = sfxVolume;
+                SaveDataManager.Instance.MarkDirty();
+            }
+        }
+        else
+        {
+            // Fallback a PlayerPrefs
+            PlayerPrefs.SetFloat(SFX_VOLUME_KEY, sfxVolume);
+            PlayerPrefs.Save();
+        }
+        
         ApplySFXVolume();
     }
     
@@ -140,6 +188,20 @@ public class AudioManager : MonoBehaviour
     
     private void LoadAudioSettings()
     {
+        // Usar SaveDataManager si está disponible
+        if (SaveDataManager.Instance != null)
+        {
+            SaveData saveData = SaveDataManager.Instance.GetSaveData();
+            if (saveData != null)
+            {
+                masterVolume = saveData.masterVolume;
+                musicVolume = saveData.musicVolume;
+                sfxVolume = saveData.sfxVolume;
+                return;
+            }
+        }
+        
+        // Fallback a PlayerPrefs
         masterVolume = PlayerPrefs.GetFloat(MASTER_VOLUME_KEY, 1f);
         musicVolume = PlayerPrefs.GetFloat(MUSIC_VOLUME_KEY, 1f);
         sfxVolume = PlayerPrefs.GetFloat(SFX_VOLUME_KEY, 1f);

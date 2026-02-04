@@ -240,6 +240,13 @@ public class GameInitializer : MonoBehaviour
             iapManager.AddComponent<IAPManager>();
         }
         
+        // Crear SaveDataManager (debe ser uno de los primeros para que otros sistemas puedan usarlo)
+        if (SaveDataManager.Instance == null)
+        {
+            GameObject saveDataManager = new GameObject("SaveDataManager");
+            saveDataManager.AddComponent<SaveDataManager>();
+        }
+        
         // Crear NotificationManager
         if (NotificationManager.Instance == null)
         {

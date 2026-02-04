@@ -64,8 +64,10 @@
     <Compile Include="Assets/Scripts/UI/MenuSection.cs" />
     <Compile Include="Assets/Scripts/Obstacles/DoorRandom.cs" />
     <Compile Include="Assets/Scripts/UI/SettingsParticleBackground.cs" />
+    <Compile Include="Assets/Scripts/Managers/SaveDataManager.cs" />
     <Compile Include="Assets/Scripts/Obstacles/StaticArc.cs" />
     <Compile Include="Assets/Scripts/Utils/ResourceLoader.cs" />
+    <Compile Include="Assets/Scripts/Managers/SaveData.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundDiagnostics.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundManager.cs" />
     <Compile Include="Assets/Scripts/Managers/AccessibilityHelper.cs" />

@@ -873,14 +873,16 @@ public class MissionManager : MonoBehaviour
     {
         return weeklyMissions;
     }
-    
-    // Clase auxiliar para serialización
-    [System.Serializable]
-    private class MissionProgressData
-    {
-        public int currentProgress;
-        public bool isCompleted;
-        public bool isClaimed;
-    }
+}
+
+/// <summary>
+/// Datos de progreso de una misión (público para SaveDataManager)
+/// </summary>
+[System.Serializable]
+public class MissionProgressData
+{
+    public int currentProgress;
+    public bool isCompleted;
+    public bool isClaimed;
 }
 

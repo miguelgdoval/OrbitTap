@@ -99,6 +99,12 @@ public class ObstacleBase : MonoBehaviour
             
             Log("Colisión detectada con Player! GameObject: " + collision.gameObject.name);
             
+            // Registrar colisión en StatisticsManager
+            if (StatisticsManager.Instance != null)
+            {
+                StatisticsManager.Instance.RecordCollision();
+            }
+            
             // CRÍTICO: Detener PlayerOrbit INMEDIATAMENTE antes de cualquier otra cosa
             GameObject playerObj = collision.gameObject;
             PlayerOrbit playerOrbit = playerObj.GetComponent<PlayerOrbit>();

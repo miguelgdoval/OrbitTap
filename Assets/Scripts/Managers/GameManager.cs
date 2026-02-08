@@ -149,6 +149,12 @@ public class GameManager : MonoBehaviour
         {
             AnalyticsManager.Instance.TrackGameOver(score, highScore, playTime);
         }
+        
+        // Statistics: Finalizar rastreo de estadísticas
+        if (StatisticsManager.Instance != null)
+        {
+            StatisticsManager.Instance.EndTrackingGame();
+        }
 
         // Esperar un poco para que la animación de destrucción se complete antes de cargar la escena
         StartCoroutine(LoadGameOverSceneDelayed());
@@ -169,6 +175,12 @@ public class GameManager : MonoBehaviour
         if (AnalyticsManager.Instance != null)
         {
             AnalyticsManager.Instance.TrackGameStart();
+        }
+        
+        // Statistics: Iniciar rastreo de estadísticas
+        if (StatisticsManager.Instance != null)
+        {
+            StatisticsManager.Instance.StartTrackingGame();
         }
     }
     

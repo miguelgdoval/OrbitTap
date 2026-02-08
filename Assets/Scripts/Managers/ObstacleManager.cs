@@ -735,6 +735,12 @@ public class ObstacleManager : MonoBehaviour
                         lastNearMissTime = Time.time;
                         breathingRoomTimer = breathingRoomDuration;
                         Log($"ObstacleManager: Near miss detected! Breathing room activated for {breathingRoomDuration}s");
+                        
+                        // Registrar near miss en StatisticsManager
+                        if (StatisticsManager.Instance != null)
+                        {
+                            StatisticsManager.Instance.RecordNearMiss();
+                        }
                     }
                 }
             }

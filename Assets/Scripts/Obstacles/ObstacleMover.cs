@@ -124,6 +124,20 @@ public class ObstacleMover : MonoBehaviour
     /// </summary>
     private void ReturnToPool()
     {
+        // Registrar que se evitó un obstáculo (solo si entró a la pantalla y no está siendo destruido)
+        if (hasEnteredScreen)
+        {
+            ObstacleDestructionController destructionController = GetComponent<ObstacleDestructionController>();
+            if (destructionController == null || !destructionController.IsDestroying())
+            {
+                // El obstáculo salió de pantalla sin colisionar = fue evitado
+                if (StatisticsManager.Instance != null)
+                {
+                    StatisticsManager.Instance.RecordObstacleAvoided();
+                }
+            }
+        }
+        
         if (ObstacleManager.Instance != null)
         {
             ObstacleManager.Instance.ReturnToPool(gameObject);

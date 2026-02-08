@@ -275,6 +275,13 @@ public class GameInitializer : MonoBehaviour
             pauseManager.AddComponent<PauseManager>();
         }
         
+        // Crear StatisticsManager
+        if (StatisticsManager.Instance == null)
+        {
+            GameObject statisticsManager = new GameObject("StatisticsManager");
+            statisticsManager.AddComponent<StatisticsManager>();
+        }
+        
         // Cargar configuración del juego
         GameConfig.LoadConfig();
         

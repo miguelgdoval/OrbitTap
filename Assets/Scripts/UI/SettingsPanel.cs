@@ -591,8 +591,64 @@ public class SettingsPanel : MonoBehaviour
         yPos = CreatePlayerNameInput(section.transform, yPos);
         yPos -= 20f;
         
+        // Botón de Estadísticas
+        yPos = CreateStatisticsButton(section.transform, yPos);
+        yPos -= 20f;
+        
         sectionContent[SettingsSection.Controls] = section;
         section.SetActive(false);
+    }
+    
+    private float CreateStatisticsButton(Transform parent, float yPos)
+    {
+        GameObject buttonObj = new GameObject("StatisticsButton");
+        buttonObj.transform.SetParent(parent, false);
+        Button button = buttonObj.AddComponent<Button>();
+        
+        Image buttonImg = buttonObj.AddComponent<Image>();
+        buttonImg.color = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.2f);
+        
+        RectTransform buttonRect = buttonObj.GetComponent<RectTransform>();
+        buttonRect.anchorMin = new Vector2(0f, 1f);
+        buttonRect.anchorMax = new Vector2(1f, 1f);
+        buttonRect.pivot = new Vector2(0f, 1f);
+        buttonRect.anchoredPosition = new Vector2(20, yPos);
+        buttonRect.sizeDelta = new Vector2(-40, 60);
+        
+        Outline buttonOutline = buttonObj.AddComponent<Outline>();
+        buttonOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.5f);
+        buttonOutline.effectDistance = new Vector2(2, 2);
+        
+        // Texto
+        GameObject textObj = new GameObject("Text");
+        textObj.transform.SetParent(buttonObj.transform, false);
+        Text text = textObj.AddComponent<Text>();
+        text.text = "Ver Estadísticas";
+        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        text.fontSize = 24;
+        text.fontStyle = FontStyle.Bold;
+        text.color = CosmicTheme.NeonCyan;
+        text.alignment = TextAnchor.MiddleCenter;
+        
+        RectTransform textRect = textObj.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.sizeDelta = Vector2.zero;
+        textRect.anchoredPosition = Vector2.zero;
+        
+        // Acción del botón
+        button.onClick.AddListener(() => {
+            Log("[SettingsPanel] Abriendo panel de estadísticas...");
+            // Cerrar settings
+            Hide();
+            // Abrir estadísticas en el menú principal
+            if (MainMenuController.Instance != null)
+            {
+                MainMenuController.Instance.NavigateTo(MenuSection.Statistics);
+            }
+        });
+        
+        return yPos - 70f;
     }
     
     private float CreatePlayerNameInput(Transform parent, float yPos)

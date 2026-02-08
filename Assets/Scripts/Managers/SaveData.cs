@@ -55,6 +55,9 @@ public class SaveData
     [Header("Leaderboard")]
     public List<LeaderboardEntry> leaderboardEntries = new List<LeaderboardEntry>();
     
+    [Header("Player Statistics")]
+    public PlayerStatistics statistics = new PlayerStatistics();
+    
     /// <summary>
     /// Crea una copia de los datos actuales (para backup)
     /// </summary>
@@ -82,7 +85,8 @@ public class SaveData
             tutorialEnabled = this.tutorialEnabled,
             gamesSinceLastAd = this.gamesSinceLastAd,
             lastAdTimestamp = this.lastAdTimestamp,
-            removeAdsPurchased = this.removeAdsPurchased
+            removeAdsPurchased = this.removeAdsPurchased,
+            statistics = this.statistics.Clone()
         };
         
         // Clonar diccionarios
@@ -193,6 +197,163 @@ public class SaveData
         {
             gamesSinceLastAd = 0;
             wasFixed = true;
+        }
+        
+        // Validar estadísticas
+        if (statistics == null)
+        {
+            statistics = new PlayerStatistics();
+            wasFixed = true;
+        }
+        else
+        {
+            bool statsFixed = statistics.ValidateAndFix();
+            if (statsFixed) wasFixed = true;
+        }
+        
+        return wasFixed;
+    }
+}
+
+/// <summary>
+/// Estructura de datos para las estadísticas detalladas del jugador
+/// </summary>
+[System.Serializable]
+public class PlayerStatistics
+{
+    [Header("Game Sessions")]
+    public int totalGamesPlayed = 0;
+    public float totalPlayTime = 0f; // En segundos
+    public float averagePlayTime = 0f; // En segundos
+    
+    [Header("Score Statistics")]
+    public int bestScore = 0;
+    public int averageScore = 0;
+    public int totalScore = 0;
+    public int bestStreak = 0; // Mejor racha de partidas consecutivas
+    
+    [Header("Obstacle Statistics")]
+    public int totalObstaclesAvoided = 0;
+    public int totalNearMisses = 0;
+    public int totalCollisions = 0;
+    public float averageObstaclesPerGame = 0f;
+    
+    [Header("Time Statistics")]
+    public float longestSurvivalTime = 0f; // En segundos
+    public float averageSurvivalTime = 0f; // En segundos
+    public float totalSurvivalTime = 0f; // En segundos
+    
+    [Header("Recent Performance")]
+    public List<int> recentScores = new List<int>(); // Últimas 10 partidas
+    public List<float> recentPlayTimes = new List<float>(); // Últimas 10 partidas
+    
+    [Header("Daily Statistics")]
+    public int gamesPlayedToday = 0;
+    public int bestScoreToday = 0;
+    public float playTimeToday = 0f; // En segundos
+    public string lastPlayDate = ""; // Fecha del último juego (yyyy-MM-dd)
+    
+    /// <summary>
+    /// Crea una copia de las estadísticas
+    /// </summary>
+    public PlayerStatistics Clone()
+    {
+        PlayerStatistics clone = new PlayerStatistics
+        {
+            totalGamesPlayed = this.totalGamesPlayed,
+            totalPlayTime = this.totalPlayTime,
+            averagePlayTime = this.averagePlayTime,
+            bestScore = this.bestScore,
+            averageScore = this.averageScore,
+            totalScore = this.totalScore,
+            bestStreak = this.bestStreak,
+            totalObstaclesAvoided = this.totalObstaclesAvoided,
+            totalNearMisses = this.totalNearMisses,
+            totalCollisions = this.totalCollisions,
+            averageObstaclesPerGame = this.averageObstaclesPerGame,
+            longestSurvivalTime = this.longestSurvivalTime,
+            averageSurvivalTime = this.averageSurvivalTime,
+            totalSurvivalTime = this.totalSurvivalTime,
+            gamesPlayedToday = this.gamesPlayedToday,
+            bestScoreToday = this.bestScoreToday,
+            playTimeToday = this.playTimeToday,
+            lastPlayDate = this.lastPlayDate
+        };
+        
+        // Clonar listas
+        clone.recentScores = new List<int>(this.recentScores);
+        clone.recentPlayTimes = new List<float>(this.recentPlayTimes);
+        
+        return clone;
+    }
+    
+    /// <summary>
+    /// Valida y corrige las estadísticas
+    /// </summary>
+    public bool ValidateAndFix()
+    {
+        bool wasFixed = false;
+        
+        // Validar valores negativos
+        if (totalGamesPlayed < 0) { totalGamesPlayed = 0; wasFixed = true; }
+        if (totalPlayTime < 0) { totalPlayTime = 0; wasFixed = true; }
+        if (bestScore < 0) { bestScore = 0; wasFixed = true; }
+        if (averageScore < 0) { averageScore = 0; wasFixed = true; }
+        if (totalScore < 0) { totalScore = 0; wasFixed = true; }
+        if (bestStreak < 0) { bestStreak = 0; wasFixed = true; }
+        if (totalObstaclesAvoided < 0) { totalObstaclesAvoided = 0; wasFixed = true; }
+        if (totalNearMisses < 0) { totalNearMisses = 0; wasFixed = true; }
+        if (totalCollisions < 0) { totalCollisions = 0; wasFixed = true; }
+        if (longestSurvivalTime < 0) { longestSurvivalTime = 0; wasFixed = true; }
+        if (averageSurvivalTime < 0) { averageSurvivalTime = 0; wasFixed = true; }
+        if (totalSurvivalTime < 0) { totalSurvivalTime = 0; wasFixed = true; }
+        if (gamesPlayedToday < 0) { gamesPlayedToday = 0; wasFixed = true; }
+        if (bestScoreToday < 0) { bestScoreToday = 0; wasFixed = true; }
+        if (playTimeToday < 0) { playTimeToday = 0; wasFixed = true; }
+        
+        // Limitar tamaño de listas recientes
+        const int MAX_RECENT_ENTRIES = 10;
+        if (recentScores.Count > MAX_RECENT_ENTRIES)
+        {
+            recentScores = recentScores.GetRange(recentScores.Count - MAX_RECENT_ENTRIES, MAX_RECENT_ENTRIES);
+            wasFixed = true;
+        }
+        if (recentPlayTimes.Count > MAX_RECENT_ENTRIES)
+        {
+            recentPlayTimes = recentPlayTimes.GetRange(recentPlayTimes.Count - MAX_RECENT_ENTRIES, MAX_RECENT_ENTRIES);
+            wasFixed = true;
+        }
+        
+        // Recalcular promedios si es necesario
+        if (totalGamesPlayed > 0)
+        {
+            float newAvgPlayTime = totalPlayTime / totalGamesPlayed;
+            if (Mathf.Abs(averagePlayTime - newAvgPlayTime) > 0.01f)
+            {
+                averagePlayTime = newAvgPlayTime;
+                wasFixed = true;
+            }
+            
+            int newAvgScore = totalScore / totalGamesPlayed;
+            if (averageScore != newAvgScore)
+            {
+                averageScore = newAvgScore;
+                wasFixed = true;
+            }
+            
+            float newAvgSurvival = totalSurvivalTime / totalGamesPlayed;
+            if (Mathf.Abs(averageSurvivalTime - newAvgSurvival) > 0.01f)
+            {
+                averageSurvivalTime = newAvgSurvival;
+                wasFixed = true;
+            }
+            
+            float newAvgObstacles = totalGamesPlayed > 0 ? (float)totalObstaclesAvoided / totalGamesPlayed : 0f;
+            if (Mathf.Abs(averageObstaclesPerGame - newAvgObstacles) > 0.01f)
+            {
+                averageObstaclesPerGame = newAvgObstacles;
+                wasFixed = true;
+            }
         }
         
         return wasFixed;

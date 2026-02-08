@@ -23,6 +23,7 @@ public class MainMenuController : MonoBehaviour
     private GameObject shopSection;
     private GameObject missionsSection;
     private GameObject leaderboardSection;
+    private GameObject statisticsSection;
     private SettingsPanel settingsPanel;
     
     [Header("Play Section")]
@@ -68,6 +69,13 @@ public class MainMenuController : MonoBehaviour
         if (GetComponent<CosmicBackground>() == null)
         {
             gameObject.AddComponent<CosmicBackground>();
+        }
+        
+        // Crear SaveDataManager PRIMERO (otros managers dependen de él)
+        if (SaveDataManager.Instance == null)
+        {
+            GameObject saveDataObj = new GameObject("SaveDataManager");
+            saveDataObj.AddComponent<SaveDataManager>();
         }
         
         // Crear o encontrar CurrencyManager
@@ -135,6 +143,13 @@ public class MainMenuController : MonoBehaviour
         {
             GameObject pauseObj = new GameObject("PauseManager");
             pauseObj.AddComponent<PauseManager>();
+        }
+        
+        // Crear StatisticsManager
+        if (StatisticsManager.Instance == null)
+        {
+            GameObject statisticsObj = new GameObject("StatisticsManager");
+            statisticsObj.AddComponent<StatisticsManager>();
         }
         
         // Cargar configuración del juego
@@ -343,6 +358,7 @@ public class MainMenuController : MonoBehaviour
         CreateShopSection();
         CreateMissionsSection();
         CreateLeaderboardSection();
+        CreateStatisticsSection();
         CreateBottomNavigation();
         
         // Inicialmente mostrar solo Play
@@ -1160,6 +1176,17 @@ public class MainMenuController : MonoBehaviour
         leaderboardSection.SetActive(false);
     }
     
+    private void CreateStatisticsSection()
+    {
+        // Crear sección de Statistics (se mantiene activo, el panel gestiona su propia visibilidad)
+        statisticsSection = new GameObject("StatisticsSection");
+        statisticsSection.transform.SetParent(canvas.transform, false);
+        
+        // Añadir componente StatisticsPanel
+        StatisticsPanel statisticsComponent = statisticsSection.AddComponent<StatisticsPanel>();
+        // No desactivar - el StatisticsPanel crea su propio overlay y lo gestiona
+    }
+    
     private void CreatePlayerDemo()
     {
         // Crear un player demo orbitando en el centro
@@ -1246,6 +1273,24 @@ public class MainMenuController : MonoBehaviour
         if (shopSection != null) shopSection.SetActive(section == MenuSection.Shop);
         if (missionsSection != null) missionsSection.SetActive(section == MenuSection.Missions);
         if (leaderboardSection != null) leaderboardSection.SetActive(section == MenuSection.Leaderboard);
+        
+        // Statistics se muestra como ventana modal
+        if (statisticsSection != null)
+        {
+            StatisticsPanel statsPanel = statisticsSection.GetComponent<StatisticsPanel>();
+            if (statsPanel != null)
+            {
+                if (section == MenuSection.Statistics)
+                {
+                    statsPanel.Show();
+                }
+                else if (statsPanel.panel != null && statsPanel.panel.activeSelf)
+                {
+                    // Solo ocultar si el panel está visible
+                    statsPanel.Hide();
+                }
+            }
+        }
         
         // Actualizar estado visual de los botones de navegación
         UpdateNavigationButtons(section);

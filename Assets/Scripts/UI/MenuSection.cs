@@ -9,7 +9,8 @@ public enum MenuSection
     Skins,
     Shop,
     Missions,
-    Leaderboard
+    Leaderboard,
+    Statistics
 }
 
 /// <summary>

@@ -118,6 +118,9 @@ public class SaveDataManager : MonoBehaviour
         // Migrar datos antiguos de PlayerPrefs si es necesario (también asíncrono)
         StartCoroutine(MigrateFromPlayerPrefsDelayed());
         
+        // Retroalimentar estadísticas desde datos existentes si están vacías
+        RetroPopulateStatistics();
+        
         Log("[SaveDataManager] Sistema de guardado inicializado");
     }
     
@@ -165,9 +168,11 @@ public class SaveDataManager : MonoBehaviour
             reduceAnimations = false,
             gamesSinceLastAd = 0,
             lastAdTimestamp = 0,
-            removeAdsPurchased = false
+            removeAdsPurchased = false,
+            statistics = new PlayerStatistics() // Inicializar estadísticas
         };
         
+        Log("[SaveDataManager] Nuevo SaveData creado con estadísticas inicializadas");
         return newData;
     }
     
@@ -194,6 +199,13 @@ public class SaveDataManager : MonoBehaviour
                     
                     if (currentSaveData != null)
                     {
+                        // Asegurar que statistics esté inicializado
+                        if (currentSaveData.statistics == null)
+                        {
+                            currentSaveData.statistics = new PlayerStatistics();
+                            isDirty = true;
+                        }
+                        
                         // Validar y corregir datos
                         bool wasFixed = currentSaveData.ValidateAndFix();
                         if (wasFixed)
@@ -416,6 +428,99 @@ public class SaveDataManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Retroalimenta las estadísticas desde datos existentes del SaveData
+    /// cuando las estadísticas están vacías pero hay evidencia de partidas jugadas.
+    /// Esto ocurre cuando el sistema de estadísticas se añade a un juego ya existente.
+    /// </summary>
+    private void RetroPopulateStatistics()
+    {
+        if (currentSaveData == null) return;
+        
+        if (currentSaveData.statistics == null)
+        {
+            currentSaveData.statistics = new PlayerStatistics();
+        }
+        
+        PlayerStatistics stats = currentSaveData.statistics;
+        
+        // Si ya hay partidas registradas en estadísticas, no hacer nada
+        if (stats.totalGamesPlayed > 0) return;
+        
+        bool populated = false;
+        
+        // Sincronizar bestScore desde highScore global
+        if (currentSaveData.highScore > stats.bestScore)
+        {
+            stats.bestScore = currentSaveData.highScore;
+            populated = true;
+        }
+        
+        // Estimar partidas jugadas desde el leaderboard local
+        if (currentSaveData.leaderboardEntries != null && currentSaveData.leaderboardEntries.Count > 0)
+        {
+            int leaderboardCount = currentSaveData.leaderboardEntries.Count;
+            stats.totalGamesPlayed = leaderboardCount;
+            
+            // Calcular puntuación total y llenar recentScores
+            int totalScore = 0;
+            stats.recentScores = new System.Collections.Generic.List<int>();
+            stats.recentPlayTimes = new System.Collections.Generic.List<float>();
+            
+            foreach (var entry in currentSaveData.leaderboardEntries)
+            {
+                totalScore += entry.score;
+                stats.recentScores.Add(entry.score);
+                stats.recentPlayTimes.Add(0f); // No tenemos datos de tiempo
+                
+                if (entry.score > stats.bestScore)
+                {
+                    stats.bestScore = entry.score;
+                }
+            }
+            
+            stats.totalScore = totalScore;
+            if (stats.totalGamesPlayed > 0)
+            {
+                stats.averageScore = totalScore / stats.totalGamesPlayed;
+            }
+            
+            populated = true;
+        }
+        else if (currentSaveData.highScore > 0)
+        {
+            // No hay leaderboard pero sí hay highScore → al menos 1 partida
+            stats.totalGamesPlayed = 1;
+            stats.totalScore = currentSaveData.highScore;
+            stats.averageScore = currentSaveData.highScore;
+            stats.recentScores = new System.Collections.Generic.List<int> { currentSaveData.highScore };
+            stats.recentPlayTimes = new System.Collections.Generic.List<float> { 0f };
+            populated = true;
+        }
+        
+        // También chequear PlayerPrefs antiguos como fallback
+        if (!populated && PlayerPrefs.HasKey("HighScore"))
+        {
+            int oldHighScore = PlayerPrefs.GetInt("HighScore", 0);
+            if (oldHighScore > 0)
+            {
+                stats.bestScore = oldHighScore;
+                stats.totalGamesPlayed = 1;
+                stats.totalScore = oldHighScore;
+                stats.averageScore = oldHighScore;
+                stats.recentScores = new System.Collections.Generic.List<int> { oldHighScore };
+                stats.recentPlayTimes = new System.Collections.Generic.List<float> { 0f };
+                populated = true;
+            }
+        }
+        
+        if (populated)
+        {
+            Log($"[SaveDataManager] Estadísticas retroalimentadas: {stats.totalGamesPlayed} partidas, bestScore={stats.bestScore}");
+            isDirty = true;
+        }
+    }
+    
+    /// <summary>
     /// Migra datos antiguos de PlayerPrefs al nuevo sistema
     /// </summary>
     private void MigrateFromPlayerPrefs()
@@ -556,7 +661,13 @@ public class SaveDataManager : MonoBehaviour
         if (PlayerPrefs.HasKey("LastAdTimestamp"))
         {
             string timestampStr = PlayerPrefs.GetString("LastAdTimestamp", "0");
-            if (long.TryParse(timestampStr, out long timestamp))
+            // Intentar parsear como double primero (puede tener decimales) y luego convertir a long
+            if (double.TryParse(timestampStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double timestampDouble))
+            {
+                currentSaveData.lastAdTimestamp = (long)timestampDouble;
+                migrated = true;
+            }
+            else if (long.TryParse(timestampStr, out long timestamp))
             {
                 currentSaveData.lastAdTimestamp = timestamp;
                 migrated = true;
@@ -588,6 +699,19 @@ public class SaveDataManager : MonoBehaviour
     /// </summary>
     public SaveData GetSaveData()
     {
+        // Asegurar que currentSaveData esté inicializado
+        if (currentSaveData == null)
+        {
+            currentSaveData = CreateNewSaveData();
+        }
+        
+        // Asegurar que statistics esté inicializado
+        if (currentSaveData.statistics == null)
+        {
+            currentSaveData.statistics = new PlayerStatistics();
+            isDirty = true;
+        }
+        
         return currentSaveData;
     }
     

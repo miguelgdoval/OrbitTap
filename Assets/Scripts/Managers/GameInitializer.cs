@@ -135,6 +135,9 @@ public class GameInitializer : MonoBehaviour
             destructionController.particleSpeed = 7f;
         }
 
+        // Inicializar managers core (SaveDataManager primero, luego el resto)
+        ManagerInitializer.InitializeCoreManagers();
+
         // Crear fondo cósmico
         GameObject cosmicBg = GameObject.Find("CosmicBackground");
         if (cosmicBg == null)
@@ -198,92 +201,8 @@ public class GameInitializer : MonoBehaviour
             CreateScoreUI(sm);
         }
 
-        // Crear AudioManager
-        if (AudioManager.Instance == null)
-        {
-            GameObject audioManager = new GameObject("AudioManager");
-            audioManager.AddComponent<AudioManager>();
-        }
-        
-        // Crear MissionManager
-        if (MissionManager.Instance == null)
-        {
-            GameObject missionManager = new GameObject("MissionManager");
-            missionManager.AddComponent<MissionManager>();
-        }
-        
-        // Crear CurrencyManager
-        if (CurrencyManager.Instance == null)
-        {
-            GameObject currencyManager = new GameObject("CurrencyManager");
-            currencyManager.AddComponent<CurrencyManager>();
-        }
-        
-        // Crear AdManager
-        if (AdManager.Instance == null)
-        {
-            GameObject adManager = new GameObject("AdManager");
-            adManager.AddComponent<AdManager>();
-        }
-        
-        // Crear AnalyticsManager
-        if (AnalyticsManager.Instance == null)
-        {
-            GameObject analyticsManager = new GameObject("AnalyticsManager");
-            analyticsManager.AddComponent<AnalyticsManager>();
-        }
-        
-        // Crear IAPManager
-        if (IAPManager.Instance == null)
-        {
-            GameObject iapManager = new GameObject("IAPManager");
-            iapManager.AddComponent<IAPManager>();
-        }
-        
-        // Crear SaveDataManager (debe ser uno de los primeros para que otros sistemas puedan usarlo)
-        if (SaveDataManager.Instance == null)
-        {
-            GameObject saveDataManager = new GameObject("SaveDataManager");
-            saveDataManager.AddComponent<SaveDataManager>();
-        }
-        
-        // Crear TutorialManager
-        if (TutorialManager.Instance == null)
-        {
-            GameObject tutorialManager = new GameObject("TutorialManager");
-            tutorialManager.AddComponent<TutorialManager>();
-        }
-        
-        // Crear NotificationManager
-        if (NotificationManager.Instance == null)
-        {
-            GameObject notificationManager = new GameObject("NotificationManager");
-            notificationManager.AddComponent<NotificationManager>();
-        }
-        
-        // Crear AccessibilityManager
-        if (AccessibilityManager.Instance == null)
-        {
-            GameObject accessibilityManager = new GameObject("AccessibilityManager");
-            accessibilityManager.AddComponent<AccessibilityManager>();
-        }
-        
-        // Crear PauseManager
-        if (PauseManager.Instance == null)
-        {
-            GameObject pauseManager = new GameObject("PauseManager");
-            pauseManager.AddComponent<PauseManager>();
-        }
-        
-        // Crear StatisticsManager
-        if (StatisticsManager.Instance == null)
-        {
-            GameObject statisticsManager = new GameObject("StatisticsManager");
-            statisticsManager.AddComponent<StatisticsManager>();
-        }
-        
-        // Cargar configuración del juego
-        GameConfig.LoadConfig();
+        // Los managers core ya fueron inicializados al inicio de InitializeGame()
+        // Solo crear managers específicos del juego aquí
         
         // Notificar que el juego ha iniciado (para misiones)
         StartCoroutine(NotifyGameStartDelayed());

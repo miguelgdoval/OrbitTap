@@ -1492,7 +1492,12 @@ public class SettingsPanel : MonoBehaviour
                 saveData.highContrastUI = highContrastUI;
                 saveData.reduceAnimations = reduceAnimations;
                 saveData.tutorialEnabled = tutorialEnabled;
-                SaveDataManager.Instance.MarkDirty();
+                // Guardar también en PlayerPrefs como respaldo
+                PlayerPrefs.SetInt("TutorialEnabled", tutorialEnabled ? 1 : 0);
+                // Forzar guardado inmediato para asegurar que el cambio se persista
+                SaveDataManager.Instance.ForceSave();
+                PlayerPrefs.Save(); // Asegurar que PlayerPrefs también se guarde
+                Log($"[SettingsPanel] Configuración guardada (tutorialEnabled: {tutorialEnabled}) - Guardado en SaveData y PlayerPrefs");
                 return;
             }
         }

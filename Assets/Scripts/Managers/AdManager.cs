@@ -104,14 +104,14 @@ public class AdManager : MonoBehaviour
         
         if (string.IsNullOrEmpty(gameId) || gameId == "YOUR_ANDROID_GAME_ID" || gameId == "YOUR_IOS_GAME_ID")
         {
-            Debug.LogWarning("[AdManager] Game ID no configurado. Los anuncios no funcionarán. Configura los Game IDs en el Inspector.");
+            LogWarning("[AdManager] Game ID no configurado. Los anuncios no funcionarán. Configura los Game IDs en el Inspector.");
             return;
         }
         
         Log($"[AdManager] Inicializando Unity Ads con Game ID: {gameId}");
         Advertisement.Initialize(gameId, testMode, this);
 #else
-        Debug.LogWarning("[AdManager] Unity Ads no está instalado. Instala el paquete desde Package Manager.");
+        LogWarning("[AdManager] Unity Ads no está instalado. Instala el paquete desde Package Manager.");
 #endif
     }
     
@@ -147,14 +147,14 @@ public class AdManager : MonoBehaviour
 #if UNITY_ADS
         if (!isInitialized)
         {
-            Debug.LogWarning("[AdManager] Ads no inicializados aún");
+            LogWarning("[AdManager] Ads no inicializados aún");
             return;
         }
         
         Log("[AdManager] Cargando anuncio intersticial...");
         Advertisement.Load(INTERSTITIAL_AD_ID, this);
 #else
-        Debug.LogWarning("[AdManager] Unity Ads no está instalado.");
+        LogWarning("[AdManager] Unity Ads no está instalado.");
 #endif
     }
     
@@ -255,18 +255,18 @@ public class AdManager : MonoBehaviour
 #if UNITY_ADS
         if (!isInitialized)
         {
-            Debug.LogWarning("[AdManager] Ads no inicializados aún. No se puede mostrar anuncio.");
+            LogWarning("[AdManager] Ads no inicializados aún. No se puede mostrar anuncio.");
             return;
         }
         
         if (!isInterstitialReady)
         {
-            Debug.LogWarning("[AdManager] Anuncio intersticial no está listo. Intentando cargar...");
+            LogWarning("[AdManager] Anuncio intersticial no está listo. Intentando cargar...");
             LoadInterstitialAd();
             // Marcar que hay un anuncio pendiente de mostrar
             pendingInterstitialShow = true;
             // NO resetear contador aquí porque el anuncio no se mostró
-            Debug.LogWarning("[AdManager] El anuncio se cargará y se mostrará automáticamente cuando esté listo. El contador NO se resetea hasta entonces.");
+            LogWarning("[AdManager] El anuncio se cargará y se mostrará automáticamente cuando esté listo. El contador NO se resetea hasta entonces.");
             return;
         }
         
@@ -275,7 +275,7 @@ public class AdManager : MonoBehaviour
         Log("[AdManager] Mostrando anuncio intersticial...");
         Advertisement.Show(INTERSTITIAL_AD_ID, this);
 #else
-        Debug.LogWarning("[AdManager] Unity Ads no está instalado.");
+        LogWarning("[AdManager] Unity Ads no está instalado.");
 #endif
     }
     
@@ -293,14 +293,14 @@ public class AdManager : MonoBehaviour
 #if UNITY_ADS
         if (!isInitialized)
         {
-            Debug.LogWarning("[AdManager] Ads no inicializados aún");
+            LogWarning("[AdManager] Ads no inicializados aún");
             return;
         }
         
         Log("[AdManager] Cargando anuncio con recompensa...");
         Advertisement.Load(REWARDED_AD_ID, this);
 #else
-        Debug.LogWarning("[AdManager] Unity Ads no está instalado.");
+        LogWarning("[AdManager] Unity Ads no está instalado.");
 #endif
     }
     
@@ -318,7 +318,7 @@ public class AdManager : MonoBehaviour
 #if UNITY_ADS
         if (!isRewardedReady)
         {
-            Debug.LogWarning("[AdManager] Anuncio con recompensa no está listo. Intentando cargar...");
+            LogWarning("[AdManager] Anuncio con recompensa no está listo. Intentando cargar...");
             LoadRewardedAd();
             return;
         }
@@ -326,7 +326,7 @@ public class AdManager : MonoBehaviour
         Log("[AdManager] Mostrando anuncio con recompensa...");
         Advertisement.Show(REWARDED_AD_ID, this);
 #else
-        Debug.LogWarning("[AdManager] Unity Ads no está instalado.");
+        LogWarning("[AdManager] Unity Ads no está instalado.");
 #endif
     }
     
@@ -347,7 +347,7 @@ public class AdManager : MonoBehaviour
     
     public void OnInitializationFailed(UnityAdsInitializationError error, string message)
     {
-        Debug.LogError($"[AdManager] Error al inicializar Unity Ads: {error} - {message}");
+        LogError($"[AdManager] Error al inicializar Unity Ads: {error} - {message}");
         
         // Mostrar notificación al usuario solo si es un error crítico
         if (error == UnityAdsInitializationError.INTERNAL_ERROR)
@@ -387,7 +387,7 @@ public class AdManager : MonoBehaviour
     
     public void OnUnityAdsFailedToLoad(string adUnitId, UnityAdsLoadError error, string message)
     {
-        Debug.LogError($"[AdManager] Error al cargar anuncio {adUnitId}: {error} - {message}");
+        LogError($"[AdManager] Error al cargar anuncio {adUnitId}: {error} - {message}");
         
         // Mostrar notificación solo si es un error crítico (no para errores temporales)
         if (error == UnityAdsLoadError.INITIALIZE_FAILED || error == UnityAdsLoadError.INTERNAL_ERROR)
@@ -412,7 +412,7 @@ public class AdManager : MonoBehaviour
     
     public void OnUnityAdsShowFailure(string adUnitId, UnityAdsShowError error, string message)
     {
-        Debug.LogError($"[AdManager] Error al mostrar anuncio {adUnitId}: {error} - {message}");
+        LogError($"[AdManager] Error al mostrar anuncio {adUnitId}: {error} - {message}");
         
         // Mostrar notificación al usuario
         if (NotificationManager.Instance != null)

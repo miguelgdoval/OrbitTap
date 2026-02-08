@@ -103,24 +103,26 @@ public class TutorialManager : MonoBehaviour
         }
         
         // Verificar si el tutorial está habilitado en configuración
-        // Este es el único check necesario - si está habilitado, se muestra
-        bool tutorialEnabledInSettings = true;
+        // Leer el valor guardado, no usar un valor por defecto hardcodeado
+        bool tutorialEnabledInSettings = true; // Valor por defecto solo si no hay datos guardados
         if (SaveDataManager.Instance != null)
         {
             SaveData saveData = SaveDataManager.Instance.GetSaveData();
             if (saveData != null)
             {
                 tutorialEnabledInSettings = saveData.tutorialEnabled;
-                Log($"[TutorialManager] Tutorial habilitado en configuración: {tutorialEnabledInSettings}");
+                Log($"[TutorialManager] Tutorial habilitado en configuración (SaveData): {tutorialEnabledInSettings}");
             }
             else
             {
-                LogWarning("[TutorialManager] SaveData es null");
+                LogWarning("[TutorialManager] SaveData es null, usando PlayerPrefs");
+                // Fallback a PlayerPrefs si SaveData es null
+                tutorialEnabledInSettings = PlayerPrefs.GetInt("TutorialEnabled", 1) == 1;
             }
         }
         else
         {
-            // Fallback a PlayerPrefs
+            // Fallback a PlayerPrefs si SaveDataManager no está disponible
             tutorialEnabledInSettings = PlayerPrefs.GetInt("TutorialEnabled", 1) == 1;
             Log($"[TutorialManager] Usando PlayerPrefs, tutorial habilitado: {tutorialEnabledInSettings}");
         }

@@ -166,13 +166,14 @@ public class SaveDataManager : MonoBehaviour
             colorBlindMode = false,
             highContrastUI = false,
             reduceAnimations = false,
+            tutorialEnabled = PlayerPrefs.GetInt("TutorialEnabled", 1) == 1, // Leer de PlayerPrefs si existe, sino true por defecto
             gamesSinceLastAd = 0,
             lastAdTimestamp = 0,
             removeAdsPurchased = false,
             statistics = new PlayerStatistics() // Inicializar estadísticas
         };
         
-        Log("[SaveDataManager] Nuevo SaveData creado con estadísticas inicializadas");
+        Log($"[SaveDataManager] Nuevo SaveData creado con estadísticas inicializadas (tutorialEnabled: {newData.tutorialEnabled})");
         return newData;
     }
     
@@ -204,6 +205,19 @@ public class SaveDataManager : MonoBehaviour
                         {
                             currentSaveData.statistics = new PlayerStatistics();
                             isDirty = true;
+                        }
+                        
+                        // Sincronizar tutorialEnabled con PlayerPrefs si existe (PlayerPrefs tiene prioridad)
+                        // Esto asegura que si el usuario cambió el valor en Settings, se preserve
+                        if (PlayerPrefs.HasKey("TutorialEnabled"))
+                        {
+                            bool playerPrefsValue = PlayerPrefs.GetInt("TutorialEnabled", 1) == 1;
+                            if (currentSaveData.tutorialEnabled != playerPrefsValue)
+                            {
+                                Log($"[SaveDataManager] Sincronizando tutorialEnabled desde PlayerPrefs: {playerPrefsValue} (SaveData tenía: {currentSaveData.tutorialEnabled})");
+                                currentSaveData.tutorialEnabled = playerPrefsValue;
+                                isDirty = true;
+                            }
                         }
                         
                         // Validar y corregir datos
@@ -710,6 +724,19 @@ public class SaveDataManager : MonoBehaviour
         {
             currentSaveData.statistics = new PlayerStatistics();
             isDirty = true;
+        }
+        
+        // Sincronizar tutorialEnabled con PlayerPrefs si existe (PlayerPrefs tiene prioridad)
+        // Esto asegura que los cambios recientes en Settings se reflejen inmediatamente
+        if (PlayerPrefs.HasKey("TutorialEnabled"))
+        {
+            bool playerPrefsValue = PlayerPrefs.GetInt("TutorialEnabled", 1) == 1;
+            if (currentSaveData.tutorialEnabled != playerPrefsValue)
+            {
+                Log($"[SaveDataManager] Sincronizando tutorialEnabled desde PlayerPrefs en GetSaveData: {playerPrefsValue}");
+                currentSaveData.tutorialEnabled = playerPrefsValue;
+                isDirty = true;
+            }
         }
         
         return currentSaveData;

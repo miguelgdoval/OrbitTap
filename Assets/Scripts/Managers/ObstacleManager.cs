@@ -126,7 +126,7 @@ public class ObstacleManager : MonoBehaviour
 
         if (mainCamera == null)
         {
-            Debug.LogError("ObstacleManager: No camera found in Start()!");
+            LogError("ObstacleManager: No camera found in Start()!");
         }
         else
         {
@@ -190,14 +190,14 @@ public class ObstacleManager : MonoBehaviour
         scoreManager = FindFirstObjectByType<ScoreManager>();
         if (scoreManager == null)
         {
-            Debug.LogWarning("ObstacleManager: ScoreManager no encontrado. La dificultad basada en score no funcionará.");
+            LogWarning("ObstacleManager: ScoreManager no encontrado. La dificultad basada en score no funcionará.");
         }
         
         // Buscar BackgroundManager para cambiar fondos según dificultad
         backgroundManager = FindFirstObjectByType<BackgroundManager>();
         if (backgroundManager == null)
         {
-            Debug.LogWarning("ObstacleManager: BackgroundManager no encontrado. Los fondos no cambiarán automáticamente.");
+            LogWarning("ObstacleManager: BackgroundManager no encontrado. Los fondos no cambiarán automáticamente.");
         }
         else
         {
@@ -819,7 +819,7 @@ public class ObstacleManager : MonoBehaviour
         currentMinSpawnInterval = newMinInterval;
         currentMaxSpawnInterval = newMaxInterval;
         
-        Debug.Log($"ObstacleManager: Difficulty updated - Spawn intervals: {currentMinSpawnInterval:F2}s - {currentMaxSpawnInterval:F2}s (Game time: {gameTime:F1}s, Progress: {progress:P0})");
+        Log($"ObstacleManager: Difficulty updated - Spawn intervals: {currentMinSpawnInterval:F2}s - {currentMaxSpawnInterval:F2}s (Game time: {gameTime:F1}s, Progress: {progress:P0})");
     }
 
     /// <summary>
@@ -1034,7 +1034,7 @@ public class ObstacleManager : MonoBehaviour
         
         if (mainCamera == null)
         {
-            Debug.LogError("ObstacleManager: No camera found for dynamic obstacle creation!");
+            LogError("ObstacleManager: No camera found for dynamic obstacle creation!");
             Destroy(obstacleObj);
             return;
         }
@@ -1105,7 +1105,7 @@ public class ObstacleManager : MonoBehaviour
         float randomSizeMultiplier = 1.0f + (sizeVariation - 1.0f) * (randomValue * randomValue);
         StartCoroutine(ApplyObstacleScale(obstacleObj, randomSizeMultiplier));
         
-        Debug.Log($"ObstacleManager: Created dynamic obstacle {obstacleObj.name} at {spawnPosition}");
+        Log($"ObstacleManager: Created dynamic obstacle {obstacleObj.name} at {spawnPosition}");
     }
 
     private void SpawnObstacle()
@@ -1154,7 +1154,7 @@ public class ObstacleManager : MonoBehaviour
             
             if (Random.Range(0f, 1f) < complexSpawnChance)
             {
-                Debug.Log($"ObstacleManager: Creating complex obstacle dynamically (difficulty: {currentDifficulty}, chance: {complexSpawnChance:P0})");
+                Log($"ObstacleManager: Creating complex obstacle dynamically (difficulty: {currentDifficulty}, chance: {complexSpawnChance:P0})");
                 CreateComplexObstacleDynamically();
                 return;
             }
@@ -1162,8 +1162,8 @@ public class ObstacleManager : MonoBehaviour
 
         if (validPrefabs.Count == 0)
         {
-            Debug.LogWarning($"ObstacleManager: No valid obstacle prefabs assigned! (Current difficulty: {currentDifficulty}, Max: {maxDifficultyLevel})");
-            Debug.LogWarning($"ObstacleManager: PulsatingRing={pulsatingRingPrefab != null}, SpiralFragment={spiralFragmentPrefab != null}, ZigzagBarrier={zigzagBarrierPrefab != null}");
+            LogWarning($"ObstacleManager: No valid obstacle prefabs assigned! (Current difficulty: {currentDifficulty}, Max: {maxDifficultyLevel})");
+            LogWarning($"ObstacleManager: PulsatingRing={pulsatingRingPrefab != null}, SpiralFragment={spiralFragmentPrefab != null}, ZigzagBarrier={zigzagBarrierPrefab != null}");
             
             // Si no hay prefabs disponibles, crear obstáculos dinámicamente
             if (currentDifficulty >= ObstacleDifficultyLevel.Hard)

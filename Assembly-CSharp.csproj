@@ -108,6 +108,7 @@
     <Compile Include="Assets/Scripts/UI/MenuNavigation.cs" />
     <Compile Include="Assets/Scripts/Obstacles/Complex/PulsatingRing.cs" />
     <Compile Include="Assets/Scripts/Visual/CosmicBackground.cs" />
+    <Compile Include="Assets/Scripts/Managers/ManagerInitializer.cs" />
     <Compile Include="Assets/Scripts/Obstacles/Complex/ZigzagBarrier.cs" />
     <Compile Include="Assets/Scripts/Visual/CosmicTheme.cs" />
     <Compile Include="Assets/Scripts/Managers/InputController.cs" />

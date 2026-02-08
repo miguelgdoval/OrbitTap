@@ -71,89 +71,11 @@ public class MainMenuController : MonoBehaviour
             gameObject.AddComponent<CosmicBackground>();
         }
         
-        // Crear SaveDataManager PRIMERO (otros managers dependen de él)
-        if (SaveDataManager.Instance == null)
-        {
-            GameObject saveDataObj = new GameObject("SaveDataManager");
-            saveDataObj.AddComponent<SaveDataManager>();
-        }
+        // Inicializar todos los managers core usando ManagerInitializer
+        ManagerInitializer.InitializeCoreManagers();
         
-        // Crear o encontrar CurrencyManager
-        if (CurrencyManager.Instance == null)
-        {
-            GameObject currencyObj = new GameObject("CurrencyManager");
-            currencyManager = currencyObj.AddComponent<CurrencyManager>();
-        }
-        else
-        {
-            currencyManager = CurrencyManager.Instance;
-        }
-        
-        // Crear o encontrar MissionManager
-        if (MissionManager.Instance == null)
-        {
-            GameObject missionObj = new GameObject("MissionManager");
-            missionObj.AddComponent<MissionManager>();
-        }
-        
-        // Crear o encontrar LocalLeaderboardManager
-        if (LocalLeaderboardManager.Instance == null)
-        {
-            GameObject leaderboardObj = new GameObject("LocalLeaderboardManager");
-            leaderboardObj.AddComponent<LocalLeaderboardManager>();
-        }
-        
-        // Crear o encontrar AdManager
-        if (AdManager.Instance == null)
-        {
-            GameObject adManagerObj = new GameObject("AdManager");
-            adManagerObj.AddComponent<AdManager>();
-        }
-        
-        // Crear PrivacyPolicyManager
-        if (PrivacyPolicyManager.Instance == null)
-        {
-            GameObject privacyObj = new GameObject("PrivacyPolicyManager");
-            privacyObj.AddComponent<PrivacyPolicyManager>();
-        }
-        
-        // Crear SocialShareManager
-        if (SocialShareManager.Instance == null)
-        {
-            GameObject socialObj = new GameObject("SocialShareManager");
-            socialObj.AddComponent<SocialShareManager>();
-        }
-        
-        // Crear NotificationManager
-        if (NotificationManager.Instance == null)
-        {
-            GameObject notificationObj = new GameObject("NotificationManager");
-            notificationObj.AddComponent<NotificationManager>();
-        }
-        
-        // Crear AccessibilityManager
-        if (AccessibilityManager.Instance == null)
-        {
-            GameObject accessibilityObj = new GameObject("AccessibilityManager");
-            accessibilityObj.AddComponent<AccessibilityManager>();
-        }
-        
-        // Crear PauseManager
-        if (PauseManager.Instance == null)
-        {
-            GameObject pauseObj = new GameObject("PauseManager");
-            pauseObj.AddComponent<PauseManager>();
-        }
-        
-        // Crear StatisticsManager
-        if (StatisticsManager.Instance == null)
-        {
-            GameObject statisticsObj = new GameObject("StatisticsManager");
-            statisticsObj.AddComponent<StatisticsManager>();
-        }
-        
-        // Cargar configuración del juego
-        GameConfig.LoadConfig();
+        // Obtener referencia a CurrencyManager para uso local
+        currencyManager = CurrencyManager.Instance;
         
         CreateUI();
         CreatePlayerDemo();

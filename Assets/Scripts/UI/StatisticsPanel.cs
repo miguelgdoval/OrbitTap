@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using System;
+using static LogHelper;
 
 /// <summary>
 /// Panel de estadísticas del jugador - Diseño simple y directo
@@ -27,7 +28,7 @@ public class StatisticsPanel : MonoBehaviour
     
     public void Show()
     {
-        Debug.Log("[StatisticsPanel] Show() llamado");
+        Log("[StatisticsPanel] Show() llamado");
         
         if (!uiCreated)
         {
@@ -68,7 +69,7 @@ public class StatisticsPanel : MonoBehaviour
         }
         if (canvas == null)
         {
-            Debug.LogError("[StatisticsPanel] No se encontró Canvas!");
+            LogError("[StatisticsPanel] No se encontró Canvas!");
             return;
         }
         
@@ -295,7 +296,7 @@ public class StatisticsPanel : MonoBehaviour
         uiCreated = true;
         panel.SetActive(false);
         
-        Debug.Log("[StatisticsPanel] UI construida correctamente");
+        Log("[StatisticsPanel] UI construida correctamente");
     }
     
     // =========================================
@@ -306,7 +307,7 @@ public class StatisticsPanel : MonoBehaviour
     {
         if (contentArea == null)
         {
-            Debug.LogError("[StatisticsPanel] contentArea es null!");
+            LogError("[StatisticsPanel] contentArea es null!");
             return;
         }
         
@@ -346,7 +347,7 @@ public class StatisticsPanel : MonoBehaviour
             scrollRect.verticalNormalizedPosition = 1f;
         }
         
-        Debug.Log($"[StatisticsPanel] Contenido poblado: {contentArea.transform.childCount} elementos, tab: {tabNames[currentTab]}");
+        Log($"[StatisticsPanel] Contenido poblado: {contentArea.transform.childCount} elementos, tab: {tabNames[currentTab]}");
     }
     
     private void EnsureHierarchyActive(GameObject obj)
@@ -390,7 +391,7 @@ public class StatisticsPanel : MonoBehaviour
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"[StatisticsPanel] Error al obtener stats: {e.Message}");
+                LogWarning($"[StatisticsPanel] Error al obtener stats: {e.Message}");
             }
         }
         
@@ -403,14 +404,14 @@ public class StatisticsPanel : MonoBehaviour
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"[StatisticsPanel] Error StatisticsManager: {e.Message}");
+                LogWarning($"[StatisticsPanel] Error StatisticsManager: {e.Message}");
             }
         }
         
         // Último fallback
         if (stats == null)
         {
-            Debug.Log("[StatisticsPanel] Usando estadísticas vacías");
+            Log("[StatisticsPanel] Usando estadísticas vacías");
             stats = new PlayerStatistics();
         }
         

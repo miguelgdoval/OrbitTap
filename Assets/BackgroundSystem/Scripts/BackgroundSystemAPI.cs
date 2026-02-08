@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 
 /// <summary>
 /// API simple para cambiar fondos desde cualquier script
@@ -12,16 +13,16 @@ public static class BackgroundSystemAPI
     /// <param name="transitionDuration">Duración de la transición (0 = cambio inmediato)</param>
     public static void SetPreset(string presetName, float transitionDuration = 1f)
     {
-        Debug.Log($"🎨 BackgroundSystemAPI: SetPreset llamado - Preset: '{presetName}', Duración: {transitionDuration}s");
+        Log($"🎨 BackgroundSystemAPI: SetPreset llamado - Preset: '{presetName}', Duración: {transitionDuration}s");
         
         if (BackgroundManager.Instance != null)
         {
-            Debug.Log($"✅ BackgroundSystemAPI: BackgroundManager.Instance encontrado, llamando SetPreset...");
+            Log($"✅ BackgroundSystemAPI: BackgroundManager.Instance encontrado, llamando SetPreset...");
             BackgroundManager.Instance.SetPreset(presetName, transitionDuration);
         }
         else
         {
-            Debug.LogError("❌ BackgroundSystemAPI: BackgroundManager.Instance is NULL!");
+            LogError("❌ BackgroundSystemAPI: BackgroundManager.Instance is NULL!");
         }
     }
     

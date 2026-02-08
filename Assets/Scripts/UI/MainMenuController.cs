@@ -1609,12 +1609,6 @@ public class MainMenuController : MonoBehaviour
         }
     }
     
-    private IEnumerator PulseTitle()
-    {
-        // Método legacy - mantener por compatibilidad pero ya no se usa
-        yield break;
-    }
-    
     private IEnumerator CreateTitleParticles(Transform titleParent)
     {
         // Esperar a que termine la animación de entrada

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using static LogHelper;
 
 /// <summary>
 /// Estructura de datos centralizada para guardar el estado del juego
@@ -127,14 +128,14 @@ public class SaveData
         // Validar puntuaciones
         if (highScore < 0 || highScore > 999999999)
         {
-            Debug.LogWarning($"[SaveData] HighScore inválido ({highScore}), reseteando a 0");
+            LogWarning($"[SaveData] HighScore inválido ({highScore}), reseteando a 0");
             highScore = 0;
             wasFixed = true;
         }
         
         if (lastScore < 0 || lastScore > 999999999)
         {
-            Debug.LogWarning($"[SaveData] LastScore inválido ({lastScore}), reseteando a 0");
+            LogWarning($"[SaveData] LastScore inválido ({lastScore}), reseteando a 0");
             lastScore = 0;
             wasFixed = true;
         }
@@ -142,14 +143,14 @@ public class SaveData
         // Validar monedas
         if (stellarShards < 0 || stellarShards > 999999999)
         {
-            Debug.LogWarning($"[SaveData] StellarShards inválido ({stellarShards}), reseteando a 0");
+            LogWarning($"[SaveData] StellarShards inválido ({stellarShards}), reseteando a 0");
             stellarShards = 0;
             wasFixed = true;
         }
         
         if (cosmicCrystals < 0 || cosmicCrystals > 999999999)
         {
-            Debug.LogWarning($"[SaveData] CosmicCrystals inválido ({cosmicCrystals}), reseteando a 0");
+            LogWarning($"[SaveData] CosmicCrystals inválido ({cosmicCrystals}), reseteando a 0");
             cosmicCrystals = 0;
             wasFixed = true;
         }
@@ -162,7 +163,7 @@ public class SaveData
         // Validar graphics quality
         if (graphicsQuality < 0 || graphicsQuality > 2)
         {
-            Debug.LogWarning($"[SaveData] GraphicsQuality inválido ({graphicsQuality}), reseteando a 1");
+            LogWarning($"[SaveData] GraphicsQuality inválido ({graphicsQuality}), reseteando a 1");
             graphicsQuality = 1;
             wasFixed = true;
         }

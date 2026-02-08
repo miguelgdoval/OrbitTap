@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using static LogHelper;
 
 /// <summary>
 /// Manager principal del sistema de fondos dinámicos.
@@ -74,25 +75,25 @@ public class BackgroundManager : MonoBehaviour
         
         if (presets != null)
         {
-            Debug.Log($"📋 BackgroundManager: Inicializando {presets.Length} presets...");
+            Log($"📋 BackgroundManager: Inicializando {presets.Length} presets...");
             foreach (BackgroundPreset preset in presets)
             {
                 if (preset != null)
                 {
                     string key = preset.presetName.ToLower();
                     presetDictionary[key] = preset;
-                    Debug.Log($"  ✅ Preset registrado: '{preset.presetName}' (key: '{key}')");
+                    Log($"  ✅ Preset registrado: '{preset.presetName}' (key: '{key}')");
                 }
                 else
                 {
-                    Debug.LogWarning("  ⚠️ Preset NULL encontrado en array");
+                    LogWarning("  ⚠️ Preset NULL encontrado en array");
                 }
             }
-            Debug.Log($"✅ BackgroundManager: Diccionario inicializado con {presetDictionary.Count} presets");
+            Log($"✅ BackgroundManager: Diccionario inicializado con {presetDictionary.Count} presets");
         }
         else
         {
-            Debug.LogError("❌ BackgroundManager: Array de presets es NULL!");
+            LogError("❌ BackgroundManager: Array de presets es NULL!");
         }
     }
     
@@ -161,24 +162,24 @@ public class BackgroundManager : MonoBehaviour
     /// </summary>
     public void SetPreset(string presetName, float transitionDuration = -1f)
     {
-        Debug.Log($"🎯 BackgroundManager.SetPreset: Llamado con '{presetName}', duration={transitionDuration}");
+        Log($"🎯 BackgroundManager.SetPreset: Llamado con '{presetName}', duration={transitionDuration}");
         
         if (string.IsNullOrEmpty(presetName))
         {
-            Debug.LogWarning("❌ BackgroundManager: Preset name is null or empty");
+            LogWarning("❌ BackgroundManager: Preset name is null or empty");
             return;
         }
         
         string presetKey = presetName.ToLower().Trim();
-        Debug.Log($"🔍 BackgroundManager: Buscando preset '{presetKey}' en diccionario (tamaño: {presetDictionary?.Count ?? 0})");
+        Log($"🔍 BackgroundManager: Buscando preset '{presetKey}' en diccionario (tamaño: {presetDictionary?.Count ?? 0})");
         
         // Intentar también sin espacios por si acaso
         string presetKeyNoSpaces = presetKey.Replace(" ", "");
         
         if (!presetDictionary.ContainsKey(presetKey) && !presetDictionary.ContainsKey(presetKeyNoSpaces))
         {
-            Debug.LogError($"❌ BackgroundManager: Preset '{presetName}' (key: '{presetKey}' o '{presetKeyNoSpaces}') not found in dictionary!");
-            Debug.LogError($"   Presets disponibles: {string.Join(", ", presetDictionary.Keys)}");
+            LogError($"❌ BackgroundManager: Preset '{presetName}' (key: '{presetKey}' o '{presetKeyNoSpaces}') not found in dictionary!");
+            LogError($"   Presets disponibles: {string.Join(", ", presetDictionary.Keys)}");
             return;
         }
         
@@ -186,29 +187,29 @@ public class BackgroundManager : MonoBehaviour
         if (!presetDictionary.ContainsKey(presetKey))
         {
             presetKey = presetKeyNoSpaces;
-            Debug.Log($"   Usando key alternativa: '{presetKey}'");
+            Log($"   Usando key alternativa: '{presetKey}'");
         }
         
         BackgroundPreset preset = presetDictionary[presetKey];
-        Debug.Log($"✅ BackgroundManager: Preset encontrado: '{preset.presetName}'");
+        Log($"✅ BackgroundManager: Preset encontrado: '{preset.presetName}'");
         
         if (transitionDuration < 0f)
         {
             transitionDuration = defaultTransitionDuration;
-            Debug.Log($"   Usando duración por defecto: {transitionDuration}s");
+            Log($"   Usando duración por defecto: {transitionDuration}s");
         }
         
         // Verificar si es el mismo preset
         if (currentPreset != null && currentPreset.presetName == preset.presetName)
         {
-            Debug.Log($"⚠️ BackgroundManager: Ya está activo el preset '{preset.presetName}', ignorando cambio");
+            Log($"⚠️ BackgroundManager: Ya está activo el preset '{preset.presetName}', ignorando cambio");
             return;
         }
         
         if (transitionDuration > 0f && currentPreset != null)
         {
             // Transición suave
-            Debug.Log($"🔄 BackgroundManager: Iniciando transición de '{currentPreset.presetName}' a '{preset.presetName}' ({transitionDuration}s)");
+            Log($"🔄 BackgroundManager: Iniciando transición de '{currentPreset.presetName}' a '{preset.presetName}' ({transitionDuration}s)");
             if (transitionCoroutine != null)
             {
                 StopCoroutine(transitionCoroutine);
@@ -218,14 +219,14 @@ public class BackgroundManager : MonoBehaviour
         else
         {
             // Cambio inmediato
-            Debug.Log($"⚡ BackgroundManager: Cambio inmediato a '{preset.presetName}' (sin transición)");
+            Log($"⚡ BackgroundManager: Cambio inmediato a '{preset.presetName}' (sin transición)");
             ApplyPreset(preset, 0f);
         }
     }
     
     private IEnumerator TransitionToPreset(BackgroundPreset newPreset, float duration)
     {
-        Debug.Log($"🔄 BackgroundManager: Iniciando transición a '{newPreset.presetName}' (duración: {duration}s)");
+        Log($"🔄 BackgroundManager: Iniciando transición a '{newPreset.presetName}' (duración: {duration}s)");
         
         // Guardar capas antiguas antes de limpiar
         for (int i = 0; i < currentLayers.Length; i++)
@@ -349,7 +350,7 @@ public class BackgroundManager : MonoBehaviour
             oldLayers[i] = null;
         }
         
-        Debug.Log($"✅ BackgroundManager: Transición completada a '{newPreset.presetName}'");
+        Log($"✅ BackgroundManager: Transición completada a '{newPreset.presetName}'");
     }
     
     /// <summary>
@@ -359,7 +360,7 @@ public class BackgroundManager : MonoBehaviour
     {
         if (preset == null)
         {
-            Debug.LogError("BackgroundManager: Cannot apply null preset!");
+            LogError("BackgroundManager: Cannot apply null preset!");
             return;
         }
         
@@ -387,7 +388,7 @@ public class BackgroundManager : MonoBehaviour
     {
         if (preset.backgroundPrefab == null)
         {
-            Debug.LogError($"❌ BackgroundManager: Preset '{preset.presetName}' tiene backgroundPrefab NULL!");
+            LogError($"❌ BackgroundManager: Preset '{preset.presetName}' tiene backgroundPrefab NULL!");
             return;
         }
         
@@ -398,11 +399,11 @@ public class BackgroundManager : MonoBehaviour
         
         // Configurar Sorting Orders de las capas del prefab
         BackgroundLayer[] layers = prefabInstance.GetComponentsInChildren<BackgroundLayer>(true);
-        Debug.Log($"🔍 BackgroundManager: Encontradas {layers.Length} capas en nuevo prefab '{preset.backgroundPrefab.name}'");
+        Log($"🔍 BackgroundManager: Encontradas {layers.Length} capas en nuevo prefab '{preset.backgroundPrefab.name}'");
         
         if (layers.Length == 0)
         {
-            Debug.LogError($"❌ BackgroundManager: El prefab '{preset.backgroundPrefab.name}' NO tiene componentes BackgroundLayer!");
+            LogError($"❌ BackgroundManager: El prefab '{preset.backgroundPrefab.name}' NO tiene componentes BackgroundLayer!");
             return;
         }
         
@@ -476,7 +477,7 @@ public class BackgroundManager : MonoBehaviour
             Camera.main.backgroundColor = preset.ambientColor;
         }
         
-        Debug.Log($"✅ BackgroundManager: Nuevo preset '{preset.presetName}' preparado para transición - Valores del prefab respetados");
+        Log($"✅ BackgroundManager: Nuevo preset '{preset.presetName}' preparado para transición - Valores del prefab respetados");
     }
     
     
@@ -484,7 +485,7 @@ public class BackgroundManager : MonoBehaviour
     {
         if (preset == null)
         {
-            Debug.LogError("BackgroundManager: Cannot apply null preset!");
+            LogError("BackgroundManager: Cannot apply null preset!");
             return;
         }
         
@@ -538,8 +539,8 @@ public class BackgroundManager : MonoBehaviour
             Camera.main.backgroundColor = preset.ambientColor;
         }
         
-        Debug.Log($"✅ BackgroundManager: Applied preset '{preset.presetName}'");
-        Debug.Log($"   - Base: {preset.enableBase}, Nebulas: {preset.enableNebulas}, StarsFar: {preset.enableStarsFar}, StarsNear: {preset.enableStarsNear}, Particles: {preset.enableParticles}");
+        Log($"✅ BackgroundManager: Applied preset '{preset.presetName}'");
+        Log($"   - Base: {preset.enableBase}, Nebulas: {preset.enableNebulas}, StarsFar: {preset.enableStarsFar}, StarsNear: {preset.enableStarsNear}, Particles: {preset.enableParticles}");
     }
     
     /// <summary>
@@ -550,7 +551,7 @@ public class BackgroundManager : MonoBehaviour
     {
         if (preset.backgroundPrefab == null)
         {
-            Debug.LogError($"❌ BackgroundManager: Preset '{preset.presetName}' tiene backgroundPrefab NULL!");
+            LogError($"❌ BackgroundManager: Preset '{preset.presetName}' tiene backgroundPrefab NULL!");
             return;
         }
         
@@ -561,12 +562,12 @@ public class BackgroundManager : MonoBehaviour
         
         // Configurar Sorting Orders de las capas del prefab
         BackgroundLayer[] layers = prefabInstance.GetComponentsInChildren<BackgroundLayer>(true); // Incluir inactivos
-        Debug.Log($"🔍 BackgroundManager: Encontradas {layers.Length} capas en prefab '{preset.backgroundPrefab.name}'");
+        Log($"🔍 BackgroundManager: Encontradas {layers.Length} capas en prefab '{preset.backgroundPrefab.name}'");
         
         if (layers.Length == 0)
         {
-            Debug.LogError($"❌ BackgroundManager: El prefab '{preset.backgroundPrefab.name}' NO tiene componentes BackgroundLayer!");
-            Debug.LogError("   → Necesitas agregar BackgroundLayer a cada objeto hijo (BG_Base, BG_Nebula, BG_Stars, BG_Particles)");
+            LogError($"❌ BackgroundManager: El prefab '{preset.backgroundPrefab.name}' NO tiene componentes BackgroundLayer!");
+            LogError("   → Necesitas agregar BackgroundLayer a cada objeto hijo (BG_Base, BG_Nebula, BG_Stars, BG_Particles)");
             return;
         }
         
@@ -583,11 +584,11 @@ public class BackgroundManager : MonoBehaviour
                 {
                     // Solo ajustar Sorting Order para estar detrás de todo (necesario)
                     sr.sortingOrder = -20 + layerIndex;
-                    Debug.Log($"  ✅ Capa {layerIndex}: {layer.gameObject.name}, Sprite: {(sr.sprite != null ? sr.sprite.name : "NULL")}, SortingOrder: {sr.sortingOrder}");
+                    Log($"  ✅ Capa {layerIndex}: {layer.gameObject.name}, Sprite: {(sr.sprite != null ? sr.sprite.name : "NULL")}, SortingOrder: {sr.sortingOrder}");
                 }
                 else
                 {
-                    Debug.LogWarning($"  ⚠️ Capa {layerIndex}: {layer.gameObject.name} NO tiene SpriteRenderer!");
+                    LogWarning($"  ⚠️ Capa {layerIndex}: {layer.gameObject.name} NO tiene SpriteRenderer!");
                 }
                 
                 // Identificar el tipo de capa para guardar referencia (pero NO modificar valores)
@@ -613,12 +614,12 @@ public class BackgroundManager : MonoBehaviour
                 if (layerName.Contains("base"))
                 {
                     currentLayers[0] = layer;
-                    Debug.Log($"    → Identificada como Base (usando valores del prefab: opacity={layer.GetOpacity()}, speed={layer.GetScrollSpeed()})");
+                    Log($"    → Identificada como Base (usando valores del prefab: opacity={layer.GetOpacity()}, speed={layer.GetScrollSpeed()})");
                 }
                 else if (layerName.Contains("nebula"))
                 {
                     currentLayers[1] = layer;
-                    Debug.Log($"    → Identificada como Nebula (usando valores del prefab: opacity={layer.GetOpacity()}, speed={layer.GetScrollSpeed()})");
+                    Log($"    → Identificada como Nebula (usando valores del prefab: opacity={layer.GetOpacity()}, speed={layer.GetScrollSpeed()})");
                 }
                 else if (layerName.Contains("star"))
                 {
@@ -626,22 +627,22 @@ public class BackgroundManager : MonoBehaviour
                     if (layerIndex == 2 || layerName.Contains("far"))
                     {
                         currentLayers[2] = layer;
-                        Debug.Log($"    → Identificada como StarsFar (usando valores del prefab: opacity={layer.GetOpacity()}, speed={layer.GetScrollSpeed()})");
+                        Log($"    → Identificada como StarsFar (usando valores del prefab: opacity={layer.GetOpacity()}, speed={layer.GetScrollSpeed()})");
                     }
                     else
                     {
                         currentLayers[3] = layer;
-                        Debug.Log($"    → Identificada como StarsNear (usando valores del prefab: opacity={layer.GetOpacity()}, speed={layer.GetScrollSpeed()})");
+                        Log($"    → Identificada como StarsNear (usando valores del prefab: opacity={layer.GetOpacity()}, speed={layer.GetScrollSpeed()})");
                     }
                 }
                 else if (layerName.Contains("particle"))
                 {
                     currentLayers[4] = layer;
-                    Debug.Log($"    → Identificada como Particles (usando valores del prefab: opacity={layer.GetOpacity()}, speed={layer.GetScrollSpeed()})");
+                    Log($"    → Identificada como Particles (usando valores del prefab: opacity={layer.GetOpacity()}, speed={layer.GetScrollSpeed()})");
                 }
                 else
                 {
-                    Debug.LogWarning($"    ⚠️ Capa no reconocida: {layerName} (usando valores del prefab)");
+                    LogWarning($"    ⚠️ Capa no reconocida: {layerName} (usando valores del prefab)");
                 }
                 
                 // Asegurar que la capa esté activa y habilitada
@@ -658,7 +659,7 @@ public class BackgroundManager : MonoBehaviour
             Camera.main.backgroundColor = preset.ambientColor;
         }
         
-        Debug.Log($"✅ BackgroundManager: Applied prefab '{preset.presetName}' - Valores del prefab respetados (NO sobrescritos por preset)");
+        Log($"✅ BackgroundManager: Applied prefab '{preset.presetName}' - Valores del prefab respetados (NO sobrescritos por preset)");
     }
     
     private void CreateBaseLayer(BackgroundPreset preset)
@@ -760,7 +761,7 @@ public class BackgroundManager : MonoBehaviour
         layer.SetParallaxMultiplier(preset.starsFarParallax);
         layer.SetOpacity(preset.starsFarOpacity * 0.3f); // Reducir opacidad si es placeholder
         
-        Debug.Log($"  ✅ StarsFar creada: Speed={preset.starsFarScrollSpeed}, Density={preset.starsFarDensity}");
+        Log($"  ✅ StarsFar creada: Speed={preset.starsFarScrollSpeed}, Density={preset.starsFarDensity}");
         
         // Forzar reconfiguración del scroll infinito después de un frame
         if (Application.isPlaying)
@@ -813,7 +814,7 @@ public class BackgroundManager : MonoBehaviour
         layer.SetParallaxMultiplier(preset.starsNearParallax);
         layer.SetOpacity(preset.starsNearOpacity * 0.3f); // Reducir opacidad si es placeholder
         
-        Debug.Log($"  ✅ StarsNear creada: Speed={preset.starsNearScrollSpeed}, Density={preset.starsNearDensity}, Opacity={preset.starsNearOpacity * 0.3f}");
+        Log($"  ✅ StarsNear creada: Speed={preset.starsNearScrollSpeed}, Density={preset.starsNearDensity}, Opacity={preset.starsNearOpacity * 0.3f}");
         
         // Forzar reconfiguración del scroll infinito después de un frame
         if (Application.isPlaying)

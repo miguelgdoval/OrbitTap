@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 
 /// <summary>
 /// Script de diagnóstico para verificar el estado del sistema de fondos
@@ -14,12 +15,12 @@ public class BackgroundDiagnostics : MonoBehaviour
     {
         if (BackgroundManager.Instance == null)
         {
-            Debug.LogError("❌ BackgroundManager.Instance es NULL!");
+            LogError("❌ BackgroundManager.Instance es NULL!");
             return;
         }
         
-        Debug.Log($"=== BACKGROUND SYSTEM DIAGNOSTICS ===");
-        Debug.Log($"Preset actual: {BackgroundSystemAPI.GetCurrentPreset()}");
+        Log($"=== BACKGROUND SYSTEM DIAGNOSTICS ===");
+        Log($"Preset actual: {BackgroundSystemAPI.GetCurrentPreset()}");
         
         // Verificar capas
         BackgroundManager bgManager = BackgroundManager.Instance;
@@ -36,11 +37,11 @@ public class BackgroundDiagnostics : MonoBehaviour
                     if (layers[i] != null)
                     {
                         float speed = layers[i].GetScrollSpeed();
-                        Debug.Log($"  Capa {i}: Activa, Scroll Speed: {speed}");
+                        Log($"  Capa {i}: Activa, Scroll Speed: {speed}");
                     }
                     else
                     {
-                        Debug.Log($"  Capa {i}: NULL (no creada)");
+                        Log($"  Capa {i}: NULL (no creada)");
                     }
                 }
             }
@@ -52,14 +53,14 @@ public class BackgroundDiagnostics : MonoBehaviour
         if (presetsField != null)
         {
             BackgroundPreset[] presets = presetsField.GetValue(bgManager) as BackgroundPreset[];
-            Debug.Log($"Presets asignados: {presets?.Length ?? 0}");
+            Log($"Presets asignados: {presets?.Length ?? 0}");
         }
     }
     
     [ContextMenu("Test Preset Change")]
     public void TestPresetChange()
     {
-        Debug.Log("🧪 Probando cambio de preset...");
+        Log("🧪 Probando cambio de preset...");
         BackgroundSystemAPI.SetPreset("BlueDrift", 1f);
     }
 }

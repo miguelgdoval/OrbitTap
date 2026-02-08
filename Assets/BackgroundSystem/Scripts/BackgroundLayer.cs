@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Reflection;
+using static LogHelper;
 
 /// <summary>
 /// Componente avanzado para capas de fondo con parallax, scroll infinito, pulsing y más.
@@ -86,7 +87,7 @@ public class BackgroundLayer : MonoBehaviour
                 // Pero podemos verificar que esté configurado correctamente
                 if (spriteTexture.wrapMode != TextureWrapMode.Repeat)
                 {
-                    Debug.LogWarning($"[BackgroundLayer] {gameObject.name}: La textura '{spriteTexture.name}' no tiene Wrap Mode = Repeat. " +
+                    LogWarning($"[BackgroundLayer] {gameObject.name}: La textura '{spriteTexture.name}' no tiene Wrap Mode = Repeat. " +
                         "Configúralo en los Import Settings de la textura para que el scroll infinito funcione correctamente.");
                 }
             }
@@ -107,7 +108,7 @@ public class BackgroundLayer : MonoBehaviour
     private void Start()
     {
         // Log inicial para todas las capas
-        Debug.Log($"[BackgroundLayer] {gameObject.name}: Start() llamado - infiniteScroll={infiniteScroll}, spriteDensity={spriteDensity}, scrollSpeed={scrollSpeed}");
+        Log($"[BackgroundLayer] {gameObject.name}: Start() llamado - infiniteScroll={infiniteScroll}, spriteDensity={spriteDensity}, scrollSpeed={scrollSpeed}");
         
         // Aplicar opacidad inicial
         SetOpacity(opacity);
@@ -118,11 +119,11 @@ public class BackgroundLayer : MonoBehaviour
         if (densityField != null)
         {
             int serializedDensity = (int)densityField.GetValue(this);
-            Debug.Log($"[BackgroundLayer] {gameObject.name}: spriteDensity - Serializado={serializedDensity}, Propiedad={spriteDensity}, infiniteScroll={infiniteScroll}");
+            Log($"[BackgroundLayer] {gameObject.name}: spriteDensity - Serializado={serializedDensity}, Propiedad={spriteDensity}, infiniteScroll={infiniteScroll}");
             
             if (serializedDensity != spriteDensity)
             {
-                Debug.LogWarning($"[BackgroundLayer] {gameObject.name}: Discrepancia detectada. Usando valor serializado: {serializedDensity}");
+                LogWarning($"[BackgroundLayer] {gameObject.name}: Discrepancia detectada. Usando valor serializado: {serializedDensity}");
                 spriteDensity = serializedDensity;
             }
         }
@@ -131,7 +132,7 @@ public class BackgroundLayer : MonoBehaviour
         string layerName = gameObject.name.ToLower();
         if (layerName.Contains("star") && infiniteScroll && spriteDensity == 1)
         {
-            Debug.LogWarning($"[BackgroundLayer] {gameObject.name}: Forzando spriteDensity a 3 para scroll infinito de estrellas");
+            LogWarning($"[BackgroundLayer] {gameObject.name}: Forzando spriteDensity a 3 para scroll infinito de estrellas");
             spriteDensity = 3;
             if (densityField != null)
             {
@@ -141,7 +142,7 @@ public class BackgroundLayer : MonoBehaviour
         
         // Verificar condiciones para scroll infinito
         bool hasSprite = spriteRenderer != null && spriteRenderer.sprite != null;
-        Debug.Log($"[BackgroundLayer] {gameObject.name}: Condiciones - infiniteScroll={infiniteScroll}, spriteDensity={spriteDensity}, hasSprite={hasSprite}, spriteName={spriteRenderer?.sprite?.name ?? "NULL"}");
+        Log($"[BackgroundLayer] {gameObject.name}: Condiciones - infiniteScroll={infiniteScroll}, spriteDensity={spriteDensity}, hasSprite={hasSprite}, spriteName={spriteRenderer?.sprite?.name ?? "NULL"}");
         
         // Configurar scroll infinito después de que todas las propiedades estén configuradas
         // Si spriteDensity = 1 y useUVScrolling está habilitado, usar UV scrolling (permite wrap mode repeat)
@@ -149,7 +150,7 @@ public class BackgroundLayer : MonoBehaviour
         if (infiniteScroll && spriteDensity > 1 && hasSprite)
         {
             SetupInfiniteScroll();
-            Debug.Log($"[BackgroundLayer] {gameObject.name}: ✅ Scroll infinito configurado (Density={spriteDensity}, Speed={scrollSpeed}, Instances={spriteInstances?.Length ?? 0})");
+            Log($"[BackgroundLayer] {gameObject.name}: ✅ Scroll infinito configurado (Density={spriteDensity}, Speed={scrollSpeed}, Instances={spriteInstances?.Length ?? 0})");
         }
         else if (infiniteScroll && spriteDensity == 1 && useUVScrolling && materialInstance != null)
         {
@@ -157,33 +158,33 @@ public class BackgroundLayer : MonoBehaviour
             Sprite sprite = spriteRenderer.sprite;
             if (sprite != null && sprite.texture != null)
             {
-                Debug.Log($"[BackgroundLayer] {gameObject.name}: ✅ Scroll infinito UV configurado (Wrap Mode: {sprite.texture.wrapMode}, Speed={scrollSpeed}, Texture: {sprite.texture.name})");
+                Log($"[BackgroundLayer] {gameObject.name}: ✅ Scroll infinito UV configurado (Wrap Mode: {sprite.texture.wrapMode}, Speed={scrollSpeed}, Texture: {sprite.texture.name})");
                 if (sprite.texture.wrapMode != TextureWrapMode.Repeat)
                 {
-                    Debug.LogError($"[BackgroundLayer] {gameObject.name}: ⚠️ La textura '{sprite.texture.name}' NO tiene Wrap Mode = Repeat! " +
+                    LogError($"[BackgroundLayer] {gameObject.name}: ⚠️ La textura '{sprite.texture.name}' NO tiene Wrap Mode = Repeat! " +
                         "Ve a los Import Settings de la textura y cambia Wrap Mode a Repeat para que funcione el scroll infinito.");
                 }
             }
             else
             {
-                Debug.LogWarning($"[BackgroundLayer] {gameObject.name}: ⚠️ No se puede configurar UV scrolling - sprite o textura es NULL");
+                LogWarning($"[BackgroundLayer] {gameObject.name}: ⚠️ No se puede configurar UV scrolling - sprite o textura es NULL");
             }
         }
         else if (scrollSpeed > 0)
         {
             if (infiniteScroll && spriteDensity <= 1)
             {
-                Debug.LogWarning($"[BackgroundLayer] {gameObject.name}: ⚠️ Scroll infinito habilitado pero spriteDensity={spriteDensity}. Necesita > 1 para funcionar.");
+                LogWarning($"[BackgroundLayer] {gameObject.name}: ⚠️ Scroll infinito habilitado pero spriteDensity={spriteDensity}. Necesita > 1 para funcionar.");
             }
             if (infiniteScroll && !hasSprite)
             {
-                Debug.LogWarning($"[BackgroundLayer] {gameObject.name}: ⚠️ Scroll infinito habilitado pero no hay sprite asignado.");
+                LogWarning($"[BackgroundLayer] {gameObject.name}: ⚠️ Scroll infinito habilitado pero no hay sprite asignado.");
             }
-            Debug.Log($"[BackgroundLayer] {gameObject.name}: Scroll simple activo (Speed={scrollSpeed}, Density={spriteDensity})");
+            Log($"[BackgroundLayer] {gameObject.name}: Scroll simple activo (Speed={scrollSpeed}, Density={spriteDensity})");
         }
         else
         {
-            Debug.Log($"[BackgroundLayer] {gameObject.name}: Sin scroll (Speed={scrollSpeed})");
+            Log($"[BackgroundLayer] {gameObject.name}: Sin scroll (Speed={scrollSpeed})");
         }
     }
     
@@ -304,7 +305,7 @@ public class BackgroundLayer : MonoBehaviour
             // Debug log para verificar creación (solo para estrellas para no saturar)
             if (gameObject.name.Contains("Star"))
             {
-                Debug.Log($"[BackgroundLayer] {gameObject.name} Instance {i} creada - Sprite: {instanceSR.sprite?.name ?? "NULL"}, Color: {instanceColor}, Opacity: {opacity}, Enabled: {instanceSR.enabled}, Active: {instance.activeSelf}, Position: {position}, Offset: {offset:F2}, Spacing: {spacing:F2}");
+                Log($"[BackgroundLayer] {gameObject.name} Instance {i} creada - Sprite: {instanceSR.sprite?.name ?? "NULL"}, Color: {instanceColor}, Opacity: {opacity}, Enabled: {instanceSR.enabled}, Active: {instance.activeSelf}, Position: {position}, Offset: {offset:F2}, Spacing: {spacing:F2}");
             }
         }
         
@@ -312,7 +313,7 @@ public class BackgroundLayer : MonoBehaviour
         if (spriteDensity > 1)
         {
             spriteRenderer.enabled = false;
-            Debug.Log($"[BackgroundLayer] {gameObject.name}: Sprite original ocultado, usando {spriteDensity} instancias");
+            Log($"[BackgroundLayer] {gameObject.name}: Sprite original ocultado, usando {spriteDensity} instancias");
             
             // Verificar que las instancias se crearon correctamente
             int activeInstances = 0;
@@ -327,7 +328,7 @@ public class BackgroundLayer : MonoBehaviour
                     }
                 }
             }
-            Debug.Log($"[BackgroundLayer] {gameObject.name}: {activeInstances}/{spriteDensity} instancias activas y visibles");
+            Log($"[BackgroundLayer] {gameObject.name}: {activeInstances}/{spriteDensity} instancias activas y visibles");
         }
     }
     
@@ -420,7 +421,7 @@ public class BackgroundLayer : MonoBehaviour
                                     // Debug log para estrellas (solo ocasionalmente)
                                     if (gameObject.name.Contains("Star") && Random.Range(0, 200) == 0)
                                     {
-                                        Debug.Log($"[BackgroundLayer] {gameObject.name} Instance {i} reposicionada: {oldY:F2} -> {posY:F2} (maxY={maxY:F2}, spacing={spacing:F2}, clamped to [{minAllowedY:F2}, {maxAllowedY:F2}])");
+                                        Log($"[BackgroundLayer] {gameObject.name} Instance {i} reposicionada: {oldY:F2} -> {posY:F2} (maxY={maxY:F2}, spacing={spacing:F2}, clamped to [{minAllowedY:F2}, {maxAllowedY:F2}])");
                                     }
                                 }
                             }
@@ -464,7 +465,7 @@ public class BackgroundLayer : MonoBehaviour
                                     // Debug log para estrellas
                                     if (gameObject.name.Contains("Star"))
                                     {
-                                        Debug.Log($"[BackgroundLayer] {gameObject.name} Instance {i} reposicionada (Up): {oldY:F2} -> {posY:F2} (minY={minY:F2}, spacing={spacing:F2})");
+                                        Log($"[BackgroundLayer] {gameObject.name} Instance {i} reposicionada (Up): {oldY:F2} -> {posY:F2} (minY={minY:F2}, spacing={spacing:F2})");
                                     }
                                 }
                             }
@@ -613,7 +614,7 @@ public class BackgroundLayer : MonoBehaviour
     public void SetScrollSpeed(float speed)
     {
         scrollSpeed = speed;
-        Debug.Log($"[BackgroundLayer] {gameObject.name}: Scroll speed set to {speed}");
+        Log($"[BackgroundLayer] {gameObject.name}: Scroll speed set to {speed}");
     }
     
     /// <summary>
@@ -667,7 +668,7 @@ public class BackgroundLayer : MonoBehaviour
         if (infiniteScroll && spriteDensity > 1 && spriteRenderer != null && spriteRenderer.sprite != null)
         {
             SetupInfiniteScroll();
-            Debug.Log($"[BackgroundLayer] {gameObject.name}: Scroll infinito refrescado - {spriteDensity} instancias recreadas");
+            Log($"[BackgroundLayer] {gameObject.name}: Scroll infinito refrescado - {spriteDensity} instancias recreadas");
         }
     }
     

@@ -47,6 +47,27 @@ public class TutorialManager : MonoBehaviour
         }
     }
     
+    private void Start()
+    {
+        // Cachear referencias a componentes del juego para evitar FindObjectOfType repetido
+        CacheGameComponents();
+    }
+    
+    /// <summary>
+    /// Cachea referencias a componentes del juego
+    /// </summary>
+    private void CacheGameComponents()
+    {
+        // Estas referencias se buscarán cuando se necesiten (el juego puede no estar activo aún)
+        // Pero las cacheamos aquí para tenerlas listas
+        inputController = FindFirstObjectByType<InputController>();
+        playerOrbit = FindFirstObjectByType<PlayerOrbit>();
+        obstacleManager = FindFirstObjectByType<ObstacleManager>();
+        scoreManager = FindFirstObjectByType<ScoreManager>();
+        
+        Log("[TutorialManager] Referencias a componentes del juego cacheadas");
+    }
+    
     /// <summary>
     /// Verifica si el tutorial ya fue completado
     /// </summary>
@@ -377,7 +398,11 @@ public class TutorialManager : MonoBehaviour
     private void PauseGameComponents()
     {
         // PRIMERO: Pausar spawn de obstáculos ANTES que nada para evitar que se generen
-        obstacleManager = FindFirstObjectByType<ObstacleManager>();
+        // Usar referencia cacheada, buscar solo si es null
+        if (obstacleManager == null)
+        {
+            obstacleManager = FindFirstObjectByType<ObstacleManager>();
+        }
         if (obstacleManager != null)
         {
             wasObstacleManagerEnabled = obstacleManager.enabled;
@@ -393,7 +418,10 @@ public class TutorialManager : MonoBehaviour
         }
         
         // Deshabilitar controles
-        inputController = FindFirstObjectByType<InputController>();
+        if (inputController == null)
+        {
+            inputController = FindFirstObjectByType<InputController>();
+        }
         if (inputController != null)
         {
             inputController.enabled = false;
@@ -401,7 +429,10 @@ public class TutorialManager : MonoBehaviour
         }
         
         // Pausar movimiento del jugador
-        playerOrbit = FindFirstObjectByType<PlayerOrbit>();
+        if (playerOrbit == null)
+        {
+            playerOrbit = FindFirstObjectByType<PlayerOrbit>();
+        }
         if (playerOrbit != null)
         {
             wasPlayerOrbitEnabled = playerOrbit.enabled;
@@ -410,7 +441,10 @@ public class TutorialManager : MonoBehaviour
         }
         
         // Pausar score
-        scoreManager = FindFirstObjectByType<ScoreManager>();
+        if (scoreManager == null)
+        {
+            scoreManager = FindFirstObjectByType<ScoreManager>();
+        }
         if (scoreManager != null)
         {
             wasScoreManagerEnabled = scoreManager.enabled;

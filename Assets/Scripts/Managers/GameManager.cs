@@ -54,13 +54,13 @@ public class GameManager : MonoBehaviour
         player = FindFirstObjectByType<PlayerOrbit>();
         if (player == null)
         {
-            Debug.LogWarning("GameManager: PlayerOrbit not found! Retrying...");
+            LogWarning("GameManager: PlayerOrbit not found! Retrying...");
             // Intentar de nuevo después de otro frame
             yield return null;
             player = FindFirstObjectByType<PlayerOrbit>();
             if (player == null)
             {
-                Debug.LogError("GameManager: PlayerOrbit still not found after retry!");
+                LogError("GameManager: PlayerOrbit still not found after retry!");
             }
         }
         
@@ -141,7 +141,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("GameManager: ScoreManager no encontrado!");
+            LogWarning("GameManager: ScoreManager no encontrado!");
         }
         
         // Analytics: Registrar fin de partida
@@ -190,15 +190,15 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(1f);
         
         // Load game over scene
-        Debug.Log("GameManager: Cargando escena GameOver...");
+        Log("GameManager: Cargando escena GameOver...");
         try
         {
             SceneManager.LoadScene("GameOver");
-            Debug.Log("GameManager: Escena GameOver cargada exitosamente");
+            Log("GameManager: Escena GameOver cargada exitosamente");
         }
         catch (System.Exception e)
         {
-            Debug.LogError("GameManager: Error al cargar escena GameOver: " + e.Message);
+            LogError("GameManager: Error al cargar escena GameOver: " + e.Message);
         }
     }
     

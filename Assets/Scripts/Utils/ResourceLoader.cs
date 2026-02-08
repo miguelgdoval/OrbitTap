@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 using static LogHelper;
 
 /// <summary>
@@ -12,6 +13,11 @@ public static class ResourceLoader
     private static Sprite defaultSprite = null;
     
     /// <summary>
+    /// Cache de sprites cargados para evitar cargas repetidas
+    /// </summary>
+    private static Dictionary<string, Sprite> spriteCache = new Dictionary<string, Sprite>();
+    
+    /// <summary>
     /// Carga un Sprite de forma segura con manejo de errores
     /// </summary>
     public static Sprite LoadSprite(string resourcePath, string assetName = null, bool logErrors = true)
@@ -23,12 +29,30 @@ public static class ResourceLoader
             return GetDefaultSprite();
         }
         
+        // Verificar cache primero
+        string cacheKey = resourcePath + (assetName ?? "");
+        if (spriteCache.ContainsKey(cacheKey))
+        {
+            Sprite cachedSprite = spriteCache[cacheKey];
+            if (cachedSprite != null)
+            {
+                return cachedSprite;
+            }
+            else
+            {
+                // Remover entrada inválida del cache
+                spriteCache.Remove(cacheKey);
+            }
+        }
+        
         try
         {
             // Intentar cargar como Sprite
             Sprite sprite = Resources.Load<Sprite>(resourcePath);
             if (sprite != null)
             {
+                // Guardar en cache
+                spriteCache[cacheKey] = sprite;
                 return sprite;
             }
             
@@ -39,6 +63,8 @@ public static class ResourceLoader
                 sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
                 if (logErrors)
                     Log($"[ResourceLoader] Sprite creado desde Texture2D: {resourcePath}");
+                // Guardar en cache
+                spriteCache[cacheKey] = sprite;
                 return sprite;
             }
             
@@ -62,6 +88,8 @@ public static class ResourceLoader
                         {
                             if (logErrors)
                                 Log($"[ResourceLoader] Sprite cargado desde AssetDatabase: {path}");
+                            // Guardar en cache
+                            spriteCache[cacheKey] = sprite;
                             return sprite;
                         }
                         
@@ -71,6 +99,8 @@ public static class ResourceLoader
                             sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
                             if (logErrors)
                                 Log($"[ResourceLoader] Sprite creado desde Texture2D (AssetDatabase): {path}");
+                            // Guardar en cache
+                            spriteCache[cacheKey] = sprite;
                             return sprite;
                         }
                     }

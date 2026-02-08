@@ -13,6 +13,7 @@ public class ObstacleMover : MonoBehaviour
     private Camera mainCamera;
     private bool hasEnteredScreen = false; // Para saber si ya entró a la pantalla
     private float spawnTime;
+    private ObstacleDestructionController destructionController; // Cacheado para evitar GetComponent en Update
 
     private void Start()
     {
@@ -23,13 +24,19 @@ public class ObstacleMover : MonoBehaviour
             mainCamera = FindFirstObjectByType<Camera>();
         }
         
+        // Cachear referencia a ObstacleDestructionController para evitar GetComponent en Update
+        destructionController = GetComponent<ObstacleDestructionController>();
+        
         Log($"ObstacleMover: {gameObject.name} started at {transform.position}, direction: {direction}, speed: {speed}");
     }
 
     private void Update()
     {
-        // Verificar si el obstáculo está siendo destruido
-        ObstacleDestructionController destructionController = GetComponent<ObstacleDestructionController>();
+        // Verificar si el obstáculo está siendo destruido (usar referencia cacheada)
+        if (destructionController == null)
+        {
+            destructionController = GetComponent<ObstacleDestructionController>();
+        }
         if (destructionController != null && destructionController.IsDestroying())
         {
             // El obstáculo está en proceso de destrucción, no mover
@@ -127,7 +134,11 @@ public class ObstacleMover : MonoBehaviour
         // Registrar que se evitó un obstáculo (solo si entró a la pantalla y no está siendo destruido)
         if (hasEnteredScreen)
         {
-            ObstacleDestructionController destructionController = GetComponent<ObstacleDestructionController>();
+            // Usar referencia cacheada
+            if (destructionController == null)
+            {
+                destructionController = GetComponent<ObstacleDestructionController>();
+            }
             if (destructionController == null || !destructionController.IsDestroying())
             {
                 // El obstáculo salió de pantalla sin colisionar = fue evitado

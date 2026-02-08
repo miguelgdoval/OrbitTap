@@ -23,6 +23,10 @@ public class StatisticsManager : MonoBehaviour
     private ScoreManager scoreManager;
     private ObstacleManager obstacleManager;
     
+    // Optimización: actualizar score solo cada segundo en lugar de cada frame
+    private float lastScoreUpdateTime = 0f;
+    private const float SCORE_UPDATE_INTERVAL = 1f; // Actualizar score cada segundo
+    
     private void Awake()
     {
         if (Instance == null)
@@ -47,13 +51,18 @@ public class StatisticsManager : MonoBehaviour
     {
         if (isTrackingCurrentGame)
         {
-            // Actualizar tiempo de juego actual
+            // Actualizar tiempo de juego actual (esto es necesario cada frame para precisión)
             currentGamePlayTime = Time.time - currentGameStartTime;
             
-            // Actualizar puntuación actual
-            if (scoreManager != null)
+            // Optimización: actualizar puntuación solo cada segundo en lugar de cada frame
+            float currentTime = Time.time;
+            if (currentTime - lastScoreUpdateTime >= SCORE_UPDATE_INTERVAL)
             {
-                currentGameScore = scoreManager.GetCurrentScore();
+                lastScoreUpdateTime = currentTime;
+                if (scoreManager != null)
+                {
+                    currentGameScore = scoreManager.GetCurrentScore();
+                }
             }
         }
     }
@@ -246,8 +255,9 @@ public class StatisticsManager : MonoBehaviour
             stats.recentPlayTimes.RemoveAt(0);
         }
         
-        // Calcular mejor racha (simplificado: si la puntuación es > 0, incrementar racha)
-        // TODO: Implementar lógica más sofisticada de rachas
+        // Calcular mejor racha: una racha es una secuencia de partidas donde el score aumenta
+        // o se mantiene alto (dentro de un margen razonable)
+        CalculateBestStreak(stats);
         
         // Guardar inmediatamente para no perder datos
         SaveDataManager.Instance.ForceSave();
@@ -294,6 +304,78 @@ public class StatisticsManager : MonoBehaviour
             saveData.statistics = new PlayerStatistics();
             SaveDataManager.Instance.MarkDirty();
             Log("[StatisticsManager] Todas las estadísticas han sido reseteadas");
+        }
+    }
+    
+    /// <summary>
+    /// Calcula la mejor racha de partidas consecutivas basándose en el historial reciente.
+    /// Una racha es una secuencia de partidas donde el jugador:
+    /// - Mejora su puntuación, O
+    /// - Mantiene una puntuación alta (dentro del 80% de su mejor score), O
+    /// - Supera su promedio de puntuación
+    /// </summary>
+    private void CalculateBestStreak(PlayerStatistics stats)
+    {
+        if (stats.recentScores == null || stats.recentScores.Count < 2)
+        {
+            // No hay suficientes datos para calcular racha
+            return;
+        }
+        
+        int currentStreak = 1; // La partida actual cuenta como 1
+        int bestStreakFound = stats.bestStreak;
+        
+        // Calcular promedio de puntuación para usar como referencia
+        float averageScore = stats.averageScore > 0 ? stats.averageScore : 
+                           (stats.bestScore > 0 ? stats.bestScore * 0.5f : 10f);
+        
+        // Calcular umbral mínimo para considerar una partida "buena" (80% del mejor score o promedio)
+        float goodScoreThreshold = Mathf.Max(
+            stats.bestScore * 0.8f,
+            averageScore
+        );
+        
+        // Analizar partidas recientes de atrás hacia adelante (más antiguas primero)
+        for (int i = stats.recentScores.Count - 2; i >= 0; i--)
+        {
+            int currentScore = stats.recentScores[i + 1];
+            int previousScore = stats.recentScores[i];
+            
+            // Una partida continúa la racha si:
+            // 1. Mejora la puntuación anterior, O
+            // 2. Mantiene una puntuación "buena" (>= umbral), O
+            // 3. Está por encima del promedio
+            bool continuesStreak = 
+                currentScore >= previousScore || // Mejora o mantiene
+                currentScore >= goodScoreThreshold || // Puntuación "buena"
+                currentScore >= averageScore; // Por encima del promedio
+            
+            if (continuesStreak)
+            {
+                currentStreak++;
+            }
+            else
+            {
+                // La racha se rompió, actualizar mejor racha si es necesario
+                if (currentStreak > bestStreakFound)
+                {
+                    bestStreakFound = currentStreak;
+                }
+                currentStreak = 1; // Reiniciar racha
+            }
+        }
+        
+        // Verificar si la racha actual es la mejor
+        if (currentStreak > bestStreakFound)
+        {
+            bestStreakFound = currentStreak;
+        }
+        
+        // Actualizar mejor racha si es mayor
+        if (bestStreakFound > stats.bestStreak)
+        {
+            stats.bestStreak = bestStreakFound;
+            Log($"[StatisticsManager] Nueva mejor racha: {bestStreakFound} partidas consecutivas");
         }
     }
 }

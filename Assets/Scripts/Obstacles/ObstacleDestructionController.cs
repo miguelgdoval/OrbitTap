@@ -52,6 +52,9 @@ public class ObstacleDestructionController : MonoBehaviour
     // Pool de fragmentos para optimización
     private static List<GameObject> fragmentPool = new List<GameObject>();
     private static int poolIndex = 0;
+    private const int MAX_FRAGMENT_POOL_SIZE = 50; // Límite máximo de fragmentos en el pool
+    private const float POOL_CLEANUP_INTERVAL = 30f; // Limpiar pool cada 30 segundos
+    private static float lastPoolCleanupTime = 0f;
     
     // Estructura para datos de fragmentos
     private struct FragmentData
@@ -709,7 +712,28 @@ public class ObstacleDestructionController : MonoBehaviour
         GameObject newFragment = new GameObject("ObstacleFragment");
         newFragment.AddComponent<SpriteRenderer>();
         newFragment.SetActive(false);
-        fragmentPool.Add(newFragment);
+        // Añadir al pool solo si no excede el límite máximo
+        if (fragmentPool.Count < MAX_FRAGMENT_POOL_SIZE)
+        {
+            fragmentPool.Add(newFragment);
+        }
+        else
+        {
+            // Si el pool está lleno, destruir el fragmento más antiguo y añadir el nuevo
+            if (fragmentPool.Count > 0)
+            {
+                GameObject oldestFragment = fragmentPool[0];
+                fragmentPool.RemoveAt(0);
+                if (oldestFragment != null)
+                {
+                    Destroy(oldestFragment);
+                }
+            }
+            fragmentPool.Add(newFragment);
+        }
+        
+        // Limpiar pool periódicamente si es necesario
+        CleanupFragmentPoolIfNeeded();
         return newFragment;
     }
     
@@ -894,5 +918,40 @@ public class ObstacleDestructionController : MonoBehaviour
         }
         fragmentPool.Clear();
         poolIndex = 0;
+    }
+    
+    /// <summary>
+    /// Limpia el pool de fragmentos periódicamente para evitar memory leaks
+    /// </summary>
+    private static void CleanupFragmentPoolIfNeeded()
+    {
+        float currentTime = Time.time;
+        
+        // Limpiar cada POOL_CLEANUP_INTERVAL segundos
+        if (currentTime - lastPoolCleanupTime >= POOL_CLEANUP_INTERVAL)
+        {
+            lastPoolCleanupTime = currentTime;
+            
+            // Remover fragmentos nulos o destruidos
+            fragmentPool.RemoveAll(frag => frag == null);
+            
+            // Si el pool excede el límite, destruir los fragmentos más antiguos que estén inactivos
+            if (fragmentPool.Count > MAX_FRAGMENT_POOL_SIZE)
+            {
+                int toRemove = fragmentPool.Count - MAX_FRAGMENT_POOL_SIZE;
+                for (int i = 0; i < toRemove && i < fragmentPool.Count; i++)
+                {
+                    GameObject frag = fragmentPool[i];
+                    if (frag != null && !frag.activeSelf)
+                    {
+                        fragmentPool.RemoveAt(i);
+                        Destroy(frag);
+                        i--; // Ajustar índice después de remover
+                    }
+                }
+            }
+            
+            Log($"[ObstacleDestructionController] Pool de fragmentos limpiado. Tamaño actual: {fragmentPool.Count}/{MAX_FRAGMENT_POOL_SIZE}");
+        }
     }
 }

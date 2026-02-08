@@ -73,7 +73,7 @@ public class ObstacleMover : MonoBehaviour
             if (destructionController == null || !destructionController.IsDestroying())
             {
                 // Devolver al pool después de 10 segundos por seguridad
-                Debug.Log($"ObstacleMover: Returning {gameObject.name} to pool - timeout");
+                Log($"ObstacleMover: Returning {gameObject.name} to pool - timeout");
                 ReturnToPool();
             }
         }

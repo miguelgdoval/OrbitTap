@@ -1,4 +1,5 @@
 using UnityEngine;
+using static LogHelper;
 
 /// <summary>
 /// Configuración centralizada del juego usando ScriptableObject
@@ -122,7 +123,7 @@ public class GameConfig : ScriptableObject
                 _instance = Resources.Load<GameConfig>("Config/GameConfig");
                 if (_instance == null)
                 {
-                    Debug.LogWarning("[GameConfig] No se encontró GameConfig en Resources/Config/GameConfig. Usando valores por defecto.");
+                    LogWarning("[GameConfig] No se encontró GameConfig en Resources/Config/GameConfig. Usando valores por defecto.");
                     _instance = CreateInstance<GameConfig>();
                 }
             }
@@ -138,7 +139,7 @@ public class GameConfig : ScriptableObject
         _instance = Resources.Load<GameConfig>("Config/GameConfig");
         if (_instance == null)
         {
-            Debug.LogWarning("[GameConfig] No se encontró GameConfig. Creando uno con valores por defecto.");
+            LogWarning("[GameConfig] No se encontró GameConfig. Creando uno con valores por defecto.");
             _instance = CreateInstance<GameConfig>();
         }
     }

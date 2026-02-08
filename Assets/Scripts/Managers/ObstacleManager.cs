@@ -5,16 +5,38 @@ using static LogHelper;
 public class ObstacleManager : MonoBehaviour
 {
     public static ObstacleManager Instance { get; private set; }
-    [Header("Spawn Settings")]
+    
+    [Header("Spawn Settings (Legacy - usar GameConfig si está disponible)")]
+    [Tooltip("Valor por defecto si GameConfig no está disponible. Se usa GameConfig.Instance si existe.")]
     public float minSpawnInterval = 2f;
+    
+    [Tooltip("Valor por defecto si GameConfig no está disponible. Se usa GameConfig.Instance si existe.")]
     public float maxSpawnInterval = 4f;
     
-    [Header("Difficulty Progression")]
+    [Header("Difficulty Progression (Legacy - usar GameConfig si está disponible)")]
+    [Tooltip("Valor por defecto si GameConfig no está disponible. Se usa GameConfig.Instance si existe.")]
     public float minSpawnIntervalMin = 0.5f; // Intervalo mínimo al máximo de dificultad
+    
+    [Tooltip("Valor por defecto si GameConfig no está disponible. Se usa GameConfig.Instance si existe.")]
     public float maxSpawnIntervalMin = 1.0f; // Intervalo máximo al máximo de dificultad
+    
+    [Tooltip("Valor por defecto si GameConfig no está disponible. Se usa GameConfig.Instance si existe.")]
     public float difficultyIncreaseRate = 0.02f; // Reducción del intervalo por segundo de juego (reducido para progresión más gradual)
+    
+    [Tooltip("Valor por defecto si GameConfig no está disponible. Se usa GameConfig.Instance si existe.")]
     public float difficultyUpdateInterval = 1f; // Cada cuánto actualizar la dificultad
+    
+    [Tooltip("Valor por defecto si GameConfig no está disponible. Se usa GameConfig.Instance si existe.")]
     public float maxDifficultyTime = 120f; // Tiempo en segundos para alcanzar la dificultad máxima (más tiempo = progresión más gradual)
+    
+    // Propiedades que leen de GameConfig cuando está disponible
+    private float MinSpawnInterval => GameConfig.Instance != null ? GameConfig.Instance.minSpawnInterval : minSpawnInterval;
+    private float MaxSpawnInterval => GameConfig.Instance != null ? GameConfig.Instance.maxSpawnInterval : maxSpawnInterval;
+    private float MinSpawnIntervalMin => GameConfig.Instance != null ? GameConfig.Instance.minSpawnIntervalMin : minSpawnIntervalMin;
+    private float MaxSpawnIntervalMin => GameConfig.Instance != null ? GameConfig.Instance.maxSpawnIntervalMin : maxSpawnIntervalMin;
+    private float DifficultyIncreaseRate => GameConfig.Instance != null ? GameConfig.Instance.difficultyIncreaseRate : difficultyIncreaseRate;
+    private float DifficultyUpdateInterval => GameConfig.Instance != null ? GameConfig.Instance.difficultyUpdateInterval : difficultyUpdateInterval;
+    private float MaxDifficultyTime => GameConfig.Instance != null ? GameConfig.Instance.maxDifficultyTime : maxDifficultyTime;
 
     [Header("Obstacle Prefabs")]
     public GameObject doorFixedPrefab;
@@ -32,27 +54,61 @@ public class ObstacleManager : MonoBehaviour
     public ObstacleDifficultyLevel maxDifficultyLevel = ObstacleDifficultyLevel.VeryHard; // Dificultad máxima permitida
     public bool useDifficultyProgression = true; // Si true, aumenta la dificultad con el tiempo
     public bool useScoreBasedDifficulty = true; // Si true, usa el score en lugar del tiempo para desbloquear dificultades
+    
+    [Header("Unlock Thresholds (Legacy - usar GameConfig si está disponible)")]
+    [Tooltip("Valor por defecto si GameConfig no está disponible. Se usa GameConfig.Instance si existe.")]
     public float scoreToUnlockMedium = 15f; // Puntos para desbloquear obstáculos Medium
+    
+    [Tooltip("Valor por defecto si GameConfig no está disponible. Se usa GameConfig.Instance si existe.")]
     public float scoreToUnlockHard = 30f; // Puntos para desbloquear obstáculos Hard
+    
+    [Tooltip("Valor por defecto si GameConfig no está disponible. Se usa GameConfig.Instance si existe.")]
     public float scoreToUnlockVeryHard = 60f; // Puntos para desbloquear obstáculos VeryHard
+    
+    [Tooltip("Valor por defecto si GameConfig no está disponible. Se usa GameConfig.Instance si existe.")]
     public float timeToUnlockMedium = 20f; // Segundos para desbloquear obstáculos Medium (si useScoreBasedDifficulty es false)
+    
+    [Tooltip("Valor por defecto si GameConfig no está disponible. Se usa GameConfig.Instance si existe.")]
     public float timeToUnlockHard = 50f; // Segundos para desbloquear obstáculos Hard (si useScoreBasedDifficulty es false)
+    
+    [Tooltip("Valor por defecto si GameConfig no está disponible. Se usa GameConfig.Instance si existe.")]
     public float timeToUnlockVeryHard = 90f; // Segundos para desbloquear obstáculos VeryHard (si useScoreBasedDifficulty es false)
+    
+    // Propiedades que leen de GameConfig cuando está disponible
+    private float ScoreToUnlockMedium => GameConfig.Instance != null ? GameConfig.Instance.scoreToUnlockMedium : scoreToUnlockMedium;
+    private float ScoreToUnlockHard => GameConfig.Instance != null ? GameConfig.Instance.scoreToUnlockHard : scoreToUnlockHard;
+    private float ScoreToUnlockVeryHard => GameConfig.Instance != null ? GameConfig.Instance.scoreToUnlockVeryHard : scoreToUnlockVeryHard;
+    private float TimeToUnlockMedium => GameConfig.Instance != null ? GameConfig.Instance.timeToUnlockMedium : timeToUnlockMedium;
+    private float TimeToUnlockHard => GameConfig.Instance != null ? GameConfig.Instance.timeToUnlockHard : timeToUnlockHard;
+    private float TimeToUnlockVeryHard => GameConfig.Instance != null ? GameConfig.Instance.timeToUnlockVeryHard : timeToUnlockVeryHard;
 
     [Header("Spawn Settings")]
     public float spawnRadius = 2f; // Mismo radio que la órbita del jugador
     public Transform center;
     private PlayerOrbit playerOrbit;
 
-    [Header("Movement Settings")]
+    [Header("Movement Settings (Legacy - usar GameConfig si está disponible)")]
+    [Tooltip("Valor por defecto si GameConfig no está disponible. Se usa GameConfig.Instance si existe.")]
     public float obstacleSpeed = 3f;
+    
+    [Tooltip("Valor por defecto si GameConfig no está disponible. Se usa GameConfig.Instance si existe.")]
     public float spawnDistanceFromScreen = 12f; // Distancia fuera de la pantalla para spawnear
-    [Tooltip("Variación de velocidad reducida para más justicia (1.0x a 1.2x en lugar de 1.5x)")]
+    
+    [Tooltip("Variación de velocidad reducida para más justicia (1.0x a 1.2x en lugar de 1.5x). Valor por defecto si GameConfig no está disponible.")]
     public float speedVariation = 1.2f; // Multiplicador máximo para variación de velocidad (1.0 a 1.2x) - REDUCIDO de 1.5x
-    [Tooltip("Variación de tamaño reducida para más justicia (1.0x a 2.0x en lugar de 3.0x)")]
+    
+    [Tooltip("Variación de tamaño reducida para más justicia (1.0x a 2.0x en lugar de 3.0x). Valor por defecto si GameConfig no está disponible.")]
     public float sizeVariation = 2.0f; // Multiplicador máximo para variación de tamaño (1.0 a 2.0x) - REDUCIDO de 3.0x
-    [Tooltip("Máximo número de obstáculos en pantalla (reducido para más justicia)")]
+    
+    [Tooltip("Máximo número de obstáculos en pantalla (reducido para más justicia). Valor por defecto si GameConfig no está disponible.")]
     public int maxObstaclesOnScreen = 3; // Máximo número de obstáculos en pantalla simultáneamente - REDUCIDO de 5 a 3
+    
+    // Propiedades que leen de GameConfig cuando está disponible
+    private float ObstacleSpeed => GameConfig.Instance != null ? GameConfig.Instance.obstacleSpeed : obstacleSpeed;
+    private float SpawnDistanceFromScreen => GameConfig.Instance != null ? GameConfig.Instance.spawnDistanceFromScreen : spawnDistanceFromScreen;
+    private float SpeedVariation => GameConfig.Instance != null ? GameConfig.Instance.speedVariation : speedVariation;
+    private float SizeVariation => GameConfig.Instance != null ? GameConfig.Instance.sizeVariation : sizeVariation;
+    private int MaxObstaclesOnScreen => GameConfig.Instance != null ? GameConfig.Instance.maxObstaclesOnScreen : maxObstaclesOnScreen;
 
     private Camera mainCamera;
     private float timeSinceLastSpawn = 0f;
@@ -183,8 +239,8 @@ public class ObstacleManager : MonoBehaviour
         }
 
         // Inicializar intervalos actuales
-        currentMinSpawnInterval = minSpawnInterval;
-        currentMaxSpawnInterval = maxSpawnInterval;
+        currentMinSpawnInterval = MinSpawnInterval;
+        currentMaxSpawnInterval = MaxSpawnInterval;
         
         // Buscar ScoreManager para obtener el score actual
         scoreManager = FindFirstObjectByType<ScoreManager>();
@@ -278,9 +334,9 @@ public class ObstacleManager : MonoBehaviour
             }
             
             int obstaclesOnScreen = CountObstaclesOnScreen();
-            if (obstaclesOnScreen < maxObstaclesOnScreen)
+            if (obstaclesOnScreen < MaxObstaclesOnScreen)
             {
-                Log($"ObstacleManager: Spawning first obstacle immediately (obstacles on screen: {obstaclesOnScreen}/{maxObstaclesOnScreen})");
+                Log($"ObstacleManager: Spawning first obstacle immediately (obstacles on screen: {obstaclesOnScreen}/{MaxObstaclesOnScreen})");
                 SpawnObstacle();
                 firstObstacleSpawned = true;
                 timeSinceLastSpawn = 0f;
@@ -290,7 +346,7 @@ public class ObstacleManager : MonoBehaviour
             }
             else
             {
-                Log($"ObstacleManager: Cannot spawn first obstacle - max obstacles reached ({obstaclesOnScreen}/{maxObstaclesOnScreen})");
+                Log($"ObstacleManager: Cannot spawn first obstacle - max obstacles reached ({obstaclesOnScreen}/{MaxObstaclesOnScreen})");
                 firstObstacleSpawned = true; // Marcar como spawneado para evitar intentos repetidos
             }
         }
@@ -622,7 +678,7 @@ public class ObstacleManager : MonoBehaviour
         CheckForNearMisses();
 
         // Actualizar dificultad progresivamente
-        if (timeSinceDifficultyUpdate >= difficultyUpdateInterval)
+        if (timeSinceDifficultyUpdate >= DifficultyUpdateInterval)
         {
             UpdateDifficulty();
             
@@ -652,7 +708,7 @@ public class ObstacleManager : MonoBehaviour
             if (timeSinceLastSpawn >= nextSpawnTime)
             {
                 int obstaclesOnScreen = CountObstaclesOnScreen();
-                if (obstaclesOnScreen < maxObstaclesOnScreen)
+                if (obstaclesOnScreen < MaxObstaclesOnScreen)
                 {
                     Log($"ObstacleManager: Spawning first obstacle after tutorial (obstacles on screen: {obstaclesOnScreen}/{maxObstaclesOnScreen})");
                     SpawnObstacle();
@@ -679,19 +735,19 @@ public class ObstacleManager : MonoBehaviour
             
             float adjustedSpawnTime = nextSpawnTime * spawnMultiplier;
             
-            if (timeSinceLastSpawn >= adjustedSpawnTime && obstaclesOnScreen < maxObstaclesOnScreen)
+            if (timeSinceLastSpawn >= adjustedSpawnTime && obstaclesOnScreen < MaxObstaclesOnScreen)
             {
-                Log($"ObstacleManager: Attempting to spawn obstacle (time: {timeSinceLastSpawn}, threshold: {adjustedSpawnTime}, obstacles on screen: {obstaclesOnScreen}/{maxObstaclesOnScreen})");
+                Log($"ObstacleManager: Attempting to spawn obstacle (time: {timeSinceLastSpawn}, threshold: {adjustedSpawnTime}, obstacles on screen: {obstaclesOnScreen}/{MaxObstaclesOnScreen})");
                 SpawnObstacle();
                 timeSinceLastSpawn = 0f;
                 nextSpawnTime = Random.Range(currentMinSpawnInterval, currentMaxSpawnInterval);
                 Log($"ObstacleManager: Next spawn in {nextSpawnTime} seconds (min: {currentMinSpawnInterval:F2}, max: {currentMaxSpawnInterval:F2})");
             }
-            else if (obstaclesOnScreen >= maxObstaclesOnScreen)
+            else if (obstaclesOnScreen >= MaxObstaclesOnScreen)
             {
                 // Esperar un poco más antes de intentar spawnear de nuevo
                 timeSinceLastSpawn = adjustedSpawnTime - 0.5f; // Reducir el tiempo para intentar de nuevo pronto
-                Log($"ObstacleManager: Max obstacles reached ({obstaclesOnScreen}/{maxObstaclesOnScreen}), waiting...");
+                Log($"ObstacleManager: Max obstacles reached ({obstaclesOnScreen}/{MaxObstaclesOnScreen}), waiting...");
             }
         }
     }
@@ -787,7 +843,7 @@ public class ObstacleManager : MonoBehaviour
         // Esto hace que la dificultad aumente más gradualmente al principio y más rápido después
         
         // Calcular el progreso normalizado (0 a 1) basado en el tiempo
-        float progress = Mathf.Clamp01(gameTime / maxDifficultyTime);
+        float progress = Mathf.Clamp01(gameTime / MaxDifficultyTime);
         
         // Usar una curva cuadrática para suavizar la progresión
         // Al principio (progress cerca de 0) la reducción es pequeña
@@ -797,17 +853,17 @@ public class ObstacleManager : MonoBehaviour
         // float smoothProgress = Mathf.SmoothStep(0f, 1f, progress);
         
         // Calcular la reducción total basada en el progreso suavizado
-        float totalReductionMin = (minSpawnInterval - minSpawnIntervalMin) * smoothProgress;
-        float totalReductionMax = (maxSpawnInterval - maxSpawnIntervalMin) * smoothProgress;
+        float totalReductionMin = (MinSpawnInterval - MinSpawnIntervalMin) * smoothProgress;
+        float totalReductionMax = (MaxSpawnInterval - MaxSpawnIntervalMin) * smoothProgress;
         
         // Calcular nuevos intervalos (reducir progresivamente de forma suave)
         float newMinInterval = Mathf.Max(
-            minSpawnInterval - totalReductionMin,
-            minSpawnIntervalMin
+            MinSpawnInterval - totalReductionMin,
+            MinSpawnIntervalMin
         );
         float newMaxInterval = Mathf.Max(
-            maxSpawnInterval - totalReductionMax,
-            maxSpawnIntervalMin
+            MaxSpawnInterval - totalReductionMax,
+            MaxSpawnIntervalMin
         );
         
         // Asegurar que el mínimo no sea mayor que el máximo
@@ -860,15 +916,15 @@ public class ObstacleManager : MonoBehaviour
             progressValue = scoreManager.GetCurrentScore();
             
             // Log cada vez que cambia la dificultad (solo una vez por nivel)
-            if (progressValue >= scoreToUnlockVeryHard)
+            if (progressValue >= ScoreToUnlockVeryHard)
             {
                 return ObstacleDifficultyLevel.VeryHard;
             }
-            else if (progressValue >= scoreToUnlockHard)
+            else if (progressValue >= ScoreToUnlockHard)
             {
                 return ObstacleDifficultyLevel.Hard;
             }
-            else if (progressValue >= scoreToUnlockMedium)
+            else if (progressValue >= ScoreToUnlockMedium)
             {
                 return ObstacleDifficultyLevel.Medium;
             }
@@ -882,15 +938,15 @@ public class ObstacleManager : MonoBehaviour
             // Usar el tiempo de juego para determinar la dificultad (comportamiento anterior)
             progressValue = gameTime;
             
-            if (progressValue >= timeToUnlockVeryHard)
+            if (progressValue >= TimeToUnlockVeryHard)
             {
                 return ObstacleDifficultyLevel.VeryHard;
             }
-            else if (progressValue >= timeToUnlockHard)
+            else if (progressValue >= TimeToUnlockHard)
             {
                 return ObstacleDifficultyLevel.Hard;
             }
-            else if (progressValue >= timeToUnlockMedium)
+            else if (progressValue >= TimeToUnlockMedium)
             {
                 return ObstacleDifficultyLevel.Medium;
             }
@@ -1070,7 +1126,7 @@ public class ObstacleManager : MonoBehaviour
         
         // Calcular posición de spawn
         float spawnAngle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-        float maxScreenDistance = Mathf.Max(screenWidth, screenHeight) / 2f + spawnDistanceFromScreen;
+        float maxScreenDistance = Mathf.Max(screenWidth, screenHeight) / 2f + SpawnDistanceFromScreen;
         
         Vector3 spawnPosition = new Vector3(
             cameraPos.x + Mathf.Cos(spawnAngle) * maxScreenDistance,
@@ -1085,8 +1141,8 @@ public class ObstacleManager : MonoBehaviour
         
         // Agregar ObstacleMover
         ObstacleMover mover = obstacleObj.AddComponent<ObstacleMover>();
-        float randomSpeedMultiplier = Random.Range(1.0f, speedVariation);
-        float randomSpeed = obstacleSpeed * randomSpeedMultiplier;
+        float randomSpeedMultiplier = Random.Range(1.0f, SpeedVariation);
+        float randomSpeed = ObstacleSpeed * randomSpeedMultiplier;
         mover.SetDirection(movementDirection);
         mover.SetSpeed(randomSpeed);
         
@@ -1102,7 +1158,7 @@ public class ObstacleManager : MonoBehaviour
         
         // Aplicar tamaño aleatorio
         float randomValue = Random.Range(0f, 1f);
-        float randomSizeMultiplier = 1.0f + (sizeVariation - 1.0f) * (randomValue * randomValue);
+        float randomSizeMultiplier = 1.0f + (SizeVariation - 1.0f) * (randomValue * randomValue);
         StartCoroutine(ApplyObstacleScale(obstacleObj, randomSizeMultiplier));
         
         Log($"ObstacleManager: Created dynamic obstacle {obstacleObj.name} at {spawnPosition}");
@@ -1184,27 +1240,32 @@ public class ObstacleManager : MonoBehaviour
         {
             scoreInfo = $", Score: {scoreManager.GetCurrentScore()}";
         }
-        Debug.Log($"ObstacleManager: Spawning obstacle (Current difficulty: {currentDifficulty}, Available prefabs: {validPrefabs.Count}, Has complex: {hasComplexPrefabs}{scoreInfo})");
+        Log($"ObstacleManager: Spawning obstacle (Current difficulty: {currentDifficulty}, Available prefabs: {validPrefabs.Count}, Has complex: {hasComplexPrefabs}{scoreInfo})");
 
         if (mainCamera == null)
         {
-            Debug.LogWarning("ObstacleManager: No camera found!");
+            LogWarning("ObstacleManager: No camera found!");
+            mainCamera = Camera.main;
+        // Usar referencia cacheada, buscar solo si es null
+        if (mainCamera == null)
+        {
             mainCamera = Camera.main;
             if (mainCamera == null)
             {
                 mainCamera = FindFirstObjectByType<Camera>();
             }
-            if (mainCamera == null)
-            {
-                Debug.LogError("ObstacleManager: Still no camera found! Cannot spawn obstacles.");
-                return;
-            }
+        }
+        if (mainCamera == null)
+        {
+            LogError("ObstacleManager: Still no camera found! Cannot spawn obstacles.");
+            return;
+        }
         }
 
         // Verificar que la cámara sea ortográfica
         if (!mainCamera.orthographic)
         {
-            Debug.LogWarning("ObstacleManager: Camera is not orthographic! Setting to orthographic.");
+            LogWarning("ObstacleManager: Camera is not orthographic! Setting to orthographic.");
             mainCamera.orthographic = true;
         }
 
@@ -1248,7 +1309,7 @@ public class ObstacleManager : MonoBehaviour
         float spawnAngle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
         
         // Calcular la distancia desde el centro de la pantalla para spawnear fuera
-        float maxScreenDistance = Mathf.Max(screenWidth, screenHeight) / 2f + spawnDistanceFromScreen;
+        float maxScreenDistance = Mathf.Max(screenWidth, screenHeight) / 2f + SpawnDistanceFromScreen;
         
         // Spawnear en una posición fuera de la pantalla en la dirección del ángulo
         // Forzar Z = 0 para que esté en el mismo plano que el jugador
@@ -1295,7 +1356,7 @@ public class ObstacleManager : MonoBehaviour
         GameObject obstacle = GetFromPool(selectedPrefab);
         if (obstacle == null)
         {
-            Debug.LogError("ObstacleManager: Failed to get obstacle from pool!");
+            LogError("ObstacleManager: Failed to get obstacle from pool!");
             return;
         }
         
@@ -1315,7 +1376,7 @@ public class ObstacleManager : MonoBehaviour
         
         if (mover == null)
         {
-            Debug.LogError("ObstacleManager: Failed to add ObstacleMover component!");
+            LogError("ObstacleManager: Failed to add ObstacleMover component!");
             ReturnToPool(obstacle);
             return;
         }
@@ -1324,8 +1385,8 @@ public class ObstacleManager : MonoBehaviour
         mover.enabled = true;
         
         // Asignar velocidad aleatoria (entre 1.0x y speedVariation)
-        float randomSpeedMultiplier = Random.Range(1.0f, speedVariation);
-        float randomSpeed = obstacleSpeed * randomSpeedMultiplier;
+        float randomSpeedMultiplier = Random.Range(1.0f, SpeedVariation);
+        float randomSpeed = ObstacleSpeed * randomSpeedMultiplier;
         
         mover.SetDirection(movementDirection);
         mover.SetSpeed(randomSpeed);
@@ -1334,7 +1395,7 @@ public class ObstacleManager : MonoBehaviour
         // Usar distribución sesgada: más probable que sea pequeño, menos probable que sea grande
         // Usar una función cuadrática para sesgar hacia valores más pequeños
         float randomValue = Random.Range(0f, 1f);
-        float randomSizeMultiplier = 1.0f + (sizeVariation - 1.0f) * (randomValue * randomValue);
+        float randomSizeMultiplier = 1.0f + (SizeVariation - 1.0f) * (randomValue * randomValue);
         
         // Aplicar escalado después de que se ejecute Start() para que los sprites ya estén creados
         StartCoroutine(ApplyObstacleScale(obstacle, randomSizeMultiplier));
@@ -1372,7 +1433,7 @@ public class ObstacleManager : MonoBehaviour
             ApplyColorBlindModeToObstacle(obstacle);
         }
         
-        Debug.Log($"ObstacleManager: Spawned {selectedPrefab.name} from pool at {obstacle.transform.position} moving {movementDirection} (speed: {randomSpeed:F2}x, size: {randomSizeMultiplier:F2}x)");
+        Log($"ObstacleManager: Spawned {selectedPrefab.name} from pool at {obstacle.transform.position} moving {movementDirection} (speed: {randomSpeed:F2}x, size: {randomSizeMultiplier:F2}x)");
     }
     
     /// <summary>

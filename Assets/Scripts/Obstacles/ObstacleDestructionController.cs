@@ -552,7 +552,7 @@ public class ObstacleDestructionController : MonoBehaviour
                 fragData.y + fragData.height > spriteHeight)
             {
                 fragmentsSkipped++;
-                Debug.LogWarning($"ObstacleDestructionController: Fragmento fuera de límites: x={fragData.x}, y={fragData.y}, w={fragData.width}, h={fragData.height}, spriteW={spriteWidth}, spriteH={spriteHeight}");
+                LogWarning($"ObstacleDestructionController: Fragmento fuera de límites: x={fragData.x}, y={fragData.y}, w={fragData.width}, h={fragData.height}, spriteW={spriteWidth}, spriteH={spriteHeight}");
                 continue;
             }
             
@@ -576,7 +576,7 @@ public class ObstacleDestructionController : MonoBehaviour
             if (!hasVisiblePixels)
             {
                 fragmentsSkipped++;
-                Debug.LogWarning($"ObstacleDestructionController: Fragmento sin píxeles visibles: x={fragData.x}, y={fragData.y}, w={fragData.width}, h={fragData.height}");
+                LogWarning($"ObstacleDestructionController: Fragmento sin píxeles visibles: x={fragData.x}, y={fragData.y}, w={fragData.width}, h={fragData.height}");
                 continue;
             }
             

@@ -77,7 +77,7 @@ public class MissionsSection : MonoBehaviour
         missionManager = MissionManager.Instance;
         if (missionManager == null)
         {
-            Debug.LogWarning("[MissionsSection] MissionManager no encontrado! Intentando crear...");
+            LogWarning("[MissionsSection] MissionManager no encontrado! Intentando crear...");
             // Intentar crear el MissionManager si no existe
             GameObject missionManagerObj = new GameObject("MissionManager");
             missionManager = missionManagerObj.AddComponent<MissionManager>();
@@ -86,7 +86,7 @@ public class MissionsSection : MonoBehaviour
         
         if (missionManager == null)
         {
-            Debug.LogError("[MissionsSection] No se pudo crear MissionManager!");
+            LogError("[MissionsSection] No se pudo crear MissionManager!");
             CreateErrorUI();
             return;
         }
@@ -102,11 +102,11 @@ public class MissionsSection : MonoBehaviour
         {
             missionManager.OnMissionProgress += OnMissionProgress;
             missionManager.OnMissionCompleted += OnMissionCompleted;
-            Debug.Log("[MissionsSection] Suscrito a eventos del MissionManager.");
+            Log("[MissionsSection] Suscrito a eventos del MissionManager.");
         }
         
         isInitialized = true;
-        Debug.Log("[MissionsSection] Inicialización completada.");
+        Log("[MissionsSection] Inicialización completada.");
         
         // Actualizar badges de pestañas
         UpdateTabBadges();
@@ -143,7 +143,7 @@ public class MissionsSection : MonoBehaviour
     
     private void CreateUI()
     {
-        Debug.Log("[MissionsSection] CreateUI llamado.");
+        Log("[MissionsSection] CreateUI llamado.");
         
         // Título
         GameObject titleObj = new GameObject("MissionsTitle");
@@ -283,7 +283,7 @@ public class MissionsSection : MonoBehaviour
         contentPanel = content;
         scrollRect.content = contentRect;
         
-        Debug.Log($"[MissionsSection] UI creada. Content sizeDelta: {contentRect.sizeDelta}, Viewport sizeDelta: {viewportRect.sizeDelta}");
+        Log($"[MissionsSection] UI creada. Content sizeDelta: {contentRect.sizeDelta}, Viewport sizeDelta: {viewportRect.sizeDelta}");
     }
     
     private void CreateCategoryTabs()
@@ -436,17 +436,17 @@ public class MissionsSection : MonoBehaviour
     
     private void RefreshMissions()
     {
-        Debug.Log($"[MissionsSection] RefreshMissions llamado. Categoría: {currentCategory}");
+        Log($"[MissionsSection] RefreshMissions llamado. Categoría: {currentCategory}");
         
         if (contentPanel == null)
         {
-            Debug.LogError("[MissionsSection] contentPanel es null en RefreshMissions!");
+            LogError("[MissionsSection] contentPanel es null en RefreshMissions!");
             return;
         }
         
         if (missionManager == null)
         {
-            Debug.LogError("[MissionsSection] missionManager es null en RefreshMissions!");
+            LogError("[MissionsSection] missionManager es null en RefreshMissions!");
             return;
         }
         
@@ -458,11 +458,11 @@ public class MissionsSection : MonoBehaviour
         
         // Obtener misiones de la categoría actual
         List<MissionData> missions = missionManager.GetActiveMissionsByCategory(currentCategory);
-        Debug.Log($"[MissionsSection] Misiones activas encontradas en categoría {currentCategory}: {missions.Count}");
+        Log($"[MissionsSection] Misiones activas encontradas en categoría {currentCategory}: {missions.Count}");
         
         if (missions.Count == 0)
         {
-            Debug.Log("[MissionsSection] No hay misiones activas, mostrando mensaje.");
+            Log("[MissionsSection] No hay misiones activas, mostrando mensaje.");
             // Mostrar mensaje si no hay misiones
             GameObject noMissionsObj = new GameObject("NoMissionsMessage");
             noMissionsObj.transform.SetParent(contentPanel.transform, false);
@@ -478,12 +478,12 @@ public class MissionsSection : MonoBehaviour
         }
         else
         {
-            Debug.Log($"[MissionsSection] Creando {missions.Count} tarjetas de misión.");
+            Log($"[MissionsSection] Creando {missions.Count} tarjetas de misión.");
             foreach (var mission in missions)
             {
                 CreateMissionCard(mission);
             }
-            Debug.Log($"[MissionsSection] Tarjetas creadas. Hijos de contentPanel: {contentPanel.transform.childCount}");
+            Log($"[MissionsSection] Tarjetas creadas. Hijos de contentPanel: {contentPanel.transform.childCount}");
         }
         
         // Forzar actualización del layout
@@ -495,13 +495,13 @@ public class MissionsSection : MonoBehaviour
             RectTransform contentRect = contentPanel.GetComponent<RectTransform>();
             if (contentRect != null)
             {
-                Debug.Log($"[MissionsSection] Después de crear tarjetas - Content sizeDelta: {contentRect.sizeDelta}, anchoredPosition: {contentRect.anchoredPosition}");
+                Log($"[MissionsSection] Después de crear tarjetas - Content sizeDelta: {contentRect.sizeDelta}, anchoredPosition: {contentRect.anchoredPosition}");
             }
         }
         
         if (scrollRect != null && scrollRect.viewport != null)
         {
-            Debug.Log($"[MissionsSection] Viewport sizeDelta: {scrollRect.viewport.sizeDelta}");
+            Log($"[MissionsSection] Viewport sizeDelta: {scrollRect.viewport.sizeDelta}");
         }
     }
     
@@ -706,7 +706,7 @@ public class MissionsSection : MonoBehaviour
         RefreshMissions();
         UpdateTabBadges();
         // Aquí podrías mostrar una notificación
-        Debug.Log($"¡Misión completada: {mission.title}!");
+        Log($"¡Misión completada: {mission.title}!");
     }
     
     private void UpdateTabBadges()

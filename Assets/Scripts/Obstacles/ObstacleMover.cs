@@ -70,7 +70,7 @@ public class ObstacleMover : MonoBehaviour
         }
 
         // Solo devolver al pool si ya entró a la pantalla y ahora está fuera
-        // O si han pasado más de 10 segundos (por si acaso)
+        // O si han pasado más de 15 segundos Y no está visible (por si acaso)
         // NOTA: Usar la variable destructionController ya declarada arriba
         if (hasEnteredScreen && IsOutOfScreen())
         {
@@ -81,13 +81,13 @@ public class ObstacleMover : MonoBehaviour
                 ReturnToPool();
             }
         }
-        else if (Time.time - spawnTime > 10f)
+        else if (Time.time - spawnTime > 15f && !IsOnScreen())
         {
-            // Verificar si hay un ObstacleDestructionController en proceso de destrucción
+            // Timeout de seguridad: solo si NO está visible en pantalla
+            // (evita eliminar obstáculos ralentizados por Slowmo que siguen en pantalla)
             if (destructionController == null || !destructionController.IsDestroying())
             {
-                // Devolver al pool después de 10 segundos por seguridad
-                Log($"ObstacleMover: Returning {gameObject.name} to pool - timeout");
+                Log($"ObstacleMover: Returning {gameObject.name} to pool - timeout (not on screen)");
                 ReturnToPool();
             }
         }

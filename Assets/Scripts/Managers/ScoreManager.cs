@@ -34,6 +34,13 @@ public class ScoreManager : MonoBehaviour
         {
             scoreMultiplier = PowerUpManager.Instance.GetScoreMultiplier();
         }
+        
+        // Aplicar multiplicador de combo/racha
+        if (ComboManager.Instance != null)
+        {
+            scoreMultiplier *= ComboManager.Instance.GetMultiplier();
+        }
+        
         score += Time.deltaTime * scoreMultiplier;
 
         if (scoreText != null)

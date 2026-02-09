@@ -803,6 +803,12 @@ public class ObstacleManager : MonoBehaviour
                         {
                             StatisticsManager.Instance.RecordNearMiss();
                         }
+                        
+                        // Notificar al ComboManager (boost de near miss)
+                        if (ComboManager.Instance != null)
+                        {
+                            ComboManager.Instance.OnNearMiss();
+                        }
                     }
                 }
             }

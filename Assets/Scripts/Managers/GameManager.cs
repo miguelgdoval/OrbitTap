@@ -141,6 +141,12 @@ public class GameManager : MonoBehaviour
             PowerUpManager.Instance.StopSpawning();
         }
         
+        // Detener combo
+        if (ComboManager.Instance != null)
+        {
+            ComboManager.Instance.StopCombo();
+        }
+        
         // Comprobar si el jugador puede usar segunda oportunidad
         if (ReviveManager.Instance != null && ReviveManager.Instance.CanRevive())
         {
@@ -181,6 +187,12 @@ public class GameManager : MonoBehaviour
         if (PowerUpManager.Instance != null)
         {
             PowerUpManager.Instance.ResumeSpawning();
+        }
+        
+        // Reanudar combo (mantener la racha)
+        if (ComboManager.Instance != null)
+        {
+            ComboManager.Instance.ResetCombo(); // Resetear tras morir, empezar de nuevo
         }
         
         // Buscar nuevo player (fue recreado por ReviveManager)
@@ -292,6 +304,12 @@ public class GameManager : MonoBehaviour
         {
             PowerUpManager.Instance.ResetSession();
             PowerUpManager.Instance.StartSpawning();
+        }
+        
+        // Resetear combo para nueva partida
+        if (ComboManager.Instance != null)
+        {
+            ComboManager.Instance.ResetCombo();
         }
     }
     

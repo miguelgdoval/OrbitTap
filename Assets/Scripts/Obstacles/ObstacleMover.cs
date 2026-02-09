@@ -153,6 +153,12 @@ public class ObstacleMover : MonoBehaviour
                 {
                     StatisticsManager.Instance.RecordObstacleAvoided();
                 }
+                
+                // Notificar al ComboManager (incrementar racha)
+                if (ComboManager.Instance != null)
+                {
+                    ComboManager.Instance.OnObstacleDodged();
+                }
             }
         }
         

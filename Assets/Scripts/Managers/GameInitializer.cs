@@ -224,6 +224,17 @@ public class GameInitializer : MonoBehaviour
         // Crear HUD de Power-Ups (debajo del score)
         CreatePowerUpHUD(canvasObj);
         
+        // Crear ComboManager (sistema de combos/racha)
+        GameObject comboManager = GameObject.Find("ComboManager");
+        if (comboManager == null)
+        {
+            comboManager = new GameObject("ComboManager");
+            comboManager.AddComponent<ComboManager>();
+        }
+        
+        // Crear HUD del Combo (arriba a la izquierda)
+        CreateComboHUD(canvasObj);
+        
         // Los managers core ya fueron inicializados al inicio de InitializeGame()
         // Solo crear managers específicos del juego aquí
         
@@ -662,6 +673,19 @@ public class GameInitializer : MonoBehaviour
         if (CollectibleManager.Instance != null)
         {
             CollectibleManager.Instance.SetShardsUI(shardsText);
+        }
+    }
+    
+    /// <summary>
+    /// Crea el HUD del combo/racha (arriba a la izquierda)
+    /// </summary>
+    private void CreateComboHUD(GameObject canvas)
+    {
+        if (canvas == null) return;
+        
+        if (ComboManager.Instance != null)
+        {
+            ComboManager.Instance.CreateHUDInCanvas(canvas);
         }
     }
     

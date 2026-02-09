@@ -211,6 +211,31 @@ public class GameOverController : MonoBehaviour
             highScoreText = highScoreObj.GetComponent<Text>();
         }
 
+        // Create Combo/Streak Text (solo si hubo racha)
+        int lastStreak = PlayerPrefs.GetInt("LastComboStreak", 0);
+        if (lastStreak > 2)
+        {
+            GameObject comboObj = new GameObject("ComboText");
+            comboObj.transform.SetParent(canvas.transform, false);
+            Text comboText = comboObj.AddComponent<Text>();
+            
+            float lastMaxMult = PlayerPrefs.GetFloat("LastMaxMultiplier", 1f);
+            comboText.text = $"Racha máxima: {lastStreak} (×{lastMaxMult:F1})";
+            comboText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            comboText.fontSize = 22;
+            comboText.color = new Color(0.5f, 1f, 0.5f, 0.9f);
+            comboText.alignment = TextAnchor.MiddleCenter;
+            comboText.raycastTarget = false;
+            
+            AccessibilityHelper.ApplyAccessibilityToText(comboText);
+            
+            RectTransform comboRect = comboObj.GetComponent<RectTransform>();
+            comboRect.anchorMin = new Vector2(0.5f, 0.5f);
+            comboRect.anchorMax = new Vector2(0.5f, 0.5f);
+            comboRect.anchoredPosition = new Vector2(0, -55);
+            comboRect.sizeDelta = new Vector2(400, 35);
+        }
+        
         // Create Shards Collected Text (solo si se recogieron shards)
         int shardsValue = PlayerPrefs.GetInt("LastShardsValue", 0);
         if (shardsValue > 0)
@@ -237,36 +262,112 @@ public class GameOverController : MonoBehaviour
             RectTransform shardsRect = shardsObj.GetComponent<RectTransform>();
             shardsRect.anchorMin = new Vector2(0.5f, 0.5f);
             shardsRect.anchorMax = new Vector2(0.5f, 0.5f);
-            shardsRect.anchoredPosition = new Vector2(0, -60);
-            shardsRect.sizeDelta = new Vector2(400, 40);
+            shardsRect.anchoredPosition = new Vector2(0, -80);
+            shardsRect.sizeDelta = new Vector2(400, 35);
         }
         
-        // Create Tap to Main Menu Text
-        GameObject tapObj = GameObject.Find("TapToRetryText");
-        if (tapObj == null)
-        {
-            tapObj = new GameObject("TapToRetryText");
-            tapObj.transform.SetParent(canvas.transform, false);
-            Text tapText = tapObj.AddComponent<Text>();
-            tapText.text = "Toca para volver al menú";
-            tapText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            tapText.fontSize = 30;
-            tapText.color = CosmicTheme.EtherealLila; // Rosa-lila etéreo
-            tapText.alignment = TextAnchor.MiddleCenter;
-            tapText.raycastTarget = false; // No bloquear toques
-            
-            // Aplicar alto contraste si está habilitado
-            AccessibilityHelper.ApplyAccessibilityToText(tapText);
-
-            RectTransform tapRect = tapObj.GetComponent<RectTransform>();
-            tapRect.anchorMin = new Vector2(0.5f, 0.5f);
-            tapRect.anchorMax = new Vector2(0.5f, 0.5f);
-            tapRect.anchoredPosition = new Vector2(0, -120);
-            tapRect.sizeDelta = new Vector2(300, 50);
-        }
+        // Crear botones de acción (Reintentar + Menú)
+        CreateActionButtons(canvas);
         
         // Crear botón de compartir
         CreateShareButton(canvas);
+    }
+    
+    /// <summary>
+    /// Crea los botones de Reintentar y Menú
+    /// </summary>
+    private void CreateActionButtons(GameObject canvas)
+    {
+        // Contenedor de botones
+        GameObject buttonsContainer = new GameObject("ButtonsContainer");
+        buttonsContainer.transform.SetParent(canvas.transform, false);
+        
+        RectTransform containerRect = buttonsContainer.AddComponent<RectTransform>();
+        containerRect.anchorMin = new Vector2(0.5f, 0.5f);
+        containerRect.anchorMax = new Vector2(0.5f, 0.5f);
+        containerRect.pivot = new Vector2(0.5f, 0.5f);
+        containerRect.anchoredPosition = new Vector2(0, -160);
+        containerRect.sizeDelta = new Vector2(420, 55);
+        
+        // --- Botón REINTENTAR (primario, más grande, colorido) ---
+        GameObject retryBtnObj = new GameObject("RetryButton");
+        retryBtnObj.transform.SetParent(buttonsContainer.transform, false);
+        Button retryBtn = retryBtnObj.AddComponent<Button>();
+        
+        Image retryBtnImg = retryBtnObj.AddComponent<Image>();
+        retryBtnImg.color = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.85f);
+        
+        // Outline de brillo
+        Outline retryOutline = retryBtnObj.AddComponent<Outline>();
+        retryOutline.effectColor = new Color(CosmicTheme.NeonCyan.r, CosmicTheme.NeonCyan.g, CosmicTheme.NeonCyan.b, 0.5f);
+        retryOutline.effectDistance = new Vector2(2, 2);
+        
+        RectTransform retryRect = retryBtnObj.GetComponent<RectTransform>();
+        retryRect.anchorMin = new Vector2(0f, 0f);
+        retryRect.anchorMax = new Vector2(0.48f, 1f);
+        retryRect.sizeDelta = Vector2.zero;
+        retryRect.anchoredPosition = Vector2.zero;
+        
+        // Texto del botón Reintentar
+        GameObject retryTextObj = new GameObject("Text");
+        retryTextObj.transform.SetParent(retryBtnObj.transform, false);
+        Text retryText = retryTextObj.AddComponent<Text>();
+        retryText.text = "▶ Reintentar";
+        retryText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        retryText.fontSize = 24;
+        retryText.fontStyle = FontStyle.Bold;
+        retryText.color = Color.white;
+        retryText.alignment = TextAnchor.MiddleCenter;
+        retryText.raycastTarget = false;
+        AccessibilityHelper.ApplyAccessibilityToText(retryText);
+        
+        RectTransform retryTextRect = retryTextObj.GetComponent<RectTransform>();
+        retryTextRect.anchorMin = Vector2.zero;
+        retryTextRect.anchorMax = Vector2.one;
+        retryTextRect.sizeDelta = Vector2.zero;
+        
+        retryBtn.onClick.AddListener(() => {
+            QuickRestart();
+        });
+        
+        // --- Botón MENÚ (secundario, más discreto) ---
+        GameObject menuBtnObj = new GameObject("MenuButton");
+        menuBtnObj.transform.SetParent(buttonsContainer.transform, false);
+        Button menuBtn = menuBtnObj.AddComponent<Button>();
+        
+        Image menuBtnImg = menuBtnObj.AddComponent<Image>();
+        menuBtnImg.color = new Color(0.3f, 0.3f, 0.4f, 0.7f);
+        
+        Outline menuOutline = menuBtnObj.AddComponent<Outline>();
+        menuOutline.effectColor = new Color(CosmicTheme.EtherealLila.r, CosmicTheme.EtherealLila.g, CosmicTheme.EtherealLila.b, 0.4f);
+        menuOutline.effectDistance = new Vector2(1, 1);
+        
+        RectTransform menuRect = menuBtnObj.GetComponent<RectTransform>();
+        menuRect.anchorMin = new Vector2(0.52f, 0f);
+        menuRect.anchorMax = new Vector2(1f, 1f);
+        menuRect.sizeDelta = Vector2.zero;
+        menuRect.anchoredPosition = Vector2.zero;
+        
+        // Texto del botón Menú
+        GameObject menuTextObj = new GameObject("Text");
+        menuTextObj.transform.SetParent(menuBtnObj.transform, false);
+        Text menuText = menuTextObj.AddComponent<Text>();
+        menuText.text = "Menú";
+        menuText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        menuText.fontSize = 22;
+        menuText.color = CosmicTheme.EtherealLila;
+        menuText.alignment = TextAnchor.MiddleCenter;
+        menuText.raycastTarget = false;
+        AccessibilityHelper.ApplyAccessibilityToText(menuText);
+        
+        RectTransform menuTextRect = menuTextObj.GetComponent<RectTransform>();
+        menuTextRect.anchorMin = Vector2.zero;
+        menuTextRect.anchorMax = Vector2.one;
+        menuTextRect.sizeDelta = Vector2.zero;
+        
+        menuBtn.onClick.AddListener(() => {
+            GoToMainMenu();
+        });
     }
     
     private void CreateShareButton(GameObject canvas)
@@ -282,8 +383,8 @@ public class GameOverController : MonoBehaviour
         shareBtnRect.anchorMin = new Vector2(0.5f, 0f);
         shareBtnRect.anchorMax = new Vector2(0.5f, 0f);
         shareBtnRect.pivot = new Vector2(0.5f, 0.5f);
-        shareBtnRect.sizeDelta = new Vector2(200, 50);
-        shareBtnRect.anchoredPosition = new Vector2(0, 100);
+        shareBtnRect.sizeDelta = new Vector2(180, 45);
+        shareBtnRect.anchoredPosition = new Vector2(0, 60);
         
         GameObject shareTextObj = new GameObject("Text");
         shareTextObj.transform.SetParent(shareBtnObj.transform, false);
@@ -340,28 +441,9 @@ public class GameOverController : MonoBehaviour
             {
                 canAcceptInput = true;
             }
-            return;
         }
         
-        // No procesar si ya estamos navegando
-        if (isNavigating) return;
-        
-        // No procesar si el toque está sobre un botón de UI (ej: Share)
-        if (IsPointerOverUI()) return;
-        
-        // Detect touch or click to go to main menu
-        if (Input.touchCount > 0)
-        {
-            Touch touch = Input.GetTouch(0);
-            if (touch.phase == TouchPhase.Began)
-            {
-                GoToMainMenu();
-            }
-        }
-        else if (Input.GetMouseButtonDown(0))
-        {
-            GoToMainMenu();
-        }
+        // Ya no procesamos "tap en cualquier sitio" — ahora hay botones explícitos
     }
     
     /// <summary>
@@ -408,10 +490,26 @@ public class GameOverController : MonoBehaviour
         SceneManager.LoadScene("MainMenu");
     }
 
-    // Mantener este método por compatibilidad, pero redirigir a MainMenu
+    /// <summary>
+    /// Reinicia la partida directamente sin pasar por el menú principal
+    /// </summary>
+    public void QuickRestart()
+    {
+        if (isNavigating) return;
+        isNavigating = true;
+        
+        Log("[GameOverController] Quick Restart — cargando escena Game directamente");
+        
+        // Limpiar elementos visuales de la escena Game antes de reiniciar
+        GameManager.CleanupGameScene();
+        
+        SceneManager.LoadScene("Game");
+    }
+    
+    // Mantener este método por compatibilidad
     public void RestartGame()
     {
-        GoToMainMenu();
+        QuickRestart();
     }
     
     private void ShowCopyMessage()

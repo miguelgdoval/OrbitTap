@@ -201,6 +201,18 @@ public class GameInitializer : MonoBehaviour
             CreateScoreUI(sm);
         }
 
+        // Crear CollectibleManager (Stellar Shards coleccionables en la órbita)
+        GameObject collectibleManager = GameObject.Find("CollectibleManager");
+        if (collectibleManager == null)
+        {
+            collectibleManager = new GameObject("CollectibleManager");
+            collectibleManager.AddComponent<CollectibleManager>();
+        }
+        
+        // Crear UI de Shards recogidos (arriba a la derecha)
+        GameObject canvasObj = GameObject.Find("Canvas");
+        CreateShardsUI(canvasObj);
+        
         // Los managers core ya fueron inicializados al inicio de InitializeGame()
         // Solo crear managers específicos del juego aquí
         
@@ -581,6 +593,64 @@ public class GameInitializer : MonoBehaviour
         {
             // Si ya existe, obtener la referencia
             sm.scoreText = scoreTextObj.GetComponent<Text>();
+        }
+    }
+    
+    /// <summary>
+    /// Crea el contador de Stellar Shards recogidos (arriba a la derecha)
+    /// </summary>
+    private void CreateShardsUI(GameObject canvas)
+    {
+        if (canvas == null) return;
+        
+        GameObject shardsContainer = new GameObject("ShardsContainer");
+        shardsContainer.transform.SetParent(canvas.transform, false);
+        
+        RectTransform containerRect = shardsContainer.AddComponent<RectTransform>();
+        containerRect.anchorMin = new Vector2(1f, 1f); // Esquina superior derecha
+        containerRect.anchorMax = new Vector2(1f, 1f);
+        containerRect.pivot = new Vector2(1f, 1f);
+        containerRect.anchoredPosition = new Vector2(-20, -45);
+        containerRect.sizeDelta = new Vector2(140, 45);
+        
+        // Fondo semitransparente
+        Image bgImage = shardsContainer.AddComponent<Image>();
+        bgImage.color = new Color(CosmicTheme.SpaceBlack.r, CosmicTheme.SpaceBlack.g, CosmicTheme.SpaceBlack.b, 0.35f);
+        bgImage.raycastTarget = false;
+        
+        // Borde dorado sutil
+        Outline bgOutline = shardsContainer.AddComponent<Outline>();
+        bgOutline.effectColor = new Color(CosmicTheme.SoftGold.r, CosmicTheme.SoftGold.g, CosmicTheme.SoftGold.b, 0.4f);
+        bgOutline.effectDistance = new Vector2(2, 2);
+        
+        // Texto del contador: "0 ⭐"
+        GameObject textObj = new GameObject("ShardsText");
+        textObj.transform.SetParent(shardsContainer.transform, false);
+        
+        Text shardsText = textObj.AddComponent<Text>();
+        shardsText.text = "0 ⭐";
+        shardsText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        shardsText.fontSize = 28;
+        shardsText.fontStyle = FontStyle.Bold;
+        shardsText.color = CosmicTheme.SoftGold;
+        shardsText.alignment = TextAnchor.MiddleCenter;
+        shardsText.raycastTarget = false;
+        
+        // Outline para legibilidad
+        Outline textOutline = textObj.AddComponent<Outline>();
+        textOutline.effectColor = new Color(0f, 0f, 0f, 0.6f);
+        textOutline.effectDistance = new Vector2(1, 1);
+        
+        RectTransform textRect = textObj.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.sizeDelta = Vector2.zero;
+        textRect.anchoredPosition = Vector2.zero;
+        
+        // Pasar la referencia al CollectibleManager
+        if (CollectibleManager.Instance != null)
+        {
+            CollectibleManager.Instance.SetShardsUI(shardsText);
         }
     }
     

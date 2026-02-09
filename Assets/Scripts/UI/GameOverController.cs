@@ -11,6 +11,7 @@ public class GameOverController : MonoBehaviour
     
     private Text scoreText;
     private Text highScoreText;
+    private Text shardsCollectedText;
     private Button shareButton;
     private GameObject copyMessageObj;
     
@@ -210,6 +211,36 @@ public class GameOverController : MonoBehaviour
             highScoreText = highScoreObj.GetComponent<Text>();
         }
 
+        // Create Shards Collected Text (solo si se recogieron shards)
+        int shardsValue = PlayerPrefs.GetInt("LastShardsValue", 0);
+        if (shardsValue > 0)
+        {
+            GameObject shardsObj = new GameObject("ShardsCollectedText");
+            shardsObj.transform.SetParent(canvas.transform, false);
+            shardsCollectedText = shardsObj.AddComponent<Text>();
+            
+            int shardsCount = PlayerPrefs.GetInt("LastShardsCollected", 0);
+            shardsCollectedText.text = $"+{shardsValue} ⭐ ({shardsCount} recogidos)";
+            shardsCollectedText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            shardsCollectedText.fontSize = 26;
+            shardsCollectedText.color = CosmicTheme.SoftGold; // Dorado suave
+            shardsCollectedText.alignment = TextAnchor.MiddleCenter;
+            shardsCollectedText.raycastTarget = false;
+            
+            AccessibilityHelper.ApplyAccessibilityToText(shardsCollectedText);
+            
+            // Outline para legibilidad
+            Outline shardsOutline = shardsObj.AddComponent<Outline>();
+            shardsOutline.effectColor = new Color(0f, 0f, 0f, 0.5f);
+            shardsOutline.effectDistance = new Vector2(1, 1);
+            
+            RectTransform shardsRect = shardsObj.GetComponent<RectTransform>();
+            shardsRect.anchorMin = new Vector2(0.5f, 0.5f);
+            shardsRect.anchorMax = new Vector2(0.5f, 0.5f);
+            shardsRect.anchoredPosition = new Vector2(0, -60);
+            shardsRect.sizeDelta = new Vector2(400, 40);
+        }
+        
         // Create Tap to Main Menu Text
         GameObject tapObj = GameObject.Find("TapToRetryText");
         if (tapObj == null)
@@ -230,7 +261,7 @@ public class GameOverController : MonoBehaviour
             RectTransform tapRect = tapObj.GetComponent<RectTransform>();
             tapRect.anchorMin = new Vector2(0.5f, 0.5f);
             tapRect.anchorMax = new Vector2(0.5f, 0.5f);
-            tapRect.anchoredPosition = new Vector2(0, -100);
+            tapRect.anchoredPosition = new Vector2(0, -120);
             tapRect.sizeDelta = new Vector2(300, 50);
         }
         

@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="Assets/Scripts/Managers/AudioManager.cs" />
     <Compile Include="Assets/Scripts/Visual/SacredOrbitRing.cs" />
+    <Compile Include="Assets/Scripts/Collectibles/CollectibleShard.cs" />
     <Compile Include="Assets/Scripts/Managers/TutorialManager.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleDestructionController.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundPreset.cs" />
@@ -77,6 +78,7 @@
     <Compile Include="Assets/Scripts/Managers/AccessibilityHelper.cs" />
     <Compile Include="Assets/Scripts/Managers/SocialShareManager.cs" />
     <Compile Include="Assets/Scripts/Managers/GameInitializer.cs" />
+    <Compile Include="Assets/Scripts/Collectibles/CollectibleManager.cs" />
     <Compile Include="Assets/Scripts/Obstacles/PooledObjectInfo.cs" />
     <Compile Include="Assets/Scripts/Visual/BackgroundSetupHelper.cs" />
     <Compile Include="Assets/Scripts/UI/SettingsPanel.cs" />

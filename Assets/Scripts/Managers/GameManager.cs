@@ -129,6 +129,12 @@ public class GameManager : MonoBehaviour
             scoreManager.StopScoring();
         }
         
+        // Detener spawning de coleccionables (pero mantener los datos de sesión)
+        if (CollectibleManager.Instance != null)
+        {
+            CollectibleManager.Instance.StopSpawning();
+        }
+        
         // Comprobar si el jugador puede usar segunda oportunidad
         if (ReviveManager.Instance != null && ReviveManager.Instance.CanRevive())
         {
@@ -157,6 +163,12 @@ public class GameManager : MonoBehaviour
         if (scoreManager != null)
         {
             scoreManager.ResumeScoring();
+        }
+        
+        // Reanudar coleccionables
+        if (CollectibleManager.Instance != null)
+        {
+            CollectibleManager.Instance.StartSpawning();
         }
         
         // Buscar nuevo player (fue recreado por ReviveManager)
@@ -205,6 +217,17 @@ public class GameManager : MonoBehaviour
         {
             StatisticsManager.Instance.EndTrackingGame();
         }
+        
+        // Coleccionables: Detener spawning y otorgar ganancias
+        if (CollectibleManager.Instance != null)
+        {
+            CollectibleManager.Instance.StopSpawning();
+            CollectibleManager.Instance.AwardSessionEarnings();
+            
+            // Guardar datos de sesión en PlayerPrefs para que GameOverController los muestre
+            PlayerPrefs.SetInt("LastShardsCollected", CollectibleManager.Instance.TotalShardsCollected);
+            PlayerPrefs.SetInt("LastShardsValue", CollectibleManager.Instance.TotalValueCollected);
+        }
 
         // Esperar un poco para que la animación de destrucción se complete antes de cargar la escena
         StartCoroutine(LoadGameOverSceneDelayed());
@@ -237,6 +260,13 @@ public class GameManager : MonoBehaviour
         if (ReviveManager.Instance != null)
         {
             ReviveManager.Instance.ResetForNewGame();
+        }
+        
+        // Resetear e iniciar coleccionables (Stellar Shards en la órbita)
+        if (CollectibleManager.Instance != null)
+        {
+            CollectibleManager.Instance.ResetSession();
+            CollectibleManager.Instance.StartSpawning();
         }
     }
     

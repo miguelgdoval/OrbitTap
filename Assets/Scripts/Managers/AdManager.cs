@@ -108,7 +108,13 @@ public class AdManager : MonoBehaviour
             return;
         }
         
+        // En producción, no mostrar el Game ID completo en logs por seguridad
+#if UNITY_EDITOR
         Log($"[AdManager] Inicializando Unity Ads con Game ID: {gameId}");
+#else
+        string maskedGameId = gameId.Length > 3 ? "***" + gameId.Substring(gameId.Length - 3) : "***";
+        Log($"[AdManager] Inicializando Unity Ads con Game ID: {maskedGameId}");
+#endif
         Advertisement.Initialize(gameId, testMode, this);
 #else
         LogWarning("[AdManager] Unity Ads no está instalado. Instala el paquete desde Package Manager.");
@@ -430,6 +436,15 @@ public class AdManager : MonoBehaviour
         {
             isRewardedReady = false;
             LoadRewardedAd();
+            
+            // Invocar callback de fallo si existe (ej: revive)
+            if (rewardedAdFailCallback != null)
+            {
+                System.Action failCallback = rewardedAdFailCallback;
+                rewardedAdCallback = null;
+                rewardedAdFailCallback = null;
+                failCallback.Invoke();
+            }
         }
     }
     
@@ -488,6 +503,18 @@ public class AdManager : MonoBehaviour
             // Dar recompensa al jugador
             OnRewardedAdCompleted();
         }
+        else if (adUnitId == REWARDED_AD_ID && showCompletionState != UnityAdsShowCompletionState.COMPLETED)
+        {
+            // Ad fue cancelado/saltado - invocar callback de fallo
+            Log("[AdManager] Anuncio con recompensa no completado (skipped/cancelled)");
+            if (rewardedAdFailCallback != null)
+            {
+                System.Action failCallback = rewardedAdFailCallback;
+                rewardedAdCallback = null;
+                rewardedAdFailCallback = null;
+                failCallback.Invoke();
+            }
+        }
         
         // Recargar el anuncio después de mostrarlo
         if (adUnitId == INTERSTITIAL_AD_ID)
@@ -509,11 +536,72 @@ public class AdManager : MonoBehaviour
     private void OnRewardedAdCompleted()
     {
         Log("[AdManager] Recompensa otorgada por ver anuncio");
-        // Dar Stellar Shards (moneda gratuita)
+        
+        // Si hay un callback personalizado (ej: revive), ejecutarlo
+        if (rewardedAdCallback != null)
+        {
+            System.Action callback = rewardedAdCallback;
+            rewardedAdCallback = null;
+            rewardedAdFailCallback = null;
+            callback.Invoke();
+            return;
+        }
+        
+        // Comportamiento por defecto: Dar Stellar Shards (moneda gratuita)
         if (CurrencyManager.Instance != null)
         {
             CurrencyManager.Instance.AddStellarShards(50); // 50 ⭐ por ver anuncio
         }
+    }
+    
+    // ========== REWARDED AD CON CALLBACK PERSONALIZADO ==========
+    
+    private System.Action rewardedAdCallback;
+    private System.Action rewardedAdFailCallback;
+    
+    /// <summary>
+    /// Muestra un anuncio con recompensa con un callback personalizado.
+    /// Se usa para Revive y otros sistemas que necesitan reaccionar al resultado del ad.
+    /// </summary>
+    /// <param name="onCompleted">Se llama si el ad se ve completo</param>
+    /// <param name="onFailed">Se llama si el ad falla o se cancela</param>
+    public void ShowRewardedAdWithCallback(System.Action onCompleted, System.Action onFailed = null)
+    {
+        rewardedAdCallback = onCompleted;
+        rewardedAdFailCallback = onFailed;
+        
+#if UNITY_ADS
+        if (!isRewardedReady)
+        {
+            LogWarning("[AdManager] Anuncio con recompensa no está listo");
+            rewardedAdCallback = null;
+            onFailed?.Invoke();
+            rewardedAdFailCallback = null;
+            return;
+        }
+        
+        Log("[AdManager] Mostrando anuncio con recompensa (callback personalizado)...");
+        Advertisement.Show(REWARDED_AD_ID, this);
+#else
+        // En entorno sin ads, ejecutar callback directamente (para testing)
+        Log("[AdManager] Unity Ads no disponible, ejecutando callback directamente (testing)");
+        System.Action callback = rewardedAdCallback;
+        rewardedAdCallback = null;
+        rewardedAdFailCallback = null;
+        callback?.Invoke();
+#endif
+    }
+    
+    /// <summary>
+    /// Comprueba si hay un anuncio con recompensa listo para mostrar
+    /// </summary>
+    public bool IsRewardedAdReady()
+    {
+#if UNITY_ADS
+        return isRewardedReady;
+#else
+        return false;
+#endif
     }
 }
 

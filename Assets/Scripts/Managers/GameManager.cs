@@ -118,12 +118,7 @@ public class GameManager : MonoBehaviour
         Log("GameManager: GameOver() llamado");
         isGameOver = true;
         
-        // Detener la puntuación y guardar (usar referencia cacheada)
-        float playTime = 0f;
-        int score = 0;
-        int highScore = 0;
-        
-        // Si no está cacheado, intentar encontrarlo una vez
+        // Detener la puntuación (pero NO guardar aún - puede haber revive)
         if (scoreManager == null)
         {
             scoreManager = FindFirstObjectByType<ScoreManager>();
@@ -131,12 +126,67 @@ public class GameManager : MonoBehaviour
         
         if (scoreManager != null)
         {
-            Log("GameManager: Deteniendo puntuación...");
+            scoreManager.StopScoring();
+        }
+        
+        // Comprobar si el jugador puede usar segunda oportunidad
+        if (ReviveManager.Instance != null && ReviveManager.Instance.CanRevive())
+        {
+            Log("GameManager: Revive disponible, mostrando opción...");
+            ReviveManager.Instance.ShowReviveOption(
+                onAccepted: () => OnReviveAccepted(),
+                onDeclined: () => OnReviveDeclined()
+            );
+        }
+        else
+        {
+            // Sin revive disponible, game over directo
+            FinalizeGameOver();
+        }
+    }
+    
+    /// <summary>
+    /// Se llama cuando el jugador acepta revivir
+    /// </summary>
+    private void OnReviveAccepted()
+    {
+        Log("GameManager: Revive aceptado, reanudando partida...");
+        isGameOver = false;
+        
+        // Reanudar scoring
+        if (scoreManager != null)
+        {
+            scoreManager.ResumeScoring();
+        }
+        
+        // Buscar nuevo player (fue recreado por ReviveManager)
+        StartCoroutine(FindPlayerDelayed());
+    }
+    
+    /// <summary>
+    /// Se llama cuando el jugador declina revivir
+    /// </summary>
+    private void OnReviveDeclined()
+    {
+        Log("GameManager: Revive declinado, procediendo con GameOver...");
+        FinalizeGameOver();
+    }
+    
+    /// <summary>
+    /// Finaliza el GameOver: guarda puntuación, analytics, carga escena
+    /// </summary>
+    private void FinalizeGameOver()
+    {
+        float playTime = 0f;
+        int score = 0;
+        int highScore = 0;
+        
+        if (scoreManager != null)
+        {
+            Log("GameManager: Guardando puntuación...");
             score = scoreManager.GetCurrentScore();
             highScore = scoreManager.GetHighScore();
-            playTime = Time.timeSinceLevelLoad; // Tiempo de juego aproximado
-            scoreManager.StopScoring();
-            Log("GameManager: Guardando puntuación...");
+            playTime = Time.timeSinceLevelLoad;
             scoreManager.SaveHighScore();
         }
         else
@@ -181,6 +231,12 @@ public class GameManager : MonoBehaviour
         if (StatisticsManager.Instance != null)
         {
             StatisticsManager.Instance.StartTrackingGame();
+        }
+        
+        // Resetear estado de revive para la nueva partida
+        if (ReviveManager.Instance != null)
+        {
+            ReviveManager.Instance.ResetForNewGame();
         }
     }
     

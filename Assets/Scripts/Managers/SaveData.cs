@@ -212,6 +212,76 @@ public class SaveData
             if (statsFixed) wasFixed = true;
         }
         
+        // Validar diccionarios (pueden ser null después de deserialización)
+        if (skinUnlocks == null)
+        {
+            skinUnlocks = new Dictionary<string, bool>();
+            wasFixed = true;
+        }
+        
+        if (missionProgress == null)
+        {
+            missionProgress = new Dictionary<string, MissionProgressData>();
+            wasFixed = true;
+        }
+        
+        if (leaderboardEntries == null)
+        {
+            leaderboardEntries = new List<LeaderboardEntry>();
+            wasFixed = true;
+        }
+        
+        // Validar límites de leaderboard (máximo 100 entradas para evitar memoria excesiva)
+        const int MAX_LEADERBOARD_ENTRIES = 100;
+        if (leaderboardEntries.Count > MAX_LEADERBOARD_ENTRIES)
+        {
+            // Mantener solo las mejores entradas
+            leaderboardEntries.Sort((a, b) => b.score.CompareTo(a.score));
+            leaderboardEntries = leaderboardEntries.GetRange(0, MAX_LEADERBOARD_ENTRIES);
+            wasFixed = true;
+        }
+        
+        // Validar que las entradas del leaderboard tengan valores válidos
+        for (int i = leaderboardEntries.Count - 1; i >= 0; i--)
+        {
+            var entry = leaderboardEntries[i];
+            if (entry == null || entry.score < 0 || entry.score > 999999999)
+            {
+                leaderboardEntries.RemoveAt(i);
+                wasFixed = true;
+            }
+            else if (string.IsNullOrEmpty(entry.playerName))
+            {
+                entry.playerName = "Jugador";
+                wasFixed = true;
+            }
+            else if (entry.playerName.Length > 20)
+            {
+                entry.playerName = entry.playerName.Substring(0, 20);
+                wasFixed = true;
+            }
+        }
+        
+        // Validar saveVersion (debe ser >= 1)
+        const int MIN_SAVE_VERSION = 1;
+        if (saveVersion < MIN_SAVE_VERSION)
+        {
+            LogWarning($"[SaveData] SaveVersion inválido ({saveVersion}), reseteando a {MIN_SAVE_VERSION}");
+            saveVersion = MIN_SAVE_VERSION;
+            wasFixed = true;
+        }
+        
+        // Validar saveDate (debe ser formato válido o vacío)
+        if (!string.IsNullOrEmpty(saveDate))
+        {
+            // Intentar validar formato de fecha (yyyy-MM-dd HH:mm:ss o similar)
+            if (saveDate.Length > 50) // Fecha demasiado larga
+            {
+                saveDate = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                wasFixed = true;
+            }
+        }
+        
         return wasFixed;
     }
 }

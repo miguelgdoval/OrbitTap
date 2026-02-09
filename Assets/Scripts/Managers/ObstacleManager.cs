@@ -758,6 +758,12 @@ public class ObstacleManager : MonoBehaviour
     /// </summary>
     private void CheckForNearMisses()
     {
+        // Re-buscar player si la referencia se perdió (ej: después de un revive)
+        if (playerOrbitRef == null)
+        {
+            playerOrbitRef = FindFirstObjectByType<PlayerOrbit>();
+            playerOrbit = playerOrbitRef;
+        }
         if (playerOrbitRef == null || center == null) return;
         
         GameObject player = playerOrbitRef.gameObject;

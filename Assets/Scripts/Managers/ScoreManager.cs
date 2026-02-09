@@ -51,6 +51,15 @@ public class ScoreManager : MonoBehaviour
     {
         isGameOver = true;
     }
+    
+    /// <summary>
+    /// Reanuda el scoring después de un revive
+    /// </summary>
+    public void ResumeScoring()
+    {
+        isGameOver = false;
+        Log("[ScoreManager] Scoring reanudado (revive)");
+    }
 
     public void SaveHighScore()
     {

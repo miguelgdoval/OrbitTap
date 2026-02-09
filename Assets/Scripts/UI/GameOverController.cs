@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using static LogHelper;
 
 public class GameOverController : MonoBehaviour
@@ -12,6 +13,11 @@ public class GameOverController : MonoBehaviour
     private Text highScoreText;
     private Button shareButton;
     private GameObject copyMessageObj;
+    
+    private float inputDelay = 0.8f; // Delay antes de aceptar input para volver al menú
+    private float timeSinceStart = 0f;
+    private bool canAcceptInput = false;
+    private bool isNavigating = false; // Prevenir múltiples navegaciones
 
     private void Awake()
     {
@@ -130,6 +136,14 @@ public class GameOverController : MonoBehaviour
             canvas.AddComponent<CanvasScaler>();
             canvas.AddComponent<GraphicRaycaster>();
             canvas.layer = 5; // UI layer
+            
+            // Asegurar EventSystem para que los botones funcionen
+            if (FindFirstObjectByType<EventSystem>() == null)
+            {
+                GameObject eventSystemObj = new GameObject("EventSystem");
+                eventSystemObj.AddComponent<EventSystem>();
+                eventSystemObj.AddComponent<StandaloneInputModule>();
+            }
 
             RectTransform canvasRect = canvas.GetComponent<RectTransform>();
             canvasRect.anchorMin = Vector2.zero;
@@ -153,6 +167,7 @@ public class GameOverController : MonoBehaviour
             scoreText.fontSize = 40;
             scoreText.color = CosmicTheme.SoftGold; // Dorado suave
             scoreText.alignment = TextAnchor.MiddleCenter;
+            scoreText.raycastTarget = false; // No bloquear toques
             
             // Aplicar alto contraste si está habilitado
             AccessibilityHelper.ApplyAccessibilityToText(scoreText);
@@ -179,6 +194,7 @@ public class GameOverController : MonoBehaviour
             highScoreText.fontSize = 35;
             highScoreText.color = CosmicTheme.CelestialBlue; // Azul celeste
             highScoreText.alignment = TextAnchor.MiddleCenter;
+            highScoreText.raycastTarget = false; // No bloquear toques
             
             // Aplicar alto contraste si está habilitado
             AccessibilityHelper.ApplyAccessibilityToText(highScoreText);
@@ -206,6 +222,7 @@ public class GameOverController : MonoBehaviour
             tapText.fontSize = 30;
             tapText.color = CosmicTheme.EtherealLila; // Rosa-lila etéreo
             tapText.alignment = TextAnchor.MiddleCenter;
+            tapText.raycastTarget = false; // No bloquear toques
             
             // Aplicar alto contraste si está habilitado
             AccessibilityHelper.ApplyAccessibilityToText(tapText);
@@ -245,6 +262,7 @@ public class GameOverController : MonoBehaviour
         shareText.fontSize = 24;
         shareText.color = Color.white;
         shareText.alignment = TextAnchor.MiddleCenter;
+        shareText.raycastTarget = false; // El raycast lo maneja el Image del botón padre
         
         // Aplicar alto contraste si está habilitado
         AccessibilityHelper.ApplyAccessibilityToText(shareText);
@@ -283,6 +301,23 @@ public class GameOverController : MonoBehaviour
 
     private void Update()
     {
+        // Esperar antes de aceptar input (evitar toques accidentales durante transición)
+        if (!canAcceptInput)
+        {
+            timeSinceStart += Time.deltaTime;
+            if (timeSinceStart >= inputDelay)
+            {
+                canAcceptInput = true;
+            }
+            return;
+        }
+        
+        // No procesar si ya estamos navegando
+        if (isNavigating) return;
+        
+        // No procesar si el toque está sobre un botón de UI (ej: Share)
+        if (IsPointerOverUI()) return;
+        
         // Detect touch or click to go to main menu
         if (Input.touchCount > 0)
         {
@@ -296,6 +331,21 @@ public class GameOverController : MonoBehaviour
         {
             GoToMainMenu();
         }
+    }
+    
+    /// <summary>
+    /// Comprueba si el toque/click está sobre un elemento de UI (ej: botón Share)
+    /// </summary>
+    private bool IsPointerOverUI()
+    {
+        if (EventSystem.current == null) return false;
+        
+        if (Input.touchCount > 0)
+        {
+            return EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+        }
+        
+        return EventSystem.current.IsPointerOverGameObject();
     }
 
     private void UpdateUI()
@@ -317,6 +367,10 @@ public class GameOverController : MonoBehaviour
 
     public void GoToMainMenu()
     {
+        // Prevenir múltiples llamadas
+        if (isNavigating) return;
+        isNavigating = true;
+        
         // Limpiar elementos visuales de la escena Game antes de volver al menú
         GameManager.CleanupGameScene();
         

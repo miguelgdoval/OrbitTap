@@ -498,6 +498,14 @@ public class GameInitializer : MonoBehaviour
             
             canvas.AddComponent<GraphicRaycaster>();
             canvas.layer = 5; // UI layer
+            
+            // Asegurar que existe un EventSystem para los botones de UI (revive, etc.)
+            if (FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
+            {
+                GameObject eventSystemObj = new GameObject("EventSystem");
+                eventSystemObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
+                eventSystemObj.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+            }
 
             RectTransform canvasRect = canvas.GetComponent<RectTransform>();
             canvasRect.anchorMin = Vector2.zero;

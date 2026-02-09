@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using static LogHelper;
 
@@ -196,7 +197,22 @@ public class SaveDataManager : MonoBehaviour
                 string json = PlayerPrefs.GetString(SAVE_DATA_KEY);
                 if (!string.IsNullOrEmpty(json))
                 {
-                    currentSaveData = JsonUtility.FromJson<SaveData>(json);
+                    // Validar que el JSON no esté corrupto antes de parsear
+                    if (!IsValidJson(json))
+                    {
+                        LogError("[SaveDataManager] JSON corrupto detectado en datos principales, intentando backup...");
+                        return LoadFromBackup();
+                    }
+                    
+                    try
+                    {
+                        currentSaveData = JsonUtility.FromJson<SaveData>(json);
+                    }
+                    catch (Exception jsonEx)
+                    {
+                        LogError($"[SaveDataManager] Error al parsear JSON: {jsonEx.Message}");
+                        return LoadFromBackup();
+                    }
                     
                     if (currentSaveData != null)
                     {
@@ -270,9 +286,29 @@ public class SaveDataManager : MonoBehaviour
                     string json = PlayerPrefs.GetString(backupKey);
                     if (!string.IsNullOrEmpty(json))
                     {
-                        currentSaveData = JsonUtility.FromJson<SaveData>(json);
-                        if (currentSaveData != null && currentSaveData.ValidateAndFix())
+                        // Validar JSON antes de parsear
+                        if (!IsValidJson(json))
                         {
+                            LogWarning($"[SaveDataManager] Backup {i} tiene JSON corrupto, intentando siguiente backup...");
+                            continue;
+                        }
+                        
+                        currentSaveData = JsonUtility.FromJson<SaveData>(json);
+                        if (currentSaveData != null)
+                        {
+                            // Validar y corregir datos del backup
+                            bool wasFixed = currentSaveData.ValidateAndFix();
+                            if (wasFixed)
+                            {
+                                LogWarning($"[SaveDataManager] Se corrigieron datos inválidos en backup {i}");
+                            }
+                            
+                            // Migrar si es necesario
+                            if (currentSaveData.saveVersion < CURRENT_SAVE_VERSION)
+                            {
+                                MigrateSaveData(currentSaveData);
+                            }
+                            
                             Log($"[SaveDataManager] Datos restaurados desde backup {i}");
                             isDirty = true; // Marcar como sucio para guardar los datos restaurados
                             OnSaveDataLoaded?.Invoke(currentSaveData);
@@ -289,6 +325,43 @@ public class SaveDataManager : MonoBehaviour
         
         LogError("[SaveDataManager] No se pudieron cargar datos ni backups, creando datos nuevos");
         return false;
+    }
+    
+    /// <summary>
+    /// Valida que un string sea JSON válido antes de parsear
+    /// </summary>
+    private bool IsValidJson(string json)
+    {
+        if (string.IsNullOrEmpty(json)) return false;
+        
+        // Verificar que tenga estructura básica de JSON
+        json = json.Trim();
+        if (!json.StartsWith("{") || !json.EndsWith("}"))
+        {
+            return false;
+        }
+        
+        // Verificar que no tenga caracteres nulos o inválidos
+        if (json.Contains("\0"))
+        {
+            return false;
+        }
+        
+        // Verificar balance de llaves y corchetes básico
+        int openBraces = 0;
+        int closeBraces = 0;
+        foreach (char c in json)
+        {
+            if (c == '{') openBraces++;
+            else if (c == '}') closeBraces++;
+        }
+        
+        if (openBraces != closeBraces)
+        {
+            return false;
+        }
+        
+        return true;
     }
     
     /// <summary>
@@ -420,25 +493,88 @@ public class SaveDataManager : MonoBehaviour
     
     /// <summary>
     /// Migra datos de versiones antiguas a la versión actual
+    /// Maneja migraciones incrementales y datos corruptos
     /// </summary>
     private void MigrateSaveData(SaveData data)
     {
+        if (data == null)
+        {
+            LogError("[SaveDataManager] Intentando migrar datos null, abortando");
+            return;
+        }
+        
         if (data.saveVersion >= CURRENT_SAVE_VERSION)
         {
             return; // Ya está en la versión actual
         }
         
-        Log($"[SaveDataManager] Migrando datos de versión {data.saveVersion} a {CURRENT_SAVE_VERSION}");
+        int originalVersion = data.saveVersion;
+        Log($"[SaveDataManager] Migrando datos de versión {originalVersion} a {CURRENT_SAVE_VERSION}");
         
-        // Aquí se pueden agregar migraciones específicas por versión
-        // Por ejemplo:
-        // if (data.saveVersion < 2)
-        // {
-        //     // Migrar datos de versión 1 a 2
-        // }
-        
-        data.saveVersion = CURRENT_SAVE_VERSION;
-        isDirty = true;
+        try
+        {
+            // Migración incremental: aplicar cambios paso a paso
+            // Versión 0 -> 1: Asegurar que todos los campos nuevos existan
+            if (data.saveVersion < 1)
+            {
+                // Inicializar campos que pueden no existir en versiones antiguas
+                if (data.statistics == null)
+                {
+                    data.statistics = new PlayerStatistics();
+                }
+                
+                if (data.skinUnlocks == null)
+                {
+                    data.skinUnlocks = new Dictionary<string, bool>();
+                }
+                
+                if (data.missionProgress == null)
+                {
+                    data.missionProgress = new Dictionary<string, MissionProgressData>();
+                }
+                
+                if (data.leaderboardEntries == null)
+                {
+                    data.leaderboardEntries = new List<LeaderboardEntry>();
+                }
+                
+                data.saveVersion = 1;
+            }
+            
+            // Aquí se pueden agregar más migraciones cuando se añadan nuevas versiones
+            // Ejemplo para futuras versiones:
+            // if (data.saveVersion < 2)
+            // {
+            //     // Migrar datos de versión 1 a 2
+            //     // Ejemplo: convertir formato antiguo a nuevo
+            //     data.saveVersion = 2;
+            // }
+            
+            // Validar datos después de la migración
+            bool wasFixed = data.ValidateAndFix();
+            if (wasFixed)
+            {
+                LogWarning("[SaveDataManager] Se corrigieron datos inválidos durante la migración");
+            }
+            
+            // Asegurar que la versión final sea la correcta
+            if (data.saveVersion != CURRENT_SAVE_VERSION)
+            {
+                LogWarning($"[SaveDataManager] Versión después de migración ({data.saveVersion}) no coincide con versión actual ({CURRENT_SAVE_VERSION}), corrigiendo");
+                data.saveVersion = CURRENT_SAVE_VERSION;
+            }
+            
+            isDirty = true;
+            Log($"[SaveDataManager] Migración completada exitosamente de versión {originalVersion} a {CURRENT_SAVE_VERSION}");
+        }
+        catch (Exception e)
+        {
+            LogError($"[SaveDataManager] Error durante la migración: {e.Message}");
+            // Intentar recuperar: validar y corregir datos
+            data.ValidateAndFix();
+            data.saveVersion = CURRENT_SAVE_VERSION;
+            isDirty = true;
+        }
     }
     
     /// <summary>

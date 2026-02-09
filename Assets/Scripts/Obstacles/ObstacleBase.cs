@@ -95,6 +95,12 @@ public class ObstacleBase : MonoBehaviour
         
         if (isPlayer)
         {
+            // Comprobar invulnerabilidad (post-revive)
+            if (ReviveManager.Instance != null && ReviveManager.Instance.IsInvulnerable())
+            {
+                return; // Jugador es invulnerable, ignorar colisión
+            }
+            
             hasTriggeredCollision = true; // Marcar para evitar múltiples triggers
             
             Log("Colisión detectada con Player! GameObject: " + collision.gameObject.name);
@@ -186,6 +192,12 @@ public class ObstacleBase : MonoBehaviour
         
         if (isPlayer)
         {
+            // Comprobar invulnerabilidad (post-revive)
+            if (ReviveManager.Instance != null && ReviveManager.Instance.IsInvulnerable())
+            {
+                return; // Jugador es invulnerable, ignorar colisión
+            }
+            
             Log("Colisión normal detectada con Player!");
             
             // CRÍTICO: Capturar la posición del PLANETA (punto de colisión real)

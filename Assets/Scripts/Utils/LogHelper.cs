@@ -99,5 +99,58 @@ public static class LogHelper
     {
         enableLogs = true;
     }
+    
+    /// <summary>
+    /// Sanitiza información sensible en logs (para producción)
+    /// Oculta parcialmente Game IDs, API keys, etc.
+    /// </summary>
+    public static string SanitizeLogMessage(string message)
+    {
+        if (string.IsNullOrEmpty(message)) return message;
+        
+        // En producción, ocultar información sensible
+#if !UNITY_EDITOR
+        // Ocultar Game IDs completos (mostrar solo últimos 3 dígitos)
+        message = System.Text.RegularExpressions.Regex.Replace(
+            message, 
+            @"(\d{4,})", 
+            m => m.Value.Length > 6 ? "***" + m.Value.Substring(m.Value.Length - 3) : "***"
+        );
+        
+        // Ocultar posibles API keys (patrones comunes)
+        message = System.Text.RegularExpressions.Regex.Replace(
+            message,
+            @"AIza[0-9A-Za-z_-]{35}",
+            "AIza***"
+        );
+        
+        // Ocultar posibles tokens
+        message = System.Text.RegularExpressions.Regex.Replace(
+            message,
+            @"[A-Za-z0-9]{32,}",
+            m => m.Value.Length > 40 ? "***" + m.Value.Substring(m.Value.Length - 4) : "***"
+        );
+#endif
+        
+        return message;
+    }
+    
+    /// <summary>
+    /// Log seguro que sanitiza información sensible automáticamente
+    /// </summary>
+    public static void LogSafe(object message)
+    {
+        string sanitized = SanitizeLogMessage(message?.ToString() ?? "");
+        Log(sanitized);
+    }
+    
+    /// <summary>
+    /// Log de error seguro que sanitiza información sensible
+    /// </summary>
+    public static void LogErrorSafe(object message)
+    {
+        string sanitized = SanitizeLogMessage(message?.ToString() ?? "");
+        LogError(sanitized);
+    }
 }
 

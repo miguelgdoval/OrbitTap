@@ -47,6 +47,7 @@ public class MainMenuController : MonoBehaviour
     
     private MenuSection currentSection = MenuSection.Play;
     private CurrencyManager currencyManager;
+    private CanvasGroup canvasGroup; // Para bloquear input durante transiciones de escena
     
     private void Awake()
     {
@@ -80,6 +81,9 @@ public class MainMenuController : MonoBehaviour
         CreateUI();
         CreatePlayerDemo();
         
+        // Bloquear input brevemente para evitar que toques de la escena anterior activen botones
+        StartCoroutine(BlockInputDuringSceneTransition());
+        
         // Mostrar política de privacidad si es la primera vez (después de crear UI)
         StartCoroutine(ShowPrivacyPolicyDelayed());
         
@@ -96,6 +100,44 @@ public class MainMenuController : MonoBehaviour
         
         // Actualizar badge inicial
         StartCoroutine(UpdateMissionsBadgeDelayed());
+    }
+    
+    /// <summary>
+    /// Bloquea la interacción con botones brevemente al cargar la escena
+    /// para evitar que toques de la escena anterior (Game Over) activen botones.
+    /// </summary>
+    private System.Collections.IEnumerator BlockInputDuringSceneTransition()
+    {
+        // Añadir CanvasGroup al canvas si no existe
+        if (canvas != null)
+        {
+            canvasGroup = canvas.GetComponent<CanvasGroup>();
+            if (canvasGroup == null)
+            {
+                canvasGroup = canvas.AddComponent<CanvasGroup>();
+            }
+            
+            // Bloquear interacción inmediatamente
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+        }
+        
+        // Esperar hasta que no haya toques activos + un pequeño margen
+        yield return null; // Esperar al menos 1 frame
+        yield return null; // Esperar otro frame para que el toque se procese
+        
+        // Esperar a que se levanten todos los dedos
+        while (Input.touchCount > 0 || Input.GetMouseButton(0))
+        {
+            yield return null;
+        }
+        
+        // Reactivar interacción
+        if (canvasGroup != null)
+        {
+            canvasGroup.interactable = true;
+            canvasGroup.blocksRaycasts = true;
+        }
     }
     
     private System.Collections.IEnumerator SubscribeToMissionEventsDelayed()

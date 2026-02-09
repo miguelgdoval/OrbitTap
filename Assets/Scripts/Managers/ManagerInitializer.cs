@@ -34,6 +34,7 @@ public static class ManagerInitializer
         EnsureManager<ReviveManager>("ReviveManager");
         EnsureManager<PowerUpManager>("PowerUpManager");
         EnsureManager<ComboManager>("ComboManager");
+        EnsureManager<GameFeedbackManager>("GameFeedbackManager");
         
         // 5. Managers de servicios externos
         EnsureManager<AdManager>("AdManager");

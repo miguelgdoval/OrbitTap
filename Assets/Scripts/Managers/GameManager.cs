@@ -311,6 +311,12 @@ public class GameManager : MonoBehaviour
         {
             ComboManager.Instance.ResetCombo();
         }
+        
+        // Resetear milestones de feedback para nueva partida
+        if (GameFeedbackManager.Instance != null)
+        {
+            GameFeedbackManager.Instance.ResetMilestones();
+        }
     }
     
     private System.Collections.IEnumerator LoadGameOverSceneDelayed()

@@ -189,6 +189,12 @@ public class PowerUp : MonoBehaviour
         CreateCollectionFeedback(worldPos, color);
         SpawnCollectionParticles(worldPos, color);
         
+        // Feedback háptico
+        if (GameFeedbackManager.Instance != null)
+        {
+            GameFeedbackManager.Instance.OnPowerUpCollected();
+        }
+        
         // Destruir inmediatamente
         Destroy(gameObject);
     }

@@ -127,6 +127,12 @@ public class PlanetDestructionController : MonoBehaviour
         
         isDestroying = true;
         
+        // Feedback visual y háptico de muerte
+        if (GameFeedbackManager.Instance != null)
+        {
+            GameFeedbackManager.Instance.OnPlayerDeath();
+        }
+        
         // CRÍTICO: Capturar la posición ACTUAL del planeta ANTES de hacer cualquier cosa
         // Esto debe ser lo PRIMERO que hacemos para asegurar que tenemos la posición exacta
         Vector3 exactPosition = transform.position;

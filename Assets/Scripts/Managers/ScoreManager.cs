@@ -48,12 +48,19 @@ public class ScoreManager : MonoBehaviour
             scoreText.text = Mathf.FloorToInt(score).ToString();
         }
         
+        int currentScoreInt = Mathf.FloorToInt(score);
+        
         // Reportar progreso de puntuación a MissionManager
         if (MissionManager.Instance != null)
         {
-            int currentScoreInt = Mathf.FloorToInt(score);
             MissionManager.Instance.ReportValue(MissionObjectiveType.ReachScore, currentScoreInt);
             MissionManager.Instance.ReportValue(MissionObjectiveType.SurviveTime, currentScoreInt);
+        }
+        
+        // Verificar milestones de puntuación (¡50 pts!, ¡Nuevo récord!, etc.)
+        if (GameFeedbackManager.Instance != null)
+        {
+            GameFeedbackManager.Instance.CheckScoreMilestones(currentScoreInt, highScore);
         }
     }
     

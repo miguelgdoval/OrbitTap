@@ -235,6 +235,14 @@ public class GameInitializer : MonoBehaviour
         // Crear HUD del Combo (arriba a la izquierda)
         CreateComboHUD(canvasObj);
         
+        // Crear GameFeedbackManager (feedback visual y háptico)
+        GameObject feedbackManager = GameObject.Find("GameFeedbackManager");
+        if (feedbackManager == null)
+        {
+            feedbackManager = new GameObject("GameFeedbackManager");
+            feedbackManager.AddComponent<GameFeedbackManager>();
+        }
+        
         // Los managers core ya fueron inicializados al inicio de InitializeGame()
         // Solo crear managers específicos del juego aquí
         

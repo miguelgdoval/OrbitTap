@@ -114,6 +114,12 @@ public class ComboManager : MonoBehaviour
             if (popCoroutine != null) StopCoroutine(popCoroutine);
             popCoroutine = StartCoroutine(PopMultiplierTextBig());
             Log($"[ComboManager] ¡Multiplicador subió! ×{CurrentMultiplier:F1} (racha: {currentStreak})");
+            
+            // Notificación de milestone de combo (cada 6 obstáculos para no saturar)
+            if (currentStreak % (obstaclesPerMultiplierStep * 2) == 0 && GameFeedbackManager.Instance != null)
+            {
+                GameFeedbackManager.Instance.OnComboMilestone(currentStreak, CurrentMultiplier);
+            }
         }
     }
     

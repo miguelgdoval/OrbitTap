@@ -405,6 +405,12 @@ public class PowerUpManager : MonoBehaviour
         
         // Efecto visual de impacto en el escudo
         StartCoroutine(ShieldImpactEffect(impactPosition));
+        
+        // Feedback visual (flash + shake) y háptico
+        if (GameFeedbackManager.Instance != null)
+        {
+            GameFeedbackManager.Instance.OnShieldBlock(impactPosition);
+        }
     }
     
     /// <summary>

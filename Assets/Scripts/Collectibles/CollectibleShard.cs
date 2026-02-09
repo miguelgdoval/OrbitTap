@@ -248,6 +248,12 @@ public class CollectibleShard : MonoBehaviour
         // Partículas de colección
         SpawnCollectionParticles(worldPos, feedbackColor);
         
+        // Feedback háptico
+        if (GameFeedbackManager.Instance != null)
+        {
+            GameFeedbackManager.Instance.OnShardCollected(value);
+        }
+        
         // Destruir el shard inmediatamente
         Destroy(gameObject);
     }

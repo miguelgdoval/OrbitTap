@@ -809,6 +809,12 @@ public class ObstacleManager : MonoBehaviour
                         {
                             ComboManager.Instance.OnNearMiss();
                         }
+                        
+                        // Feedback visual y háptico de near miss
+                        if (GameFeedbackManager.Instance != null)
+                        {
+                            GameFeedbackManager.Instance.OnNearMiss(playerPos);
+                        }
                     }
                 }
             }

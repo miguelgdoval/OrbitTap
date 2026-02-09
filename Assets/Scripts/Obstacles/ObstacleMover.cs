@@ -50,8 +50,15 @@ public class ObstacleMover : MonoBehaviour
             return;
         }
 
+        // Obtener multiplicador de velocidad (slowmo power-up)
+        float speedMultiplier = 1f;
+        if (PowerUpManager.Instance != null)
+        {
+            speedMultiplier = PowerUpManager.Instance.GetObstacleSpeedMultiplier();
+        }
+        
         // Mover el obstáculo en la dirección especificada
-        Vector3 newPos = transform.position + (Vector3)(direction.normalized * speed * Time.deltaTime);
+        Vector3 newPos = transform.position + (Vector3)(direction.normalized * speed * speedMultiplier * Time.deltaTime);
         // Mantener Z = 0 siempre
         transform.position = new Vector3(newPos.x, newPos.y, 0f);
 

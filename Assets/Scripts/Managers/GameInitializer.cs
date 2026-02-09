@@ -209,9 +209,20 @@ public class GameInitializer : MonoBehaviour
             collectibleManager.AddComponent<CollectibleManager>();
         }
         
+        // Crear PowerUpManager (power-ups temporales en la órbita)
+        GameObject powerUpManager = GameObject.Find("PowerUpManager");
+        if (powerUpManager == null)
+        {
+            powerUpManager = new GameObject("PowerUpManager");
+            powerUpManager.AddComponent<PowerUpManager>();
+        }
+        
         // Crear UI de Shards recogidos (arriba a la derecha)
         GameObject canvasObj = GameObject.Find("Canvas");
         CreateShardsUI(canvasObj);
+        
+        // Crear HUD de Power-Ups (debajo del score)
+        CreatePowerUpHUD(canvasObj);
         
         // Los managers core ya fueron inicializados al inicio de InitializeGame()
         // Solo crear managers específicos del juego aquí
@@ -651,6 +662,19 @@ public class GameInitializer : MonoBehaviour
         if (CollectibleManager.Instance != null)
         {
             CollectibleManager.Instance.SetShardsUI(shardsText);
+        }
+    }
+    
+    /// <summary>
+    /// Crea el HUD del Power-Up activo (barra de duración debajo del score)
+    /// </summary>
+    private void CreatePowerUpHUD(GameObject canvas)
+    {
+        if (canvas == null) return;
+        
+        if (PowerUpManager.Instance != null)
+        {
+            PowerUpManager.Instance.CreateHUDInCanvas(canvas);
         }
     }
     

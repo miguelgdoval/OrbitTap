@@ -135,6 +135,12 @@ public class GameManager : MonoBehaviour
             CollectibleManager.Instance.StopSpawning();
         }
         
+        // Detener spawning de power-ups
+        if (PowerUpManager.Instance != null)
+        {
+            PowerUpManager.Instance.StopSpawning();
+        }
+        
         // Comprobar si el jugador puede usar segunda oportunidad
         if (ReviveManager.Instance != null && ReviveManager.Instance.CanRevive())
         {
@@ -169,6 +175,12 @@ public class GameManager : MonoBehaviour
         if (CollectibleManager.Instance != null)
         {
             CollectibleManager.Instance.StartSpawning();
+        }
+        
+        // Reanudar power-ups
+        if (PowerUpManager.Instance != null)
+        {
+            PowerUpManager.Instance.ResumeSpawning();
         }
         
         // Buscar nuevo player (fue recreado por ReviveManager)
@@ -216,6 +228,12 @@ public class GameManager : MonoBehaviour
         if (StatisticsManager.Instance != null)
         {
             StatisticsManager.Instance.EndTrackingGame();
+        }
+        
+        // Power-ups: Detener spawning y resetear
+        if (PowerUpManager.Instance != null)
+        {
+            PowerUpManager.Instance.ResetSession();
         }
         
         // Coleccionables: Detener spawning y otorgar ganancias
@@ -267,6 +285,13 @@ public class GameManager : MonoBehaviour
         {
             CollectibleManager.Instance.ResetSession();
             CollectibleManager.Instance.StartSpawning();
+        }
+        
+        // Resetear e iniciar power-ups
+        if (PowerUpManager.Instance != null)
+        {
+            PowerUpManager.Instance.ResetSession();
+            PowerUpManager.Instance.StartSpawning();
         }
     }
     

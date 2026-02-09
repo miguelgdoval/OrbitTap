@@ -30,6 +30,20 @@ public class ObstacleCollisionDetector : MonoBehaviour
         
         if (isPlayer)
         {
+            // Comprobar invulnerabilidad (post-revive)
+            if (ReviveManager.Instance != null && ReviveManager.Instance.IsInvulnerable())
+            {
+                return; // Jugador es invulnerable, ignorar colisión
+            }
+            
+            // Comprobar escudo (power-up)
+            if (PowerUpManager.Instance != null && PowerUpManager.Instance.IsShieldActive())
+            {
+                Log("[ObstacleCollisionDetector] Escudo bloqueó colisión (HandleCollision)");
+                PowerUpManager.Instance.OnShieldBlocked(transform.position);
+                return; // Escudo activo, ignorar colisión
+            }
+            
             hasTriggeredCollision = true; // Marcar para evitar múltiples triggers
             
             Log("Colisión detectada en hijo del obstáculo! GameObject: " + gameObject.name);
@@ -147,6 +161,20 @@ public class ObstacleCollisionDetector : MonoBehaviour
         
         if (isPlayer)
         {
+            // Comprobar invulnerabilidad (post-revive)
+            if (ReviveManager.Instance != null && ReviveManager.Instance.IsInvulnerable())
+            {
+                return; // Jugador es invulnerable, ignorar colisión
+            }
+            
+            // Comprobar escudo (power-up)
+            if (PowerUpManager.Instance != null && PowerUpManager.Instance.IsShieldActive())
+            {
+                Log("[ObstacleCollisionDetector] Escudo bloqueó colisión (OnCollisionEnter2D)");
+                PowerUpManager.Instance.OnShieldBlocked(transform.position);
+                return; // Escudo activo, ignorar colisión
+            }
+            
             hasTriggeredCollision = true; // Marcar para evitar múltiples triggers
             
             Log("Colisión normal detectada en hijo del obstáculo! GameObject: " + gameObject.name);

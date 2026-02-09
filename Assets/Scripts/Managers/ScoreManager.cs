@@ -28,7 +28,13 @@ public class ScoreManager : MonoBehaviour
         // No aumentar la puntuación si el juego terminó
         if (isGameOver) return;
         
-        score += Time.deltaTime;
+        // Aplicar multiplicador de power-up (×2 con Double Points)
+        float scoreMultiplier = 1f;
+        if (PowerUpManager.Instance != null)
+        {
+            scoreMultiplier = PowerUpManager.Instance.GetScoreMultiplier();
+        }
+        score += Time.deltaTime * scoreMultiplier;
 
         if (scoreText != null)
         {

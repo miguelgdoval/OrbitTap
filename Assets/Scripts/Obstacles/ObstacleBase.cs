@@ -101,6 +101,14 @@ public class ObstacleBase : MonoBehaviour
                 return; // Jugador es invulnerable, ignorar colisión
             }
             
+            // Comprobar escudo (power-up)
+            if (PowerUpManager.Instance != null && PowerUpManager.Instance.IsShieldActive())
+            {
+                Log("[ObstacleBase] Escudo bloqueó colisión (HandleCollision)");
+                PowerUpManager.Instance.OnShieldBlocked(transform.position);
+                return; // Escudo activo, ignorar colisión
+            }
+            
             hasTriggeredCollision = true; // Marcar para evitar múltiples triggers
             
             Log("Colisión detectada con Player! GameObject: " + collision.gameObject.name);
@@ -196,6 +204,14 @@ public class ObstacleBase : MonoBehaviour
             if (ReviveManager.Instance != null && ReviveManager.Instance.IsInvulnerable())
             {
                 return; // Jugador es invulnerable, ignorar colisión
+            }
+            
+            // Comprobar escudo (power-up)
+            if (PowerUpManager.Instance != null && PowerUpManager.Instance.IsShieldActive())
+            {
+                Log("[ObstacleBase] Escudo bloqueó colisión (OnCollisionEnter2D)");
+                PowerUpManager.Instance.OnShieldBlocked(transform.position);
+                return; // Escudo activo, ignorar colisión
             }
             
             Log("Colisión normal detectada con Player!");

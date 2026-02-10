@@ -18,15 +18,15 @@ public class ComboManager : MonoBehaviour
     
     [Header("Combo Settings")]
     [Tooltip("Obstáculos necesarios para subir el multiplicador")]
-    public int obstaclesPerMultiplierStep = 3;
+    public int obstaclesPerMultiplierStep = 2;
     [Tooltip("Incremento de multiplicador por paso")]
-    public float multiplierIncrement = 0.1f;
+    public float multiplierIncrement = 0.15f;
     [Tooltip("Multiplicador máximo")]
     public float maxMultiplier = 3.0f;
     [Tooltip("Boost de multiplicador por near miss")]
-    public float nearMissBoost = 0.2f;
+    public float nearMissBoost = 0.25f;
     [Tooltip("Duración del boost de near miss (segundos)")]
-    public float nearMissBoostDuration = 3f;
+    public float nearMissBoostDuration = 4f;
     
     // Estado del combo
     private int currentStreak = 0;
@@ -75,6 +75,12 @@ public class ComboManager : MonoBehaviour
             {
                 nearMissMultiplier = 0f;
                 UpdateHUD();
+                
+                // Notificar al FeverModeManager que el multiplicador bajó
+                if (FeverModeManager.Instance != null)
+                {
+                    FeverModeManager.Instance.OnMultiplierChanged(CurrentMultiplier);
+                }
             }
         }
     }
@@ -103,6 +109,12 @@ public class ComboManager : MonoBehaviour
         baseMultiplier = Mathf.Min(baseMultiplier, maxMultiplier);
         
         UpdateHUD();
+        
+        // Notificar al FeverModeManager del cambio de multiplicador
+        if (FeverModeManager.Instance != null)
+        {
+            FeverModeManager.Instance.OnMultiplierChanged(CurrentMultiplier);
+        }
         
         // Animación de pop cuando sube el streak
         if (popCoroutine != null) StopCoroutine(popCoroutine);
@@ -136,6 +148,12 @@ public class ComboManager : MonoBehaviour
         
         UpdateHUD();
         
+        // Notificar al FeverModeManager del cambio de multiplicador
+        if (FeverModeManager.Instance != null)
+        {
+            FeverModeManager.Instance.OnMultiplierChanged(CurrentMultiplier);
+        }
+        
         // Animación especial de near miss
         if (nearMissPopCoroutine != null) StopCoroutine(nearMissPopCoroutine);
         nearMissPopCoroutine = StartCoroutine(NearMissEffect());
@@ -166,6 +184,12 @@ public class ComboManager : MonoBehaviour
         
         UpdateHUD();
         
+        // Notificar al FeverModeManager que el multiplicador se reseteó
+        if (FeverModeManager.Instance != null)
+        {
+            FeverModeManager.Instance.OnMultiplierChanged(1.0f);
+        }
+        
         // Mostrar HUD
         if (hudRoot != null)
         {
@@ -186,6 +210,12 @@ public class ComboManager : MonoBehaviour
         PlayerPrefs.SetInt("LastComboStreak", currentStreak);
         PlayerPrefs.SetInt("LastBestStreak", bestStreak);
         PlayerPrefs.SetFloat("LastMaxMultiplier", baseMultiplier);
+        
+        // Notificar al FeverModeManager que el multiplicador se reseteó
+        if (FeverModeManager.Instance != null)
+        {
+            FeverModeManager.Instance.OnMultiplierChanged(0f);
+        }
         
         Log($"[ComboManager] Combo detenido. Racha: {currentStreak}, Mejor: {bestStreak}, Max mult: ×{baseMultiplier:F1}");
     }

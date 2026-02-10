@@ -88,11 +88,13 @@
     <Compile Include="Assets/Scripts/Player/FlashEffect.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundDebug.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundSystemAPI.cs" />
+    <Compile Include="Assets/Scripts/Managers/FeverModeManager.cs" />
     <Compile Include="Assets/Scripts/Managers/GameFeedbackManager.cs" />
     <Compile Include="Assets/Scripts/Obstacles/Complex/SpiralFragment.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundLayer.cs" />
     <Compile Include="Assets/Scripts/Player/PlanetDestructionController.cs" />
     <Compile Include="Assets/Scripts/Managers/PauseManager.cs" />
+    <Compile Include="Assets/Scripts/Managers/DangerZoneManager.cs" />
     <Compile Include="Assets/Scripts/UI/MainMenuController.cs" />
     <Compile Include="Assets/Scripts/UI/StatisticsPanel.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/TestBackgroundSystem.cs" />

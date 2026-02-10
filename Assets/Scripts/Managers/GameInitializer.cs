@@ -243,6 +243,22 @@ public class GameInitializer : MonoBehaviour
             feedbackManager.AddComponent<GameFeedbackManager>();
         }
         
+        // Crear DangerZoneManager (oleadas de peligro)
+        GameObject dangerZoneManager = GameObject.Find("DangerZoneManager");
+        if (dangerZoneManager == null)
+        {
+            dangerZoneManager = new GameObject("DangerZoneManager");
+            dangerZoneManager.AddComponent<DangerZoneManager>();
+        }
+        
+        // Crear FeverModeManager (modo fiebre por multiplicador alto)
+        GameObject feverModeManager = GameObject.Find("FeverModeManager");
+        if (feverModeManager == null)
+        {
+            feverModeManager = new GameObject("FeverModeManager");
+            feverModeManager.AddComponent<FeverModeManager>();
+        }
+        
         // Los managers core ya fueron inicializados al inicio de InitializeGame()
         // Solo crear managers específicos del juego aquí
         

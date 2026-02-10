@@ -1491,6 +1491,16 @@ public class ObstacleManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Fuerza el spawn de un obstáculo inmediatamente (usado por DangerZoneManager).
+    /// Ignora el límite de obstáculos en pantalla y los timers.
+    /// </summary>
+    public void ForceSpawnObstacle()
+    {
+        Log("[ObstacleManager] ForceSpawnObstacle llamado (DangerZone)");
+        SpawnObstacle();
+    }
+    
+    /// <summary>
     /// Resetea el flag de primer obstáculo spawneado (útil cuando el tutorial termina)
     /// </summary>
     public void ResetFirstObstacleSpawned()

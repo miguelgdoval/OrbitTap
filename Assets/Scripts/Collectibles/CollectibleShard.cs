@@ -229,21 +229,44 @@ public class CollectibleShard : MonoBehaviour
     {
         isCollected = true;
         
+        // Aplicar multiplicador de Fever Mode (shards valen doble)
+        int finalValue = value;
+        bool isFeverActive = false;
+        if (FeverModeManager.Instance != null && FeverModeManager.Instance.IsFeverActive)
+        {
+            finalValue = Mathf.RoundToInt(value * FeverModeManager.Instance.GetShardValueMultiplier());
+            isFeverActive = true;
+        }
+        
+        // Sobreescribir el valor para que el manager registre el valor con bonus
+        int originalValue = value;
+        value = finalValue;
+        
         // Notificar al manager
         if (CollectibleManager.Instance != null)
         {
             CollectibleManager.Instance.OnShardCollected(this);
         }
         
+        // Restaurar valor original (por si acaso)
+        value = originalValue;
+        
         // Guardar posición ANTES de destruir
         Vector3 worldPos = transform.position;
         Color feedbackColor = rarity == ShardRarity.UltraRare ? UltraRareColor :
                               rarity == ShardRarity.Rare ? RareColor : NormalColor;
+        
+        // Si Fever activo, usar color dorado para el feedback
+        if (isFeverActive)
+        {
+            feedbackColor = new Color(1f, 0.85f, 0.2f, 1f); // Dorado fever
+        }
+        
         int feedbackSize = rarity == ShardRarity.UltraRare ? 28 : 
                            rarity == ShardRarity.Rare ? 24 : 20;
         
         // Crear feedback que se auto-anima (NO depende de esta coroutine)
-        CreateSelfAnimatingFeedback(worldPos, value, feedbackColor, feedbackSize);
+        CreateSelfAnimatingFeedback(worldPos, finalValue, feedbackColor, feedbackSize);
         
         // Partículas de colección
         SpawnCollectionParticles(worldPos, feedbackColor);

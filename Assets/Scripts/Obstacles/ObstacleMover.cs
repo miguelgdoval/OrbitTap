@@ -57,6 +57,12 @@ public class ObstacleMover : MonoBehaviour
             speedMultiplier = PowerUpManager.Instance.GetObstacleSpeedMultiplier();
         }
         
+        // Aplicar multiplicador de Danger Zone (obstáculos más rápidos durante oleadas)
+        if (DangerZoneManager.Instance != null)
+        {
+            speedMultiplier *= DangerZoneManager.Instance.GetDangerSpeedMultiplier();
+        }
+        
         // Mover el obstáculo en la dirección especificada
         Vector3 newPos = transform.position + (Vector3)(direction.normalized * speed * speedMultiplier * Time.deltaTime);
         // Mantener Z = 0 siempre

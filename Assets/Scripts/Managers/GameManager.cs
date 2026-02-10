@@ -147,6 +147,18 @@ public class GameManager : MonoBehaviour
             ComboManager.Instance.StopCombo();
         }
         
+        // Detener Danger Zone
+        if (DangerZoneManager.Instance != null)
+        {
+            DangerZoneManager.Instance.OnPlayerDeath();
+        }
+        
+        // Detener Fever Mode
+        if (FeverModeManager.Instance != null)
+        {
+            FeverModeManager.Instance.StopSystem();
+        }
+        
         // Comprobar si el jugador puede usar segunda oportunidad
         if (ReviveManager.Instance != null && ReviveManager.Instance.CanRevive())
         {
@@ -193,6 +205,18 @@ public class GameManager : MonoBehaviour
         if (ComboManager.Instance != null)
         {
             ComboManager.Instance.ResetCombo(); // Resetear tras morir, empezar de nuevo
+        }
+        
+        // Reanudar Danger Zone
+        if (DangerZoneManager.Instance != null)
+        {
+            DangerZoneManager.Instance.StartSystem();
+        }
+        
+        // Reanudar Fever Mode
+        if (FeverModeManager.Instance != null)
+        {
+            FeverModeManager.Instance.StartSystem();
         }
         
         // Buscar nuevo player (fue recreado por ReviveManager)
@@ -246,6 +270,18 @@ public class GameManager : MonoBehaviour
         if (PowerUpManager.Instance != null)
         {
             PowerUpManager.Instance.ResetSession();
+        }
+        
+        // Danger Zone: Detener
+        if (DangerZoneManager.Instance != null)
+        {
+            DangerZoneManager.Instance.StopSystem();
+        }
+        
+        // Fever Mode: Detener
+        if (FeverModeManager.Instance != null)
+        {
+            FeverModeManager.Instance.StopSystem();
         }
         
         // Coleccionables: Detener spawning y otorgar ganancias
@@ -310,6 +346,20 @@ public class GameManager : MonoBehaviour
         if (ComboManager.Instance != null)
         {
             ComboManager.Instance.ResetCombo();
+        }
+        
+        // Resetear e iniciar Danger Zone
+        if (DangerZoneManager.Instance != null)
+        {
+            DangerZoneManager.Instance.ResetSession();
+            DangerZoneManager.Instance.StartSystem();
+        }
+        
+        // Resetear e iniciar Fever Mode
+        if (FeverModeManager.Instance != null)
+        {
+            FeverModeManager.Instance.ResetSession();
+            FeverModeManager.Instance.StartSystem();
         }
         
         // Resetear milestones de feedback para nueva partida

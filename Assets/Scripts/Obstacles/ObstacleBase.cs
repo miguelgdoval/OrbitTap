@@ -33,6 +33,19 @@ public class ObstacleBase : MonoBehaviour
             Sprite loadedSprite = ResourceLoader.LoadSprite($"Art/Obstacles/{spriteName}", spriteName);
             if (loadedSprite != null)
             {
+                // Si ResourceLoader devolvió el fallback blanco (1x1), tratarlo como "no encontrado"
+                // para que cada obstáculo pueda usar su sprite procedural de respaldo.
+                bool isDefaultFallback =
+                    loadedSprite.name == "DefaultSprite" ||
+                    (loadedSprite.texture != null && loadedSprite.texture.width <= 1 && loadedSprite.texture.height <= 1);
+                if (isDefaultFallback)
+                {
+                    loadedSprite = null;
+                }
+            }
+
+            if (loadedSprite != null)
+            {
                 // Normalizar el tamaño si es necesario
                 float currentWorldSize = loadedSprite.rect.width / loadedSprite.pixelsPerUnit;
                 if (Mathf.Abs(currentWorldSize - targetWorldSize) > 0.2f && loadedSprite.texture != null)

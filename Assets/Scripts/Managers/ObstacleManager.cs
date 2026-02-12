@@ -50,6 +50,12 @@ public class ObstacleManager : MonoBehaviour
     public GameObject spiralFragmentPrefab;
     public GameObject zigzagBarrierPrefab;
     
+    [Header("VeryHard Obstacle Prefabs")]
+    public GameObject phasingObstaclePrefab;
+    public GameObject orbitingFragmentsPrefab;
+    public GameObject laserBeamPrefab;
+    public GameObject gravityWellPrefab;
+    
     [Header("Difficulty Settings")]
     public ObstacleDifficultyLevel maxDifficultyLevel = ObstacleDifficultyLevel.VeryHard; // Dificultad máxima permitida
     public bool useDifficultyProgression = true; // Si true, aumenta la dificultad con el tiempo
@@ -234,8 +240,12 @@ public class ObstacleManager : MonoBehaviour
             if (pulsatingRingPrefab != null) loadedPrefabs++;
             if (spiralFragmentPrefab != null) loadedPrefabs++;
             if (zigzagBarrierPrefab != null) loadedPrefabs++;
+            if (phasingObstaclePrefab != null) loadedPrefabs++;
+            if (orbitingFragmentsPrefab != null) loadedPrefabs++;
+            if (laserBeamPrefab != null) loadedPrefabs++;
+            if (gravityWellPrefab != null) loadedPrefabs++;
             
-            Log($"ObstacleManager: Loaded {loadedPrefabs}/8 prefabs (Max difficulty: {maxDifficultyLevel})");
+            Log($"ObstacleManager: Loaded {loadedPrefabs}/12 prefabs (Max difficulty: {maxDifficultyLevel})");
         }
 
         // Inicializar intervalos actuales
@@ -360,7 +370,8 @@ public class ObstacleManager : MonoBehaviour
         GameObject[] allPrefabs = { 
             doorFixedPrefab, doorRandomPrefab, oscillatingBarrierPrefab, 
             rotatingArcPrefab, staticArcPrefab,
-            pulsatingRingPrefab, spiralFragmentPrefab, zigzagBarrierPrefab
+            pulsatingRingPrefab, spiralFragmentPrefab, zigzagBarrierPrefab,
+            phasingObstaclePrefab, orbitingFragmentsPrefab, laserBeamPrefab, gravityWellPrefab
         };
         
         foreach (GameObject prefab in allPrefabs)
@@ -483,7 +494,8 @@ public class ObstacleManager : MonoBehaviour
             GameObject[] allPrefabs = { 
                 doorFixedPrefab, doorRandomPrefab, oscillatingBarrierPrefab, 
                 rotatingArcPrefab, staticArcPrefab,
-                pulsatingRingPrefab, spiralFragmentPrefab, zigzagBarrierPrefab
+                pulsatingRingPrefab, spiralFragmentPrefab, zigzagBarrierPrefab,
+                phasingObstaclePrefab, orbitingFragmentsPrefab, laserBeamPrefab, gravityWellPrefab
             };
             
             foreach (GameObject prefab in allPrefabs)
@@ -607,6 +619,14 @@ public class ObstacleManager : MonoBehaviour
             spiralFragmentPrefab = LoadPrefabByName("SpiralFragment");
         if (zigzagBarrierPrefab == null)
             zigzagBarrierPrefab = LoadPrefabByName("ZigzagBarrier");
+        if (phasingObstaclePrefab == null)
+            phasingObstaclePrefab = LoadPrefabByName("PhasingObstacle");
+        if (orbitingFragmentsPrefab == null)
+            orbitingFragmentsPrefab = LoadPrefabByName("OrbitingFragments");
+        if (laserBeamPrefab == null)
+            laserBeamPrefab = LoadPrefabByName("LaserBeam");
+        if (gravityWellPrefab == null)
+            gravityWellPrefab = LoadPrefabByName("GravityWell");
         #else
         // En builds, intentar cargar desde Resources (si están en una carpeta Resources)
         // Si no están, se crearán dinámicamente cuando sea necesario
@@ -626,6 +646,14 @@ public class ObstacleManager : MonoBehaviour
             spiralFragmentPrefab = ResourceLoader.LoadPrefab("Prefabs/Obstacles/SpiralFragment");
         if (zigzagBarrierPrefab == null)
             zigzagBarrierPrefab = ResourceLoader.LoadPrefab("Prefabs/Obstacles/ZigzagBarrier");
+        if (phasingObstaclePrefab == null)
+            phasingObstaclePrefab = ResourceLoader.LoadPrefab("Prefabs/Obstacles/PhasingObstacle");
+        if (orbitingFragmentsPrefab == null)
+            orbitingFragmentsPrefab = ResourceLoader.LoadPrefab("Prefabs/Obstacles/OrbitingFragments");
+        if (laserBeamPrefab == null)
+            laserBeamPrefab = ResourceLoader.LoadPrefab("Prefabs/Obstacles/LaserBeam");
+        if (gravityWellPrefab == null)
+            gravityWellPrefab = ResourceLoader.LoadPrefab("Prefabs/Obstacles/GravityWell");
         #endif
     }
 
@@ -1007,7 +1035,11 @@ public class ObstacleManager : MonoBehaviour
         
         // Si no se encontró, intentar por nombre del prefab (fallback)
         string prefabName = prefab.name.ToLower();
-        if (prefabName.Contains("pulsating") || prefabName.Contains("spiral") || prefabName.Contains("zigzag"))
+        if (prefabName.Contains("phasing") || prefabName.Contains("orbiting") || prefabName.Contains("laser") || prefabName.Contains("gravity"))
+        {
+            return ObstacleDifficultyLevel.VeryHard;
+        }
+        else if (prefabName.Contains("pulsating") || prefabName.Contains("spiral") || prefabName.Contains("zigzag"))
         {
             return ObstacleDifficultyLevel.Hard;
         }
@@ -1068,7 +1100,17 @@ public class ObstacleManager : MonoBehaviour
     /// </summary>
     private void CreateComplexObstacleDynamically()
     {
-        // Seleccionar un tipo aleatorio de obstáculo complejo
+        // Obtener el nivel de dificultad actual
+        ObstacleDifficultyLevel currentDifficulty = GetCurrentDifficultyLevel();
+        
+        // Si la dificultad es VeryHard, hay una probabilidad de crear obstáculos VeryHard
+        if (currentDifficulty >= ObstacleDifficultyLevel.VeryHard && Random.Range(0f, 1f) < 0.5f)
+        {
+            CreateVeryHardObstacleDynamically();
+            return;
+        }
+        
+        // Seleccionar un tipo aleatorio de obstáculo complejo (Hard)
         int obstacleType = Random.Range(0, 3);
         
         GameObject obstacleObj = new GameObject();
@@ -1089,6 +1131,40 @@ public class ObstacleManager : MonoBehaviour
         }
         
         // Continuar con el spawn normal desde aquí
+        SetupDynamicObstacle(obstacleObj);
+    }
+    
+    /// <summary>
+    /// Crea obstáculos VeryHard dinámicamente si los prefabs no están disponibles.
+    /// Tipos: PhasingObstacle, OrbitingFragments, LaserBeam, GravityWell.
+    /// </summary>
+    private void CreateVeryHardObstacleDynamically()
+    {
+        int obstacleType = Random.Range(0, 4);
+        
+        GameObject obstacleObj = new GameObject();
+        
+        switch (obstacleType)
+        {
+            case 0:
+                obstacleObj.name = "PhasingObstacle";
+                obstacleObj.AddComponent<PhasingObstacle>();
+                break;
+            case 1:
+                obstacleObj.name = "OrbitingFragments";
+                obstacleObj.AddComponent<OrbitingFragments>();
+                break;
+            case 2:
+                obstacleObj.name = "LaserBeam";
+                obstacleObj.AddComponent<LaserBeam>();
+                break;
+            case 3:
+                obstacleObj.name = "GravityWell";
+                obstacleObj.AddComponent<GravityWell>();
+                break;
+        }
+        
+        Log($"ObstacleManager: Creating VeryHard obstacle dynamically: {obstacleObj.name}");
         SetupDynamicObstacle(obstacleObj);
     }
     
@@ -1188,7 +1264,8 @@ public class ObstacleManager : MonoBehaviour
         GameObject[] allPrefabs = { 
             doorFixedPrefab, doorRandomPrefab, oscillatingBarrierPrefab, 
             rotatingArcPrefab, staticArcPrefab,
-            pulsatingRingPrefab, spiralFragmentPrefab, zigzagBarrierPrefab
+            pulsatingRingPrefab, spiralFragmentPrefab, zigzagBarrierPrefab,
+            phasingObstaclePrefab, orbitingFragmentsPrefab, laserBeamPrefab, gravityWellPrefab
         };
         
         // Obtener el nivel de dificultad actual
@@ -1219,10 +1296,21 @@ public class ObstacleManager : MonoBehaviour
             }
         }
 
+        // Verificar si hay prefabs VeryHard disponibles
+        bool hasVeryHardPrefabs = false;
+        foreach (GameObject prefab in allPrefabs)
+        {
+            if (prefab != null && GetObstacleDifficulty(prefab) == ObstacleDifficultyLevel.VeryHard)
+            {
+                hasVeryHardPrefabs = true;
+                break;
+            }
+        }
+        
         // Si la dificultad es Hard o superior pero no hay prefabs complejos disponibles,
         // crear uno dinámicamente con cierta probabilidad
         // La probabilidad aumenta con la dificultad: Hard = 40%, VeryHard = 60%
-        if (currentDifficulty >= ObstacleDifficultyLevel.Hard && !hasComplexPrefabs)
+        if (currentDifficulty >= ObstacleDifficultyLevel.Hard && !hasComplexPrefabs && !hasVeryHardPrefabs)
         {
             float complexSpawnChance = currentDifficulty == ObstacleDifficultyLevel.VeryHard ? 0.6f : 0.4f;
             

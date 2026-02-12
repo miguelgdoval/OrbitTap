@@ -68,10 +68,12 @@
     <Compile Include="Assets/Scripts/Obstacles/DoorRandom.cs" />
     <Compile Include="Assets/Scripts/UI/SettingsParticleBackground.cs" />
     <Compile Include="Assets/Scripts/Managers/SaveDataManager.cs" />
+    <Compile Include="Assets/Scripts/Obstacles/Complex/OrbitingFragments.cs" />
     <Compile Include="Assets/Scripts/UI/TutorialUI.cs" />
     <Compile Include="Assets/Scripts/Obstacles/StaticArc.cs" />
     <Compile Include="Assets/Scripts/Utils/ResourceLoader.cs" />
     <Compile Include="Assets/Scripts/Managers/SaveData.cs" />
+    <Compile Include="Assets/Scripts/Obstacles/Complex/GravityWell.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundDiagnostics.cs" />
     <Compile Include="Assets/Scripts/Managers/ReviveManager.cs" />
     <Compile Include="Assets/BackgroundSystem/Scripts/BackgroundManager.cs" />
@@ -108,6 +110,7 @@
     <Compile Include="Assets/Scripts/UI/PrivacyPolicyManager.cs" />
     <Compile Include="Assets/Scripts/Managers/ScoreManager.cs" />
     <Compile Include="Assets/Scripts/Managers/LocalLeaderboardManager.cs" />
+    <Compile Include="Assets/Scripts/Obstacles/Complex/LaserBeam.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleGlow.cs" />
     <Compile Include="Assets/Scripts/UI/GameOverController.cs" />
     <Compile Include="Assets/Scripts/Player/SpriteGenerator.cs" />
@@ -120,6 +123,7 @@
     <Compile Include="Assets/Scripts/Obstacles/Complex/ZigzagBarrier.cs" />
     <Compile Include="Assets/Scripts/Visual/CosmicTheme.cs" />
     <Compile Include="Assets/Scripts/Managers/InputController.cs" />
+    <Compile Include="Assets/Scripts/Obstacles/Complex/PhasingObstacle.cs" />
     <Compile Include="Assets/Scripts/Managers/AdManager.cs" />
     <Compile Include="Assets/Scripts/Managers/AnalyticsManager.cs" />
     <Compile Include="Assets/Scripts/Managers/ObstacleManager.cs" />

@@ -55,8 +55,16 @@ public class LaserBeam : ObstacleBase, IObstacleDifficulty
     private SpriteRenderer coreRenderer;
     private GameObject[] beamSegments;
     private SpriteRenderer[] segmentRenderers;
+    private CircleCollider2D[] segmentColliders;
+    private float[] segmentSizeVariations;
     private GameObject starEmitter;              // Estrella roja giratoria en el origen del láser
     private SpriteRenderer starEmitterRenderer;
+
+    // Cache de sprites para evitar generar texturas en cada spawn del láser
+    private static Sprite cachedStarSprite;
+    private static Sprite cachedBeamSprite;
+    private static Sprite cachedBeamCoreSprite;
+    private static Sprite cachedBeamSegmentSprite;
     
     // Se usa ObstacleMover del padre para el movimiento general,
     // pero el láser en sí es estático respecto a su posición de spawn.
@@ -104,12 +112,7 @@ public class LaserBeam : ObstacleBase, IObstacleDifficulty
     /// </summary>
     private void CreateStarEmitter()
     {
-        // Intentar reutilizar sprite de estrella de obstáculos; si no, usar generador de estrellas
-        Sprite starSprite = LoadObstacleSprite("StarObstacle");
-        if (starSprite == null)
-        {
-            starSprite = SpriteGenerator.CreateStarSprite(0.5f, new Color(1f, 0.35f, 0.35f, 1f));
-        }
+        Sprite starSprite = GetOrCreateStarSprite();
 
         // Configurar el SpriteRenderer raíz para que nunca se vea como cuadrado.
         // Si ObstacleGlow le cambia alpha/color, seguirá siendo forma de estrella.
@@ -137,6 +140,19 @@ public class LaserBeam : ObstacleBase, IObstacleDifficulty
         starEmitterRenderer.color = new Color(1f, 0.25f, 0.25f, 1f); // Rojo intenso
         starEmitterRenderer.sortingOrder = 7; // Por encima del rayo y del núcleo
         starEmitterRenderer.sortingLayerName = "Default";
+    }
+
+    private Sprite GetOrCreateStarSprite()
+    {
+        if (cachedStarSprite != null) return cachedStarSprite;
+
+        cachedStarSprite = LoadObstacleSprite("StarObstacle");
+        if (cachedStarSprite == null)
+        {
+            cachedStarSprite = SpriteGenerator.CreateStarSprite(0.5f, new Color(1f, 0.35f, 0.35f, 1f));
+        }
+
+        return cachedStarSprite;
     }
 
     private void PositionOnOrbit(Vector2 moveDirection)
@@ -249,7 +265,9 @@ public class LaserBeam : ObstacleBase, IObstacleDifficulty
             {
                 if (beamSegments[i] != null)
                 {
-                    float sizeVariation = 0.8f + Mathf.PerlinNoise(i * 0.3f, 0f) * 0.4f;
+                    float sizeVariation = segmentSizeVariations != null && i < segmentSizeVariations.Length
+                        ? segmentSizeVariations[i]
+                        : 1f;
                     beamSegments[i].transform.localScale = Vector3.one * currentWidth * sizeVariation;
                     
                     if (segmentRenderers[i] != null)
@@ -288,14 +306,13 @@ public class LaserBeam : ObstacleBase, IObstacleDifficulty
         if (t > 0.5f)
         {
             if (beamCollider != null) beamCollider.enabled = true;
-            if (beamSegments != null)
+            if (segmentColliders != null)
             {
-                foreach (GameObject segment in beamSegments)
+                for (int i = 0; i < segmentColliders.Length; i++)
                 {
-                    if (segment != null)
+                    if (segmentColliders[i] != null)
                     {
-                        CircleCollider2D segCollider = segment.GetComponent<CircleCollider2D>();
-                        if (segCollider != null) segCollider.enabled = true;
+                        segmentColliders[i].enabled = true;
                     }
                 }
             }
@@ -326,7 +343,9 @@ public class LaserBeam : ObstacleBase, IObstacleDifficulty
             {
                 if (beamSegments[i] != null)
                 {
-                    float sizeVariation = 0.8f + Mathf.PerlinNoise(i * 0.3f, 0f) * 0.4f;
+                    float sizeVariation = segmentSizeVariations != null && i < segmentSizeVariations.Length
+                        ? segmentSizeVariations[i]
+                        : 1f;
                     beamSegments[i].transform.localScale = Vector3.one * beamWidth * pulse * sizeVariation;
                     
                     if (segmentRenderers[i] != null)
@@ -370,14 +389,13 @@ public class LaserBeam : ObstacleBase, IObstacleDifficulty
             
             // Desactivar colliders
             if (beamCollider != null) beamCollider.enabled = false;
-            if (beamSegments != null)
+            if (segmentColliders != null)
             {
-                foreach (GameObject segment in beamSegments)
+                for (int i = 0; i < segmentColliders.Length; i++)
                 {
-                    if (segment != null)
+                    if (segmentColliders[i] != null)
                     {
-                        CircleCollider2D segCollider = segment.GetComponent<CircleCollider2D>();
-                        if (segCollider != null) segCollider.enabled = false;
+                        segmentColliders[i].enabled = false;
                     }
                 }
             }
@@ -398,7 +416,9 @@ public class LaserBeam : ObstacleBase, IObstacleDifficulty
             {
                 if (beamSegments[i] != null)
                 {
-                    float sizeVariation = 0.8f + Mathf.PerlinNoise(i * 0.3f, 0f) * 0.4f;
+                    float sizeVariation = segmentSizeVariations != null && i < segmentSizeVariations.Length
+                        ? segmentSizeVariations[i]
+                        : 1f;
                     beamSegments[i].transform.localScale = Vector3.one * currentWidth * sizeVariation;
                     
                     if (segmentRenderers[i] != null)
@@ -445,11 +465,18 @@ public class LaserBeam : ObstacleBase, IObstacleDifficulty
     {
         // Crear múltiples segmentos orgánicos en lugar de un rectángulo simple
         // Esto crea una línea de energía con forma irregular y orgánica
-        int segmentCount = Mathf.RoundToInt(beamLength / 0.5f); // Segmentos cada 0.5 unidades
-        segmentCount = Mathf.Max(segmentCount, 8); // Mínimo 8 segmentos
+        int segmentCount = Mathf.RoundToInt(beamLength / 0.8f); // Menos segmentos = menos pico de CPU/GC
+        segmentCount = Mathf.Clamp(segmentCount, 12, 28);
         
         beamSegments = new GameObject[segmentCount];
         segmentRenderers = new SpriteRenderer[segmentCount];
+        segmentColliders = new CircleCollider2D[segmentCount];
+        segmentSizeVariations = new float[segmentCount];
+
+        if (cachedBeamSegmentSprite == null)
+        {
+            cachedBeamSegmentSprite = CreateBeamSegmentSprite();
+        }
         
         for (int i = 0; i < segmentCount; i++)
         {
@@ -461,11 +488,12 @@ public class LaserBeam : ObstacleBase, IObstacleDifficulty
             segment.transform.localRotation = Quaternion.identity;
             
             // Variación de tamaño para forma orgánica
-            float sizeVariation = 0.8f + Mathf.PerlinNoise(i * 0.3f, 0f) * 0.4f;
+            float sizeVariation = 0.85f + Mathf.PerlinNoise(i * 0.37f, 0.11f) * 0.3f;
+            segmentSizeVariations[i] = sizeVariation;
             segment.transform.localScale = Vector3.one * warningWidth * sizeVariation;
             
             SpriteRenderer sr = segment.AddComponent<SpriteRenderer>();
-            sr.sprite = CreateBeamSegmentSprite();
+            sr.sprite = cachedBeamSegmentSprite;
             sr.color = warningColor;
             sr.sortingOrder = 5;
             sr.sortingLayerName = "Default";
@@ -476,6 +504,7 @@ public class LaserBeam : ObstacleBase, IObstacleDifficulty
             collider.radius = 0.4f;
             collider.isTrigger = true;
             collider.enabled = false;
+            segmentColliders[i] = collider;
             
             segment.AddComponent<ObstacleCollisionDetector>();
             beamSegments[i] = segment;
@@ -489,7 +518,7 @@ public class LaserBeam : ObstacleBase, IObstacleDifficulty
         beamObject.transform.localScale = new Vector3(beamLength, warningWidth, 1f);
         
         beamRenderer = beamObject.AddComponent<SpriteRenderer>();
-        beamRenderer.sprite = CreateBeamSprite();
+        beamRenderer.sprite = GetOrCreateBeamSprite();
         beamRenderer.color = warningColor;
         beamRenderer.sortingOrder = 4; // Detrás de los segmentos
         beamRenderer.sortingLayerName = "Default";
@@ -508,10 +537,19 @@ public class LaserBeam : ObstacleBase, IObstacleDifficulty
         coreObject.transform.localScale = new Vector3(beamLength, warningWidth * 0.35f, 1f);
         
         coreRenderer = coreObject.AddComponent<SpriteRenderer>();
-        coreRenderer.sprite = CreateBeamCoreSprite();
+        coreRenderer.sprite = GetOrCreateBeamCoreSprite();
         coreRenderer.color = new Color(beamCoreColor.r, beamCoreColor.g, beamCoreColor.b, 0f);
         coreRenderer.sortingOrder = 6;
         coreRenderer.sortingLayerName = "Default";
+    }
+
+    private Sprite GetOrCreateBeamSprite()
+    {
+        if (cachedBeamSprite == null)
+        {
+            cachedBeamSprite = CreateBeamSprite();
+        }
+        return cachedBeamSprite;
     }
 
     private Sprite CreateBeamSprite()
@@ -569,6 +607,15 @@ public class LaserBeam : ObstacleBase, IObstacleDifficulty
         // Usar ConstellationFragmentGenerator para mantener consistencia
         Color segmentColor = Color.Lerp(CosmicTheme.CelestialBlue, CosmicTheme.EtherealLila, 0.5f);
         return ConstellationFragmentGenerator.CreateFragmentSprite(0.4f, segmentColor, false);
+    }
+
+    private Sprite GetOrCreateBeamCoreSprite()
+    {
+        if (cachedBeamCoreSprite == null)
+        {
+            cachedBeamCoreSprite = CreateBeamCoreSprite();
+        }
+        return cachedBeamCoreSprite;
     }
 
     private Sprite CreateBeamCoreSprite()

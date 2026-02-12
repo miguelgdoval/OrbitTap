@@ -90,7 +90,7 @@ public class GameOverController : MonoBehaviour
         }
         
         // Obtener puntuación de la partida (el score es igual al tiempo sobrevivido en segundos)
-        int gameScore = PlayerPrefs.GetInt("LastScore", 0);
+        int gameScore = GetLastScore();
         Log($"[GameOverController] Verificando anuncio. Puntuación: {gameScore}");
         
         // Verificar si se debe mostrar el anuncio
@@ -405,8 +405,8 @@ public class GameOverController : MonoBehaviour
         shareTextRect.sizeDelta = Vector2.zero;
         
         shareButton.onClick.AddListener(() => {
-            int currentScore = PlayerPrefs.GetInt("LastScore", 0);
-            int highScore = PlayerPrefs.GetInt("HighScore", 0);
+            int currentScore = GetLastScore();
+            int highScore = GetHighScore();
             bool isNewRecord = currentScore == highScore && currentScore > 0;
             
             if (SocialShareManager.Instance != null)
@@ -463,9 +463,8 @@ public class GameOverController : MonoBehaviour
 
     private void UpdateUI()
     {
-        // Leer directamente de PlayerPrefs (más eficiente que crear GameObject temporal)
-        int currentScore = PlayerPrefs.GetInt("LastScore", 0);
-        int highScore = PlayerPrefs.GetInt("HighScore", 0);
+        int currentScore = GetLastScore();
+        int highScore = GetHighScore();
         
         if (scoreText != null)
         {
@@ -476,6 +475,36 @@ public class GameOverController : MonoBehaviour
         {
             highScoreText.text = "Mejor puntuación: " + highScore;
         }
+    }
+
+    private int GetLastScore()
+    {
+        // Priorizar SaveData (fuente principal actual)
+        if (SaveDataManager.Instance != null)
+        {
+            SaveData saveData = SaveDataManager.Instance.GetSaveData();
+            if (saveData != null)
+            {
+                return saveData.lastScore;
+            }
+        }
+
+        // Fallback por compatibilidad
+        return PlayerPrefs.GetInt("LastScore", 0);
+    }
+
+    private int GetHighScore()
+    {
+        if (SaveDataManager.Instance != null)
+        {
+            SaveData saveData = SaveDataManager.Instance.GetSaveData();
+            if (saveData != null)
+            {
+                return saveData.highScore;
+            }
+        }
+
+        return PlayerPrefs.GetInt("HighScore", 0);
     }
 
     public void GoToMainMenu()

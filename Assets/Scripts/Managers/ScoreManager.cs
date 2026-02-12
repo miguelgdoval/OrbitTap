@@ -42,14 +42,18 @@ public class ScoreManager : MonoBehaviour
         }
         
         score += Time.deltaTime * scoreMultiplier;
+        RefreshScoreOutputs();
+    }
+
+    private void RefreshScoreOutputs()
+    {
+        int currentScoreInt = Mathf.FloorToInt(score);
 
         if (scoreText != null)
         {
-            scoreText.text = Mathf.FloorToInt(score).ToString();
+            scoreText.text = currentScoreInt.ToString();
         }
-        
-        int currentScoreInt = Mathf.FloorToInt(score);
-        
+
         // Reportar progreso de puntuación a MissionManager
         if (MissionManager.Instance != null)
         {
@@ -62,6 +66,17 @@ public class ScoreManager : MonoBehaviour
         {
             GameFeedbackManager.Instance.CheckScoreMilestones(currentScoreInt, highScore);
         }
+    }
+
+    /// <summary>
+    /// Añade puntos directos (bonos de eventos, p. ej. Danger Zone).
+    /// </summary>
+    public void AddBonusPoints(int points)
+    {
+        if (isGameOver || points <= 0) return;
+        score += points;
+        RefreshScoreOutputs();
+        Log($"[ScoreManager] Bonus aplicado: +{points} (total: {Mathf.FloorToInt(score)})");
     }
     
     /// <summary>
@@ -110,24 +125,28 @@ public class ScoreManager : MonoBehaviour
                 SaveDataManager.Instance.MarkDirty();
             }
         }
-        else
+
+        // Mantener PlayerPrefs sincronizado SIEMPRE por compatibilidad con UI/ads/share
+        PlayerPrefs.SetInt("LastScore", currentScore);
+        
+        if (currentScore > highScore)
         {
-            // Fallback a PlayerPrefs
-            PlayerPrefs.SetInt("LastScore", currentScore);
+            highScore = currentScore;
+            PlayerPrefs.SetInt(HIGH_SCORE_KEY, highScore);
             
-            if (currentScore > highScore)
+            // Reportar nuevo récord a MissionManager
+            if (MissionManager.Instance != null)
             {
-                highScore = currentScore;
-                PlayerPrefs.SetInt(HIGH_SCORE_KEY, highScore);
-                
-                // Reportar nuevo récord a MissionManager
-                if (MissionManager.Instance != null)
-                {
-                    MissionManager.Instance.ReportValue(MissionObjectiveType.ReachHighScore, highScore);
-                }
+                MissionManager.Instance.ReportValue(MissionObjectiveType.ReachHighScore, highScore);
             }
-            
-            PlayerPrefs.Save();
+        }
+        
+        PlayerPrefs.Save();
+
+        // Guardar SaveData inmediatamente para que GameOver lea datos coherentes
+        if (SaveDataManager.Instance != null)
+        {
+            SaveDataManager.Instance.ForceSave();
         }
 
         // Asegurar que existe LocalLeaderboardManager incluso si se entra directo a la escena de juego

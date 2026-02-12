@@ -318,6 +318,16 @@ public class DangerZoneManager : MonoBehaviour
     
     private void AwardSurvivalBonus()
     {
+        // Bonus de puntos
+        if (survivalBonusPoints > 0)
+        {
+            ScoreManager scoreManager = FindFirstObjectByType<ScoreManager>();
+            if (scoreManager != null)
+            {
+                scoreManager.AddBonusPoints(survivalBonusPoints);
+            }
+        }
+
         // Bonus de shards
         if (survivalBonusShards > 0 && CollectibleManager.Instance != null)
         {

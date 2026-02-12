@@ -245,9 +245,9 @@ public class GameManager : MonoBehaviour
         {
             Log("GameManager: Guardando puntuación...");
             score = scoreManager.GetCurrentScore();
-            highScore = scoreManager.GetHighScore();
             playTime = Time.timeSinceLevelLoad;
             scoreManager.SaveHighScore();
+            highScore = scoreManager.GetHighScore(); // leer después de guardar por si hubo récord
         }
         else
         {

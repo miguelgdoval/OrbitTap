@@ -28,6 +28,7 @@ public class ReviveManager : MonoBehaviour
     // Estado
     private int revivesUsedThisGame = 0;
     private bool isShowingReviveUI = false;
+    private bool isWaitingForAdResult = false;
     private bool isPlayerInvulnerable = false;
     private float invulnerabilityTimer = 0f;
     private GameObject reviveUIRoot;
@@ -123,6 +124,7 @@ public class ReviveManager : MonoBehaviour
         if (isShowingReviveUI) return;
         
         isShowingReviveUI = true;
+        isWaitingForAdResult = false;
         onReviveAccepted = onAccepted;
         onReviveDeclined = onDeclined;
         
@@ -145,6 +147,7 @@ public class ReviveManager : MonoBehaviour
     {
         revivesUsedThisGame++;
         isShowingReviveUI = false;
+        isWaitingForAdResult = false;
         
         Log("[ReviveManager] Ejecutando revive...");
         
@@ -185,7 +188,15 @@ public class ReviveManager : MonoBehaviour
     /// </summary>
     public void DeclineRevive()
     {
+        // Si hay un anuncio en curso para revive, no declinar en segundo plano.
+        if (isWaitingForAdResult)
+        {
+            Log("[ReviveManager] Ignorando declive: anuncio de revive en progreso");
+            return;
+        }
+
         isShowingReviveUI = false;
+        isWaitingForAdResult = false;
         
         Log("[ReviveManager] Revive declinado");
         
@@ -215,23 +226,39 @@ public class ReviveManager : MonoBehaviour
     /// </summary>
     private void ReviveWithAd()
     {
+        if (isWaitingForAdResult)
+        {
+            return;
+        }
+
         Log("[ReviveManager] Intentando revive con anuncio...");
         
         if (AdManager.Instance != null)
         {
+            isWaitingForAdResult = true;
+            SetReviveButtonsInteractable(false);
+
             // Restaurar timeScale temporalmente para que el ad funcione
             Time.timeScale = 1f;
             
             AdManager.Instance.ShowRewardedAdWithCallback(
                 onCompleted: () =>
                 {
+                    isWaitingForAdResult = false;
                     Log("[ReviveManager] Anuncio completado, ejecutando revive");
                     ExecuteRevive();
                 },
                 onFailed: () =>
                 {
+                    isWaitingForAdResult = false;
                     Log("[ReviveManager] Anuncio cancelado o falló");
-                    Time.timeScale = 0f; // Volver a pausar
+
+                    // Si la UI de revive sigue activa, volver al estado de decisión.
+                    if (isShowingReviveUI)
+                    {
+                        Time.timeScale = 0f; // Volver a pausar
+                        SetReviveButtonsInteractable(true);
+                    }
                 }
             );
             return;
@@ -574,6 +601,23 @@ public class ReviveManager : MonoBehaviour
         
         while (timeRemaining > 0f)
         {
+            if (!isShowingReviveUI)
+            {
+                yield break;
+            }
+
+            // Congelar countdown mientras el anuncio está en pantalla.
+            if (isWaitingForAdResult)
+            {
+                if (countdownText != null)
+                {
+                    countdownText.text = Mathf.CeilToInt(timeRemaining).ToString();
+                }
+
+                yield return null;
+                continue;
+            }
+
             // Usar unscaledDeltaTime porque el juego está pausado (timeScale = 0)
             timeRemaining -= Time.unscaledDeltaTime;
             
@@ -585,9 +629,35 @@ public class ReviveManager : MonoBehaviour
             yield return null;
         }
         
+        // Si ya no estamos mostrando revive, no hacer nada.
+        if (!isShowingReviveUI)
+        {
+            yield break;
+        }
+
+        // Si justo terminó el tiempo pero hay anuncio en curso, no declinar en segundo plano.
+        if (isWaitingForAdResult)
+        {
+            yield break;
+        }
+
         // Tiempo agotado, declinar automáticamente
         Log("[ReviveManager] Tiempo de decisión agotado");
         DeclineRevive();
+    }
+
+    private void SetReviveButtonsInteractable(bool interactable)
+    {
+        if (reviveUIRoot == null) return;
+
+        Button[] buttons = reviveUIRoot.GetComponentsInChildren<Button>(true);
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            if (buttons[i] != null)
+            {
+                buttons[i].interactable = interactable;
+            }
+        }
     }
     
     /// <summary>

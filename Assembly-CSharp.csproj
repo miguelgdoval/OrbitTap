@@ -103,6 +103,7 @@
     <Compile Include="Assets/Scripts/UI/LeaderboardSection.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleBase.cs" />
     <Compile Include="Assets/Scripts/UI/ShopSection.cs" />
+    <Compile Include="Assets/Scripts/UI/GamePauseController.cs" />
     <Compile Include="Assets/Scripts/Obstacles/ObstacleMover.cs" />
     <Compile Include="Assets/Scripts/Managers/NotificationManager.cs" />
     <Compile Include="Assets/Scripts/Player/PlayerOrbit.cs" />

@@ -41,6 +41,11 @@ public class ReviveManager : MonoBehaviour
     // Referencia al callback original de rewarded ad
     private System.Action originalRewardedCallback;
     
+    /// <summary>
+    /// True si la UI de revive está visible (para que otros sistemas no abran pausa encima).
+    /// </summary>
+    public bool IsShowingReviveUI => isShowingReviveUI;
+    
     private void Awake()
     {
         if (Instance == null)

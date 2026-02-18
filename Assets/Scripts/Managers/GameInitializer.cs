@@ -235,6 +235,10 @@ public class GameInitializer : MonoBehaviour
         // Crear HUD del Combo (arriba a la izquierda)
         CreateComboHUD(canvasObj);
         
+        // Crear UI de pausa manual (botón + menú Reanudar / Salir al menú)
+        GameObject pauseUI = new GameObject("GamePauseUI");
+        pauseUI.AddComponent<GamePauseController>();
+        
         // Crear GameFeedbackManager (feedback visual y háptico)
         GameObject feedbackManager = GameObject.Find("GameFeedbackManager");
         if (feedbackManager == null)

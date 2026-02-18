@@ -795,7 +795,7 @@ public class SettingsPanel : MonoBehaviour
         GameObject versionObj = new GameObject("Version");
         versionObj.transform.SetParent(section.transform, false);
         Text versionText = versionObj.AddComponent<Text>();
-        versionText.text = "Starbound Orbit v0.1.3 Early Test";
+        versionText.text = "Starbound Orbit v0.1.3";
         versionText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         versionText.fontSize = 16;
         versionText.color = new Color(CosmicTheme.SpaceWhite.r, CosmicTheme.SpaceWhite.g, CosmicTheme.SpaceWhite.b, 0.6f);

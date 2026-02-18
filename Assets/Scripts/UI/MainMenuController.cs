@@ -49,6 +49,9 @@ public class MainMenuController : MonoBehaviour
     private CurrencyManager currencyManager;
     private CanvasGroup canvasGroup; // Para bloquear input durante transiciones de escena
     
+    [Header("Back / Quit")]
+    private GameObject quitConfirmPanel; // Diálogo "¿Salir del juego?"
+    
     private void Awake()
     {
         if (Instance == null)
@@ -100,6 +103,33 @@ public class MainMenuController : MonoBehaviour
         
         // Actualizar badge inicial
         StartCoroutine(UpdateMissionsBadgeDelayed());
+    }
+    
+    private void Update()
+    {
+        // Botón Atrás (Android) / Escape
+        if (!Input.GetKeyDown(KeyCode.Escape)) return;
+        
+        if (IsQuitConfirmVisible())
+        {
+            HideQuitConfirm();
+            return;
+        }
+        if (settingsPanel != null && settingsPanel.IsOpen())
+        {
+            settingsPanel.Hide();
+            return;
+        }
+        if (statisticsSection != null)
+        {
+            StatisticsPanel statsPanel = statisticsSection.GetComponent<StatisticsPanel>();
+            if (statsPanel != null && statsPanel.panel != null && statsPanel.panel.activeSelf)
+            {
+                statsPanel.Hide();
+                return;
+            }
+        }
+        ShowQuitConfirm();
     }
     
     /// <summary>
@@ -1365,6 +1395,127 @@ public class MainMenuController : MonoBehaviour
             settingsPanel = settingsObj.AddComponent<SettingsPanel>();
         }
         settingsPanel.Show();
+    }
+    
+    private bool IsQuitConfirmVisible()
+    {
+        return quitConfirmPanel != null && quitConfirmPanel.activeSelf;
+    }
+    
+    private void ShowQuitConfirm()
+    {
+        if (quitConfirmPanel == null)
+            CreateQuitConfirmDialog();
+        if (quitConfirmPanel != null)
+            quitConfirmPanel.SetActive(true);
+    }
+    
+    private void HideQuitConfirm()
+    {
+        if (quitConfirmPanel != null)
+            quitConfirmPanel.SetActive(false);
+    }
+    
+    private void CreateQuitConfirmDialog()
+    {
+        if (canvas == null) return;
+        
+        quitConfirmPanel = new GameObject("QuitConfirmPanel");
+        quitConfirmPanel.transform.SetParent(canvas.transform, false);
+        RectTransform panelRect = quitConfirmPanel.AddComponent<RectTransform>();
+        panelRect.anchorMin = Vector2.zero;
+        panelRect.anchorMax = Vector2.one;
+        panelRect.sizeDelta = Vector2.zero;
+        
+        Image panelBg = quitConfirmPanel.AddComponent<Image>();
+        panelBg.color = new Color(0, 0, 0, 0.85f);
+        
+        GameObject content = new GameObject("Content");
+        content.transform.SetParent(quitConfirmPanel.transform, false);
+        RectTransform contentRect = content.AddComponent<RectTransform>();
+        contentRect.anchorMin = new Vector2(0.5f, 0.5f);
+        contentRect.anchorMax = new Vector2(0.5f, 0.5f);
+        contentRect.pivot = new Vector2(0.5f, 0.5f);
+        contentRect.sizeDelta = new Vector2(500, 280);
+        contentRect.anchoredPosition = Vector2.zero;
+        
+        Image contentBg = content.AddComponent<Image>();
+        contentBg.color = new Color(0.08f, 0.08f, 0.12f, 1f);
+        
+        GameObject titleObj = new GameObject("Title");
+        titleObj.transform.SetParent(content.transform, false);
+        Text titleText = titleObj.AddComponent<Text>();
+        titleText.text = "¿Salir del juego?";
+        titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        titleText.fontSize = 36;
+        titleText.fontStyle = FontStyle.Bold;
+        titleText.color = CosmicTheme.NeonCyan;
+        titleText.alignment = TextAnchor.MiddleCenter;
+        RectTransform titleRect = titleObj.GetComponent<RectTransform>();
+        titleRect.anchorMin = new Vector2(0.5f, 1f);
+        titleRect.anchorMax = new Vector2(0.5f, 1f);
+        titleRect.pivot = new Vector2(0.5f, 1f);
+        titleRect.sizeDelta = new Vector2(450, 50);
+        titleRect.anchoredPosition = new Vector2(0, -30);
+        
+        GameObject salirBtnObj = new GameObject("SalirButton");
+        salirBtnObj.transform.SetParent(content.transform, false);
+        Button salirBtn = salirBtnObj.AddComponent<Button>();
+        Image salirImg = salirBtnObj.AddComponent<Image>();
+        salirImg.color = new Color(0.9f, 0.25f, 0.25f, 1f);
+        RectTransform salirRect = salirBtnObj.GetComponent<RectTransform>();
+        salirRect.anchorMin = new Vector2(0.5f, 0.5f);
+        salirRect.anchorMax = new Vector2(0.5f, 0.5f);
+        salirRect.pivot = new Vector2(0.5f, 0.5f);
+        salirRect.sizeDelta = new Vector2(200, 56);
+        salirRect.anchoredPosition = new Vector2(-110, -80);
+        GameObject salirTextObj = new GameObject("Text");
+        salirTextObj.transform.SetParent(salirBtnObj.transform, false);
+        Text salirText = salirTextObj.AddComponent<Text>();
+        salirText.text = "Salir";
+        salirText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        salirText.fontSize = 26;
+        salirText.color = Color.white;
+        salirText.alignment = TextAnchor.MiddleCenter;
+        RectTransform salirTextRect = salirTextObj.GetComponent<RectTransform>();
+        salirTextRect.anchorMin = Vector2.zero;
+        salirTextRect.anchorMax = Vector2.one;
+        salirTextRect.sizeDelta = Vector2.zero;
+        salirBtn.onClick.AddListener(() => {
+            HideQuitConfirm();
+#if UNITY_EDITOR
+            EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        });
+        
+        GameObject cancelarBtnObj = new GameObject("CancelarButton");
+        cancelarBtnObj.transform.SetParent(content.transform, false);
+        Button cancelarBtn = cancelarBtnObj.AddComponent<Button>();
+        Image cancelarImg = cancelarBtnObj.AddComponent<Image>();
+        cancelarImg.color = CosmicTheme.NeonCyan;
+        RectTransform cancelarRect = cancelarBtnObj.GetComponent<RectTransform>();
+        cancelarRect.anchorMin = new Vector2(0.5f, 0.5f);
+        cancelarRect.anchorMax = new Vector2(0.5f, 0.5f);
+        cancelarRect.pivot = new Vector2(0.5f, 0.5f);
+        cancelarRect.sizeDelta = new Vector2(200, 56);
+        cancelarRect.anchoredPosition = new Vector2(110, -80);
+        GameObject cancelarTextObj = new GameObject("Text");
+        cancelarTextObj.transform.SetParent(cancelarBtnObj.transform, false);
+        Text cancelarText = cancelarTextObj.AddComponent<Text>();
+        cancelarText.text = "Cancelar";
+        cancelarText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        cancelarText.fontSize = 26;
+        cancelarText.color = Color.white;
+        cancelarText.alignment = TextAnchor.MiddleCenter;
+        RectTransform cancelarTextRect = cancelarTextObj.GetComponent<RectTransform>();
+        cancelarTextRect.anchorMin = Vector2.zero;
+        cancelarTextRect.anchorMax = Vector2.one;
+        cancelarTextRect.sizeDelta = Vector2.zero;
+        cancelarBtn.onClick.AddListener(HideQuitConfirm);
+        
+        quitConfirmPanel.SetActive(false);
     }
     
     private void AddButtonPressAnimation(Button button, RectTransform iconRect)

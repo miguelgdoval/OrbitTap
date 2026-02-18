@@ -111,6 +111,14 @@ public class SettingsPanel : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// Indica si el panel de ajustes está visible (para manejo del botón Atrás).
+    /// </summary>
+    public bool IsOpen()
+    {
+        return panel != null && panel.activeSelf;
+    }
+    
     private void CreatePanel()
     {
         GameObject canvas = GameObject.Find("Canvas");
